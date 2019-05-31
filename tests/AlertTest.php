@@ -61,8 +61,6 @@ class AlertTest extends TestCase
 
         $escaped = '&lt;script&gt;alert(&quot;should be escaped&quot;)&lt;/script&gt;';
 
-        dump(e('<script>alert("Let me escape from here")</script>'));
-
         $this->assertEquals($escaped, $this->alert->getMessage());
     }
 
