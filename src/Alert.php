@@ -119,6 +119,17 @@ class Alert implements Arrayable, Jsonable, JsonSerializable, Htmlable
     }
 
     /**
+     * Encodes and sets the message of the Alert
+     *
+     * @param string $text
+     * @return \DarkGhostHunter\Laralerts\Alert
+     */
+    public function escape(string $text)
+    {
+        return $this->message(e($text));
+    }
+
+    /**
      * Sets the message of the Alert
      *
      * @param string $text

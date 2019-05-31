@@ -3,7 +3,7 @@
 namespace DarkGhostHunter\Laralerts;
 
 use BadMethodCallException;
-use Illuminate\Contracts\Session\Session;
+use Illuminate\Session\Store as Session;
 
 class AlertFactory
 {
@@ -33,7 +33,7 @@ class AlertFactory
      * AlertFactory constructor.
      *
      * @param \DarkGhostHunter\Laralerts\AlertBag $alertBag
-     * @param \Illuminate\Contracts\Session\Session $session
+     * @param \Illuminate\Session\Store $session
      */
     public function __construct(AlertBag $alertBag, Session $session)
     {
@@ -113,7 +113,7 @@ class AlertFactory
      */
     public function putAlertBag(AlertBag $alertBag)
     {
-        $this->session->put($this->key, $alertBag);
+        $this->session->flash($this->key, $alertBag);
 
         return $this;
     }

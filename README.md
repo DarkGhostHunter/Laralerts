@@ -20,7 +20,7 @@ Additionally, [download Bootstrap 4](https://getbootstrap.com) for your frontend
 
 ## Basic Usage
 
-To set an Alert in your frontend, you can use the `alert()` helper, or the `Alert` Facade. For example, when you are using your controllers. 
+To set an Alert in your frontend, you can use the `alert()` helper, or the `Alert` Facade. For example, before sending a Response to the browser. 
 
 ```php
 <?php
@@ -31,7 +31,12 @@ use DarkGhostHunter\Laralerts\Facades\Alert;
 
 class ExampleController extends Controller
 {
-    public function send()
+    /**
+     * Tell the User the message was sent 
+     * 
+     * @return \Illuminate\Http\Response
+     */
+    public function sent()
     {
         alert('Your message was sent!', 'success');
             
@@ -39,14 +44,14 @@ class ExampleController extends Controller
             ->info()
             ->dismissible();
         
-        return view('page');
+        return response()->view('page');
     }
 }
 ```
 
 The `alert()` helper accepts the message text and alert type, quickly making your alerts into one-liners.
 
-To render them in the frontend, use the `@alerts` Blade directive which will take care of the rest.
+To render them in the frontend, use the `@alerts` Blade directive which will take care of the magic.
 
 ```blade
 <div class="header">
@@ -59,7 +64,7 @@ To render them in the frontend, use the `@alerts` Blade directive which will tak
 
 ### Message
 
-This allows you to add a text string into the Alert. You can use a simple text string, or an HTML text.
+Add text inside the Alert using the `message()` method. You can use a simple string, or HTML for more personalized messages.
 
 ```php
 <?php
@@ -67,12 +72,40 @@ This allows you to add a text string into the Alert. You can use a simple text s
 alert()->message('Your message was sent!')
     ->success();
     
-Alert::message('We will email you a copy!')
-    ->info()
-    ->dismissable();
+Alert::message('<strong>We will email you a copy!</strong>')
+    ->info();
 ```
 
-> **Warning:** the message is **NOT** escaped. You're fully responsible of what the string contains.
+```html
+<div class="alert alert-success">
+    Your message was sent!
+</div>
+
+<div class="alert alert-info">
+    <strong>We will email you a copy!</strong>
+</div>
+```
+
+> **Warning:** the message is **NOT** escaped. If you need to escape the text, use [`escape()`](#escaping-the-text).
+
+#### Escaping the text
+
+Since the `message()` method doesn't escape or encodes the text, you can use the `escape()` method to do the same, but encoding the string.
+
+```php
+<?php
+
+alert()->escape('<script>alert("Let me escape from here")</script>')
+    ->success();
+```
+
+```html
+<div class="alert alert-success">
+    &lt;script&gt;alert(&quot;Let me escape from here&quot;)&lt;/script&gt;
+</div>
+```
+
+> Advice: It's recommended to use `escape()` when you deal with strings set by the user to avoid *HTML poisoning* or *XSS attacks*. 
 
 #### Using Localization
 
@@ -82,6 +115,12 @@ Instead of witting a raw message, you can use the `lang()` method, which is a mi
 <?php
 
 alert()->lang('email.sent')->success();
+```
+
+```html
+<div class="alert alert-success">
+    Your email has been sent succesfully!
+</div>
 ```
 
 ### Alert Type
@@ -106,11 +145,17 @@ alert()->message('Your message was sent!')
     ->primary();
 ```
 
+```html
+<div class="alert alert-primary">
+    Your message was sent!
+</div>
+```
+
 > By default, the Alert type is not set in your Alert, so they will be transparent, but you can [set a default](#defaults).
 
 ### Dismissible
 
-To make an Alert dismissible, use the `dismissable()` method. 
+To make an Alert dismissible, use the `dismissable()` method. This will add the necessary code to make the alert dismissible.
 
 ```php
 <?php
@@ -118,12 +163,20 @@ To make an Alert dismissible, use the `dismissable()` method.
 alert()->message('Your message was sent!')
     ->success()
     ->dismissible();
+```
 
+```html
+<div class="alert alert-info alert-dismissible fade show">
+    Your message was sent!
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
 ```
 
 It also accepts as first parameter a boolean to enable or disable the `show` class (visible), and optionally a class (or classes) to use for animation, like with [animate.css](https://daneden.github.io/animate.css/).
 
-By default, if it's dismissible, it will use the `fade` class for animation.
+By default it will use the `fade` class for animation.
 
 ```php
 <?php
@@ -133,12 +186,20 @@ alert()->message('Ups, the recipient did not reply!')
     ->dismissible(false, 'animated bounceOutLeft');
 ```
 
-When using a dismissible Alert, the default dismissible class will be added, along with the button to dismiss at the end.
+```html
+<div class="alert alert-warning alert-dismissible animated bounceOutLeft">
+    Ups, the recipient did not reply!
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+```
+
+When using a dismissible Alert, the default dismissible class `alert-dismissible` will be added, along with the button to dismiss at the end.
 
 ### Additional Classes
 
 You can issue additional classes to your Alert seamlessly using the `classes()` method, which accepts a list of classes to be added to the Alert.
-
 
 ```php
 <?php
@@ -146,6 +207,12 @@ You can issue additional classes to your Alert seamlessly using the `classes()` 
 alert()->message('Your message was sent!')
     ->success()
     ->classes('message-sent', 'global-alert');
+```
+
+```html
+<div class="alert alert-success message-sent global-alert">
+    Your message was sent!
+</div>
 ```
 
 ### Defaults
