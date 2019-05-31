@@ -6,7 +6,7 @@ use BadMethodCallException;
 use DarkGhostHunter\Laralerts\Alert;
 use DarkGhostHunter\Laralerts\AlertBag;
 use DarkGhostHunter\Laralerts\AlertFactory;
-use Illuminate\Contracts\Session\Session;
+use Illuminate\Session\Store as Session;
 use Mockery;
 use Orchestra\Testbench\TestCase;
 
@@ -90,7 +90,7 @@ class AlertFactoryTest extends TestCase
             ->with(\Mockery::type(Alert::class))
             ->andReturn($this->mockAlertBag);
 
-        $this->mockSession->shouldReceive('put')
+        $this->mockSession->shouldReceive('flash')
             ->once()
             ->with('test-key', $this->mockAlertBag)
             ->andReturnNull();
@@ -125,7 +125,7 @@ class AlertFactoryTest extends TestCase
             ->with(\Mockery::type(Alert::class))
             ->andReturn($this->mockAlertBag);
 
-        $this->mockSession->shouldReceive('put')
+        $this->mockSession->shouldReceive('flash')
             ->twice()
             ->with($this->factory->getKey(), $this->mockAlertBag)
             ->andReturnNull();
@@ -145,7 +145,7 @@ class AlertFactoryTest extends TestCase
             ->with(\Mockery::type(Alert::class))
             ->andReturn($this->mockAlertBag);
 
-        $this->mockSession->shouldReceive('put')
+        $this->mockSession->shouldReceive('flash')
             ->with($this->factory->getKey(), $this->mockAlertBag)
             ->andReturnNull();
 
@@ -169,7 +169,7 @@ class AlertFactoryTest extends TestCase
         $this->expectException(BadMethodCallException::class);
 
         $this->mockAlertBag->shouldNotReceive('add');
-        $this->mockSession->shouldNotReceive('put');
+        $this->mockSession->shouldNotReceive('flash');
 
         $this->factory->anInvalidMethod('with', 'invalid', 'arguments');
     }

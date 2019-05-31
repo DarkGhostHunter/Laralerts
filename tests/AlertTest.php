@@ -53,6 +53,17 @@ class AlertTest extends TestCase
         $this->assertEquals('successful', $this->alert->getMessage());
     }
 
+    public function testMessageEncode()
+    {
+        $this->assertNull($this->alert->getMessage());
+
+        $this->alert->escape('<script>alert("should be escaped")</script>');
+
+        $escaped = '&lt;script&gt;alert(&quot;should be escaped&quot;)&lt;/script&gt;';
+
+        $this->assertEquals($escaped, $this->alert->getMessage());
+    }
+
     public function testToJson()
     {
         $this->alert->message('test-message');
