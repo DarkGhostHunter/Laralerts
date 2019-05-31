@@ -1,0 +1,65 @@
+{
+    "name": "darkghosthunter/laralerts",
+    "description": "Consistenly flash multiple alerts in your application",
+    "keywords": [
+        "darkghosthunter",
+        "laralerts",
+        "alerts",
+        "notifications",
+        "flash",
+        "session",
+        "laravel"
+    ],
+    "homepage": "https://github.com/darkghosthunter/laralerts",
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Italo Israel Baeza Cabrera",
+            "email": "darkghosthunter@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^7.1",
+        "ext-json": "*",
+        "illuminate/support": "5.8.*"
+    },
+    "require-dev": {
+        "orchestra/testbench": "3.8.*",
+        "phpunit/phpunit": "^8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "DarkGhostHunter\\Laralerts\\": "src"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "DarkGhostHunter\\Laralerts\\Tests\\": "tests"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "test-coverage": "vendor/bin/phpunit --coverage-html coverage"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "DarkGhostHunter\\Laralerts\\LaralertsServiceProvider"
+            ],
+            "aliases": {
+                "Alert": "DarkGhostHunter\\Laralerts\\Facades\\Alert"
+            }
+        }
+    }
+}
