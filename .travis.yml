@@ -6,15 +6,13 @@ php:
   - 7.3
 
 env:
-  matrix:
-    - COMPOSER_FLAGS="--prefer-lowest"
-    - COMPOSER_FLAGS=""
   global:
     - CC_TEST_REPORTER_ID=90d4c55b7332ed3a43142ea384614777e3102f39729268c4a87f876a85d505a9
 
 before_script:
   - travis_retry composer self-update
   - travis_retry composer update ${COMPOSER_FLAGS} --no-interaction --prefer-source
+  - composer require php-coveralls/php-coveralls:2.1.* --dev
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
@@ -25,3 +23,6 @@ script:
 after_script:
   - php vendor/bin/ocular code-coverage:upload --format=php-clover coverage.clover
   - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+
+after_success:
+  - travis_retry php vendor/bin/php-coveralls --verbose
