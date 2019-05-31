@@ -1,6 +1,6 @@
 {
     "name": "darkghosthunter/laralerts",
-    "description": "Consistenly flash multiple alerts in your application",
+    "description": "Quickly create one or multiple Alerts from your backend",
     "keywords": [
         "darkghosthunter",
         "laralerts",
@@ -23,11 +23,13 @@
     "require": {
         "php": "^7.1",
         "ext-json": "*",
-        "illuminate/support": "5.8.*"
+        "illuminate/support": "5.8.*",
+        "illuminate/session": "5.8.*",
+        "illuminate/view": "5.8.*"
     },
     "require-dev": {
-        "orchestra/testbench": "3.8.*",
-        "phpunit/phpunit": "^8.0"
+        "phpunit/phpunit": "^8.0",
+        "orchestra/testbench": "3.8.*"
     },
     "autoload": {
         "psr-4": {
