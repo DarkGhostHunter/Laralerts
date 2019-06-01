@@ -10,14 +10,13 @@ env:
 
 before_script:
   - travis_retry composer self-update
+
+install:
   - travis_retry composer update ${COMPOSER_FLAGS} --no-interaction --prefer-source
-  - composer require php-coveralls/php-coveralls:2.1.* --dev
-  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - travis_retry composer require php-coveralls/php-coveralls:2.1.* --dev
+  - travis_retry curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
-
-script:
-  - vendor/bin/phpunit --coverage-text --coverage-clover=coverage.clover
 
 after_script:
   - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
