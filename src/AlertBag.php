@@ -6,10 +6,9 @@ use Countable;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Contracts\Support\Jsonable;
-use Illuminate\Contracts\Support\Renderable;
 use JsonSerializable;
 
-class AlertBag implements Arrayable, Countable, Jsonable, JsonSerializable, Htmlable, Renderable
+class AlertBag implements Arrayable, Countable, Jsonable, JsonSerializable, Htmlable
 {
     /**
      * Alerts inside the Session
@@ -177,22 +176,12 @@ class AlertBag implements Arrayable, Countable, Jsonable, JsonSerializable, Html
     }
 
     /**
-     * Get the evaluated contents of the object.
-     *
-     * @return string
-     */
-    public function render()
-    {
-        return $this->toHtml();
-    }
-
-    /**
      * Return a string representation of this instance
      *
      * @return string
      */
     public function __toString()
     {
-        return $this->render();
+        return $this->toHtml();
     }
 }

@@ -4,7 +4,6 @@ namespace DarkGhostHunter\Laralerts\Tests;
 
 use DarkGhostHunter\Laralerts\Alert;
 use DarkGhostHunter\Laralerts\AlertBag;
-use DOMDocument;
 use Orchestra\Testbench\TestCase;
 
 class AlertBagTest extends TestCase
@@ -145,7 +144,6 @@ class AlertBagTest extends TestCase
         $html = '<div class="alert" role="alert">test-message</div><div class="alert" role="alert">second</div>';
 
         $this->assertEquals($html, $this->alertBag->toHtml());
-        $this->assertEquals($html, $this->alertBag->render());
         $this->assertEquals($html, (string)$this->alertBag);
     }
 
