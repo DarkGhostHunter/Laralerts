@@ -6,7 +6,9 @@
 
 # Laralerts
 
-Quickly set one or multiple Alerts (Bootstrap 4) in your backend, and render them in the frontend.
+Quickly set one or multiple Alerts in your backend, and render them in the frontend.
+
+This version 2.0 is compatible with any framework, and allows you to edit the rendered HTML.
 
 ## Installation
 
@@ -16,7 +18,9 @@ You can install the package via composer:
 composer require darkghosthunter/laralerts
 ```
 
-Additionally, [download Bootstrap 4](https://getbootstrap.com) for your frontend.
+Additionally, [download Bootstrap 4](https://getbootstrap.com) for your frontend. 
+
+And that's it. This works out of the box.
 
 ## Basic Usage
 
@@ -38,29 +42,29 @@ class ExampleController extends Controller
      */
     public function sent()
     {
-        alert('Your message was sent!', 'success');
+        alert('Your message was sent!', 'success', true);
             
         Alert::message('We will also email you a copy!')
             ->info()
-            ->dismissible();
+            ->dismiss();
         
         return response()->view('page');
     }
 }
 ```
 
-The `alert()` helper accepts the message text and alert type, quickly making your alerts into one-liners.
+The `alert()` helper accepts the message text, alert type, and dismiss, quickly making your alerts into one-liners.
 
 To render them in the frontend, use the `@alerts` Blade directive which will take care of the magic.
 
 ```blade
 <div class="header">
-    <h1>Welcome</h1>
-    <div class="alerts">
-        @alerts
-    </div>
+    <h1>Welcome to my site</h1>
+    @alerts
 </div>
 ```
+
+And if there is no Alerts to show, don't worry, nothing will be rendered.
 
 ### Message
 
@@ -69,10 +73,12 @@ Add text inside the Alert using the `message()` method. You can use a simple str
 ```php
 <?php
 
+use DarkGhostHunter\Laralerts\Facades\Alert;
+
 alert()->message('Your message was sent!')
     ->success();
     
-Alert::message('<strong>We will email you a copy!</strong>')
+Alert::message('We will email you a copy!')
     ->info();
 ```
 
@@ -86,26 +92,26 @@ Alert::message('<strong>We will email you a copy!</strong>')
 </div>
 ```
 
-> **Warning:** the message is **NOT** escaped. If you need to escape the text, use [`escape()`](#escaping-the-text).
+> By default, the `message()` method escapes the text. If you want to send a raw message, you should use `raw()`.
 
-#### Escaping the text
+#### Raw message
 
-Since the `message()` method doesn't escape or encodes the text, you can use the `escape()` method to do the same, but encoding the string.
+Since the `message()` method escape the text for safety, you can use the `raw()` method to do the same but without touching the string.
 
 ```php
 <?php
 
-alert()->escape('<script>alert("Let me escape from here")</script>')
+alert()->raw('<strong>This is very important</strong>')
     ->success();
 ```
 
 ```html
 <div class="alert alert-success">
-    &lt;script&gt;alert(&quot;Let me escape from here&quot;)&lt;/script&gt;
+    <strong>This is very important</strong>
 </div>
 ```
 
-> Advice: It's recommended to use `escape()` when you deal with strings set by the user to avoid *HTML poisoning* or *XSS attacks*. 
+> Advice: Don't use when you're pushing user-generated content.
 
 #### Using Localization
 
@@ -153,16 +159,16 @@ alert()->message('Your message was sent!')
 
 > By default, the Alert type is not set in your Alert, so they will be transparent, but you can [set a default](#defaults).
 
-### Dismissible
+### Dismiss
 
-To make an Alert dismissible, use the `dismissable()` method. This will add the necessary code to make the alert dismissible.
+To make an Alert dismissible, use the `dismiss()` method. This will change the HTML code to make the alert dismissible.
 
 ```php
 <?php
 
 alert()->message('Your message was sent!')
     ->success()
-    ->dismissible();
+    ->dismiss();
 ```
 
 ```html
@@ -173,29 +179,6 @@ alert()->message('Your message was sent!')
     </button>
 </div>
 ```
-
-It also accepts as first parameter a boolean to enable or disable the `show` class (visible), and optionally a class (or classes) to use for animation, like with [animate.css](https://daneden.github.io/animate.css/).
-
-By default it will use the `fade` class for animation.
-
-```php
-<?php
-
-alert()->message('Ups, the recipient did not reply!')
-    ->warning()
-    ->dismissible(false, 'animated bounceOutLeft');
-```
-
-```html
-<div class="alert alert-warning alert-dismissible animated bounceOutLeft">
-    Ups, the recipient did not reply!
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-    </button>
-</div>
-```
-
-When using a dismissible Alert, the default dismissible class `alert-dismissible` will be added, along with the button to dismiss at the end.
 
 ### Additional Classes
 
@@ -215,109 +198,80 @@ alert()->message('Your message was sent!')
 </div>
 ```
 
-### Defaults
+### Configuration
 
-Additionally, you can ease your developer life by setting defaults for the Alerts being made in your application.
+Laralerts works out-of-the-box with some common defaults, but if you need a better approach, you can set configure some parameters. First, publish the configuration file.
 
-For this to work, set the defaults inside the `boot()` method of your `AppServiceProvider`. 
+```bash
+php artisan vendor:publish --provider="DarkGhostHunter\Laralerts\LaralertsServiceProvider"
+``` 
+
+Let's examine the configuration array:
 
 ```php
-<?php
+<?php 
 
-namespace App\Providers;
-
-use DarkGhostHunter\Laralerts\Facades\Alert;
-use Illuminate\Support\ServiceProvider;
-
-class AppServiceProvider extends ServiceProvider
-{
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
-    public function boot()
-    {
-        Alert::setDefaultType('info')
-            ->setDefaultDismissible(true)
-            ->setDefaultClasses('font-weight-bold', 'text-center');
-    }
-
-}
+return [
+    'component' => 'alerts',
+    'key' => 'alerts',
+    'type' => null,
+];
 ```
 
-If you are concerned with performance, you can use the `resolving()` method of the Service Container to set the defaults only when resolving the `AlertFactory` from it.
+#### Component
+
+This library registers the `@alerts` blade component, that has the container where all the Alerts will be rendered. If you're using the same namespace, you may want to change it so it doesn't collide, like to `@laralerts`.
 
 ```php
-<?php
+<?php 
 
-$this->app->resolving(AlertFactory::class, function ($factory) {
-    $factory->setDefaultType('info')
-        ->setDefaultDismissible(true)
-        ->setDefaultClasses('font-weight-bold', 'text-center');
-});
-```
-
-#### Default Type
-
-The default type of the Alerts in the Application. You can use any of the method names.
-
-```php
-<?php
-
-use DarkGhostHunter\Laralerts\Facades\Alert;
-
-Alert::setType('secondary');
-```
-
-#### Default Dismissible
-
-If the alerts should be dismissible by default. When not, they will be fixed. 
-
-```php
-<?php
-
-use DarkGhostHunter\Laralerts\Facades\Alert;
-
-Alert::setDefaultDismissible(true);
-```
-
-#### Default Classes
-
-You can add default classes to the Alert HTML tag. You can use this for custom entrance animation classes, or other styling. These will be always appended to the tag.
-
-```php
-<?php
-
-use DarkGhostHunter\Laralerts\Facades\Alert;
-
-Alert::setDefaultClasses('text-center', 'font-weight-bold');
+return [
+    'component' => 'laralerts',
+];
 ```
 
 #### Session Key
 
-By default, this package puts the `AlertBag` into the `alerts` key of the Session. If you're using it for other purposes, it may be overwritten. To avoid this, you can change the default key for anything you want so it doesn't collide with other keys.
+The Alert Bag is registered into th Session by a given key, called `_alerts`. If you're using this key name for other things, you should change for other key, since if it collides the Alert Bag won't be flashed into the session.
 
 ```php
-<?php
+<?php 
 
-use DarkGhostHunter\Laralerts\Facades\Alert;
-
-Alert::setKey('Laralerts');
+return [
+    'session_key' => '_alerts',
+];
 ```
 
-## Contributing
+#### Default Type
 
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
+The default type of the Alerts in the Application. You can use any of the method names, like `success` or `info`. You can override the type anytime when you create an Alert manually.
+
+```php
+<?php 
+
+return [
+    'type' => 'primary',
+];
+```
+
+### Modifying the HTML
+
+You may be using another frontend framework different from Bootstrap 4, or you may want to change the HTML to better suit your application design. In any case, you can override the View files in `views/vendor/laralerts`:
+
+* `alert.blade.php`: The HTML for a single Alert.
+* `alert-dismiss.blade.php`: Same as above, but for a dismissible Alert.
+* `container.blade.php`: The HTML that contains all the Alerts
+
+The Alert view receives:
+
+* `$message`: The message to show inside the Alert.
+* `$type`: The type of Alert.  
+* `$classes`: The classes to add to the HTML tag.
+* `$dismiss`: If the Alert should be dismissible.
 
 ### Security
 
 If you discover any security related issues, please email darkghosthunter@gmail.com instead of using the issue tracker.
-
-## Credits
-
-- [Italo Israel Baeza Cabrera](https://github.com/darkghosthunter)
-- [All Contributors](../../contributors)
 
 ## License
 

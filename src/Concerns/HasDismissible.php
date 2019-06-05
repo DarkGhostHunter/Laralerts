@@ -5,28 +5,30 @@ namespace DarkGhostHunter\Laralerts\Concerns;
 trait HasDismissible
 {
     /**
+     * If the Alert should be dismissible
+     *
+     * @var bool
+     */
+    protected $dismiss;
+
+    /**
      * Return if the Alert should be dismissible
      *
      * @return bool
      */
-    public function isDismissible()
+    public function isDismiss()
     {
-        return $this->dismissible;
+        return $this->dismiss;
     }
+
     /**
      * Should the Alert be dismissible
      *
-     * @param bool $show
-     * @param string $animationClass
      * @return \DarkGhostHunter\Laralerts\Alert
      */
-    public function dismissible(?bool $show = true, ?string $animationClass = 'fade')
+    public function dismiss()
     {
-        $this->dismissible = true;
-
-        $this->show = $show;
-
-        $this->animationClass = $animationClass;
+        $this->dismiss = true;
 
         return $this;
     }
@@ -38,53 +40,7 @@ trait HasDismissible
      */
     public function fixed()
     {
-        $this->dismissible = false;
-
-        return $this;
-    }
-
-    /**
-     * Return if the Alert should be showed when is dismissible
-     *
-     * @return mixed
-     */
-    public function isShow()
-    {
-        return $this->show;
-    }
-
-    /**
-     * Set if the Alert should be showed when is dismissible
-     *
-     * @param bool $show
-     * @return \DarkGhostHunter\Laralerts\Alert
-     */
-    public function setShow(bool $show)
-    {
-        $this->show = $show;
-
-        return $this;
-    }
-
-    /**
-     * Return the Animation Class used by the Alert for dismissing
-     *
-     * @return string
-     */
-    public function getAnimationClass()
-    {
-        return $this->animationClass;
-    }
-
-    /**
-     * Set the Animation Class used by the Alert for dismissing
-     *
-     * @param string $class
-     * @return $this
-     */
-    public function setAnimationClass(string $class)
-    {
-        $this->animationClass = $class;
+        $this->dismiss = false;
 
         return $this;
     }

@@ -4,6 +4,19 @@ namespace DarkGhostHunter\Laralerts\Concerns;
 
 trait HasClasses
 {
+    /**
+     * Type of Alert (class)
+     *
+     * @var string
+     */
+    protected $type;
+
+    /**
+     * Additional classes to add to the HTML tag
+     *
+     * @var string
+     */
+    protected $classes;
 
     /**
      * Sets the Alert class
@@ -98,16 +111,16 @@ trait HasClasses
     /**
      * Set the Alert type class
      *
-     * @param string $class
+     * @param string $type
      * @return \DarkGhostHunter\Laralerts\Alert
      */
-    public function setType(string $class)
+    public function setType(string $type)
     {
-        if (!in_array($class, self::TYPES, true)) {
-            throw new \BadMethodCallException("The $class is not a valid Alert type");
+        if (!in_array($type, self::TYPES, false)) {
+            throw new \BadMethodCallException("The [$type] is not a valid Alert type");
         }
 
-        $this->type = $class;
+        $this->type = $type;
 
         return $this;
     }
@@ -134,7 +147,7 @@ trait HasClasses
             $classes = $classes[0];
         }
 
-        $this->classes = implode(' ', $classes);
+        $this->classes = trim(implode(' ', $classes));
 
         return $this;
     }
