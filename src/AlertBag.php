@@ -6,6 +6,8 @@ use Countable;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Contracts\Support\Jsonable;
+use Illuminate\Contracts\View\Factory as View;
+use Illuminate\Support\HtmlString;
 use JsonSerializable;
 
 class AlertBag implements Arrayable, Countable, Jsonable, JsonSerializable, Htmlable
@@ -16,6 +18,23 @@ class AlertBag implements Arrayable, Countable, Jsonable, JsonSerializable, Html
      * @var array
      */
     protected $alerts = [];
+
+    /**
+     * The View Factory
+     *
+     * @var \Illuminate\Contracts\View\Factory
+     */
+    protected $view;
+
+    /**
+     * AlertBag constructor.
+     *
+     * @param \Illuminate\Contracts\View\Factory $view
+     */
+    public function __construct(View $view)
+    {
+        $this->view = $view;
+    }
 
     /**
      * Return the Alerts array
@@ -165,14 +184,9 @@ class AlertBag implements Arrayable, Countable, Jsonable, JsonSerializable, Html
      */
     public function toHtml()
     {
-        $tag = '';
-
-        foreach ($this->alerts as $alert) {
-            /** @var \DarkGhostHunter\Laralerts\Alert $alert */
-            $tag .= $alert->toHtml();
-        }
-
-        return $tag;
+        return new HtmlString(
+            $this->view->make('laralerts::container')->with('alerts', $this->alerts)->render()
+        );
     }
 
     /**
