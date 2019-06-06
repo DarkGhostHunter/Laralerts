@@ -288,7 +288,7 @@ return [
 ];
 ```
 
-> For your safety, the Alerts serialize and unserialize as `array`, so you don't have to worry about storage concerns. In prior versions, the whole Alert Bag was included, which added a lot of overhead.
+> For your ease of mind, the Alerts serialize and unserialize as `array`, so you don't have to worry about storage concerns. In prior versions, the whole Alert Bag was included, which added a lot of overhead.
 
 #### Type
 
