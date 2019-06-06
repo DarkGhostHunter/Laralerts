@@ -18,7 +18,7 @@ You can install the package via composer:
 composer require darkghosthunter/laralerts
 ```
 
-Additionally, [download Bootstrap 4](https://getbootstrap.com) for your frontend. 
+Additionally, [download Bootstrap 4](https://getbootstrap.com) for your frontend if you don't have anything. 
 
 And that's it. This works out of the box.
 
@@ -53,7 +53,7 @@ class ExampleController extends Controller
 }
 ```
 
-The `alert()` helper accepts the message text, alert type, and dismiss, quickly making your alerts into one-liners.
+The `alert()` helper accepts the text *message*, alert *type*, and if it should be *dismissible*, quickly making your alerts into one-liners.
 
 To render them in the frontend, use the `@alerts` Blade directive which will take care of the magic.
 
@@ -96,7 +96,7 @@ Alert::message('We will email you a copy!')
 
 #### Raw message
 
-Since the `message()` method escape the text for safety, you can use the `raw()` method to do the same but without touching the string.
+Since the `message()` method escape the text for safety, you can use the `raw()` method to do the same with the untouched string.
 
 ```php
 <?php
@@ -111,11 +111,11 @@ alert()->raw('<strong>This is very important</strong>')
 </div>
 ```
 
-> Advice: Don't use when you're pushing user-generated content.
+> Advice: Don't use `raw()` when you need to show **user-generated content**.
 
 #### Using Localization
 
-Instead of witting a raw message, you can use the `lang()` method, which is a mirror to [the `@lang` Blade directive](https://laravel.com/docs/localization#retrieving-translation-strings), to localize the message on the fly.
+To gracefully localize messages on the fly, use the `lang()` method, which is a mirror to [the `@lang` Blade directive](https://laravel.com/docs/localization#retrieving-translation-strings).
 
 ```php
 <?php
@@ -157,11 +157,11 @@ alert()->message('Your message was sent!')
 </div>
 ```
 
-> By default, the Alert type is not set in your Alert, so they will be transparent, but you can [set a default](#defaults).
+> By default, the Alert type is not set in your Alert, so they will be transparent, but you can [set a default](#configuration).
 
 ### Dismiss
 
-To make an Alert dismissible, use the `dismiss()` method. This will change the HTML code to make the alert dismissible.
+To make an Alert dismissible, use the `dismiss()` method. This will change the HTML to make the alert dismissible.
 
 ```php
 <?php
@@ -198,6 +198,41 @@ alert()->message('Your message was sent!')
 </div>
 ```
 
+### Adding Alerts to a JSON Response
+
+This library has a convenient way to return alerts into your JSON Responses. Just simply add the `AppendAlertsToJsonResponse` middleware into your routes or `app/Http/Kernel`, [as the documentation says](https://laravel.com/docs/middleware#registering-middleware).
+
+When you return a `JsonResponse` to the browser, the middleware will append the Alerts as JSON using the same Session Key defined in the configuration, which is `_alerts` by default, but it also accepts the `key` parameter to use as an alternative. Here is the lazy way to do it:
+
+```php
+<?php
+
+use Illuminate\Support\Facades\Route;
+use DarkGhostHunter\Laralerts\Http\Middleware\AppendAlertsToJsonResponse;
+
+Route::post('json')
+    ->uses('JsonController@postJson')
+    ->middleware(AppendAlertsToJsonResponse::class.':_app-alerts');
+```
+
+You should see a response
+
+```json
+{
+    "is_good": "true",
+    "_app-alerts": [
+        {
+            "message": "Your email has been sent!",
+            "type" : "success",
+            "dismiss": true,
+            "classes": null
+        }
+    ]
+}
+```
+
+The Alert will be injected into the Session only if it has started. Since the `api` routes are stateless, there is no need to worry about disabling the Session in these routes. 
+
 ### Configuration
 
 Laralerts works out-of-the-box with some common defaults, but if you need a better approach, you can set configure some parameters. First, publish the configuration file.
@@ -212,27 +247,27 @@ Let's examine the configuration array:
 <?php 
 
 return [
-    'component' => 'alerts',
-    'key' => 'alerts',
+    'directive' => 'alerts',
+    'key' => '_alerts',
     'type' => null,
 ];
 ```
 
-#### Component
+#### Directive
 
-This library registers the `@alerts` blade component, that has the container where all the Alerts will be rendered. If you're using the same namespace, you may want to change it so it doesn't collide, like to `@laralerts`.
+This library registers the `@alerts` blade component, that has the container where all the Alerts will be rendered. If you're using the same namespace, you may want to change it so it doesn't collide with other Blade directives, like using the safe `@laralerts`.
 
 ```php
 <?php 
 
 return [
-    'component' => 'laralerts',
+    'directive' => 'laralerts',
 ];
 ```
 
 #### Session Key
 
-The Alert Bag is registered into th Session by a given key, called `_alerts`. If you're using this key name for other things, you should change for other key, since if it collides the Alert Bag won't be flashed into the session.
+The Alert Bag is registered into the Session by a given key, called `_alerts`. If you're using this key name for other things, you should change for other key, since if it collides the Alert Bag won't be flashed into the session.
 
 ```php
 <?php 
@@ -242,9 +277,11 @@ return [
 ];
 ```
 
-#### Default Type
+> For your safety, the Alerts serialize and unserialize as `array`, so you don't have to worry about storage concerns. In prior versions, the whole Alert Bag was included, which added a lot of overhead.
 
-The default type of the Alerts in the Application. You can use any of the method names, like `success` or `info`. You can override the type anytime when you create an Alert manually.
+#### Type
+
+The default type of the Alerts in the Application. You can use any of the [included type names](#alert-type), like `success` or `info`. You can override the type anytime when you create an Alert manually.
 
 ```php
 <?php 
@@ -254,13 +291,33 @@ return [
 ];
 ```
 
+#### Modifying the Types 
+ 
+If you need to modify the Alert types, you can use the static method `Alert::setTypes()` with an array of accepted types of Alerts. You can do this on the boot method or register method of your `AppServiceProvider`.
+
+```php
+<?php
+
+/**
+ * Bootstrap any application services.
+ *
+ * @return void
+ */
+public function boot()
+{
+    // ...
+    
+    \DarkGhostHunter\Laralerts\Alert::setTypes(['info', 'success', 'warning', 'danger', 'my-custom-type']);
+}
+```
+
 ### Modifying the HTML
 
 You may be using another frontend framework different from Bootstrap 4, or you may want to change the HTML to better suit your application design. In any case, you can override the View files in `views/vendor/laralerts`:
 
 * `alert.blade.php`: The HTML for a single Alert.
 * `alert-dismiss.blade.php`: Same as above, but for a dismissible Alert.
-* `container.blade.php`: The HTML that contains all the Alerts
+* `alerts.blade.php`: The HTML that contains all the Alerts
 
 The Alert view receives:
 
@@ -268,6 +325,15 @@ The Alert view receives:
 * `$type`: The type of Alert.  
 * `$classes`: The classes to add to the HTML tag.
 * `$dismiss`: If the Alert should be dismissible.
+
+You can change the HTML to whatever you want, like adapting the Alert to be used with [Bulma.io Notifications](https://bulma.io/documentation/elements/notification/).
+
+```blade
+<div class="notification is-{{ $type }} {{ $classes }}">
+    @if($dismiss)<button class="delete"></button>@endif 
+    {!! $message !!}
+</div>
+```
 
 ### Security
 

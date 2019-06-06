@@ -5,20 +5,19 @@ use DarkGhostHunter\Laralerts\AlertFactory;
 if (! function_exists('alert')) {
 
     /**
-     * Returns the Alert Factory.
-     * If a message is passed, we'll assume you want to create an Alert
+     * Creates an Alert
      *
      * @param string|null $message
      * @param string|null $type
-     * @param bool $dismiss
+     * @param bool|null $dismiss
      * @return \DarkGhostHunter\Laralerts\AlertFactory|\DarkGhostHunter\Laralerts\Alert
      */
-    function alert(string $message = null, string $type = 'info', bool $dismiss = null) {
-
+    function alert(string $message = null, string $type = null, bool $dismiss = null)
+    {
         /** @var AlertFactory $factory */
         $factory = app(AlertFactory::class);
 
-        if (!$message) {
+        if (! $message) {
             return $factory;
         }
 
@@ -28,13 +27,10 @@ if (! function_exists('alert')) {
             $alert->setType($type);
         }
 
-        if ($dismiss === true) {
-            $alert->dismiss();
-        } elseif($dismiss === false) {
-            $alert->fixed();
+        if ($dismiss !== null) {
+            $alert->setDismiss($dismiss);
         }
 
         return $alert;
     }
-
 }

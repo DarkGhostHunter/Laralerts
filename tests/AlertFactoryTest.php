@@ -6,7 +6,7 @@ use BadMethodCallException;
 use DarkGhostHunter\Laralerts\Alert;
 use DarkGhostHunter\Laralerts\AlertBag;
 use DarkGhostHunter\Laralerts\AlertFactory;
-use Illuminate\Session\Store as Session;
+use Illuminate\Session\Store;
 use Mockery;
 use Orchestra\Testbench\TestCase;
 
@@ -15,142 +15,90 @@ class AlertFactoryTest extends TestCase
     use Concerns\RegistersPackage;
 
     /**
-     * @var AlertBag & Mockery\Mock
-     */
-    protected $mockAlertBag;
-
-    /**
-     * @var Session & Mockery\Mock
-     */
-    protected $mockSession;
-
-    /**
-     * @var AlertFactory
+     * @var \DarkGhostHunter\Laralerts\AlertFactory & \Mockery\MockInterface
      */
     protected $factory;
+
+    /** @var \Illuminate\Session\Store & \Mockery\MockInterface */
+    protected $mockStore;
+
+    /** @var \DarkGhostHunter\Laralerts\AlertBag & \Mockery\MockInterface */
+    protected $mockBag;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->mockAlertBag = Mockery::mock(AlertBag::class);
+        $this->mockStore = $this->mock(Store::class);
+        $this->mockBag = $this->mock(AlertBag::class);
 
-        $this->mockSession = Mockery::mock(Session::class);
-
-        $this->factory = new AlertFactory($this->mockAlertBag, $this->mockSession);
-
+        $this->factory = new AlertFactory($this->mockBag, $this->mockStore, 'test-type', true);
     }
 
-    public function testDefaults()
-    {
-        $this->assertNull($this->factory->getDefaultAnimationClass());
-        $this->assertNull($this->factory->getDefaultClasses());
-        $this->assertFalse($this->factory->isDefaultDismiss());
-        $this->assertTrue($this->factory->isDefaultShow());
-        $this->assertNull($this->factory->getDefaultType());
-
-        $this->factory->setDefaultAnimationClass($animationClass = 'test-animation');
-        $this->factory->setDefaultClasses($classes = 'test-class');
-        $this->factory->setDefaultDismiss($dismissible = true);
-        $this->factory->setDefaultShow($show = false);
-        $this->factory->setDefaultType($type = 'primary');
-
-        $this->assertEquals($animationClass, $this->factory->getDefaultAnimationClass());
-        $this->assertEquals([$classes], $this->factory->getDefaultClasses());
-        $this->assertEquals($dismissible, $this->factory->isDefaultDismiss());
-        $this->assertEquals($show, $this->factory->isDefaultShow());
-        $this->assertEquals($type, $this->factory->getDefaultType());
-
-        $alert = $this->factory->make();
-
-        $this->assertInstanceOf(Alert::class, $alert);
-        $this->assertEquals($animationClass, $alert->getAnimationClass());
-        $this->assertEquals($classes, $alert->getClasses());
-        $this->assertEquals($dismissible, $alert->isDismiss());
-        $this->assertEquals($show, $alert->isShow());
-        $this->assertEquals($type, $alert->getType());
-    }
-
-    public function testInvalidDefaultType()
-    {
-        $this->expectException(BadMethodCallException::class);
-        $this->factory->setDefaultType('invalid-type');
-    }
-
-    public function testDefaultClassesArray()
-    {
-        $this->factory->setDefaultClasses(['foo', 'bar']);
-        $this->assertEquals(['foo', 'bar'], $this->factory->getDefaultClasses());
-    }
-
-    public function testKey()
-    {
-        $this->mockAlertBag->shouldReceive('add')
-            ->once()
-            ->with(\Mockery::type(Alert::class))
-            ->andReturn($this->mockAlertBag);
-
-        $this->mockSession->shouldReceive('flash')
-            ->once()
-            ->with('test-key', $this->mockAlertBag)
-            ->andReturnNull();
-
-        $this->assertEquals('alerts', $this->factory->getKey());
-        $this->factory->setKey($key = 'test-key');
-        $this->assertEquals($key, $this->factory->getKey());
-
-        $this->factory->add(new Alert());
-    }
-
-    public function testAlertBag()
+    public function testGetAndSetAlertBag()
     {
         $this->assertInstanceOf(AlertBag::class, $this->factory->getAlertBag());
+        $this->assertEquals($this->mockBag, $this->factory->getAlertBag());
 
-        $randomAlertBag = new class extends AlertBag {};
+        $bag = new AlertBag();
 
-        $this->factory->setAlertBag($randomAlertBag);
-
-        $this->assertInstanceOf(get_class($randomAlertBag), $this->factory->getAlertBag());
+        $this->factory->setAlertBag($bag);
+        $this->assertEquals($bag, $this->factory->getAlertBag());
     }
 
-    public function testMakeAlert()
+    public function testGetAndSetStore()
     {
-        $this->assertInstanceOf(Alert::class, $this->factory->make());
+        $this->assertInstanceOf(Store::class, $this->factory->getStore());
+        $this->assertEquals($this->mockStore, $this->factory->getStore());
+
+        $store = $this->mock(Store::class);
+
+        $this->factory->setStore($store);
+        $this->assertEquals($store, $this->factory->getStore());
     }
 
     public function testAddAlert()
     {
-        $this->mockAlertBag->shouldReceive('add')
-            ->twice()
-            ->with(\Mockery::type(Alert::class))
-            ->andReturn($this->mockAlertBag);
+        $this->mockBag->shouldReceive('add')
+            ->once()
+            ->with(Mockery::type(Alert::class))
+            ->andReturnUsing(function ($alert) { return $alert; });
 
-        $this->mockSession->shouldReceive('flash')
-            ->twice()
-            ->with($this->factory->getKey(), $this->mockAlertBag)
-            ->andReturnNull();
+        $alert = new Alert;
 
-        $alert = new Alert();
-
-        $alert->message('test-message');
-
-        $this->assertInstanceOf(Alert::class, $this->factory->add());
-        $this->assertInstanceOf(Alert::class, $receivedAlert = $this->factory->add($alert));
-        $this->assertEquals('test-message', $receivedAlert->getMessage());
+        $added = $this->factory->add($alert);
+        $this->assertEquals($alert, $added);
     }
 
-    public function testPassthroughsAlert()
+    public function testMake()
     {
-        $this->mockAlertBag->shouldReceive('add')
-            ->with(\Mockery::type(Alert::class))
-            ->andReturn($this->mockAlertBag);
+        $this->mockBag->shouldNotReceive('add');
 
-        $this->mockSession->shouldReceive('flash')
-            ->with($this->factory->getKey(), $this->mockAlertBag)
-            ->andReturnNull();
+        $alert = $this->factory->make(
+            'test', 'type', true, 'classes'
+        );
 
-        $this->assertInstanceOf(Alert::class, $this->factory->message('test'));
-        $this->assertInstanceOf(Alert::class, $this->factory->lang('test'));
+        $this->assertInstanceOf(Alert::class, $alert);
+        $this->assertEquals([
+            'message' => 'test',
+            'type' => 'type',
+            'dismiss' => true,
+            'classes' => 'classes'
+        ], $alert->toArray());
+    }
+
+    public function testBypassToAlert()
+    {
+        $this->mockBag->shouldReceive('add')
+            ->times(14)
+            ->with(Mockery::type(Alert::class))
+            ->andReturnUsing(function ($alert) { return $alert; });
+
+        $this->assertInstanceOf(Alert::class, $this->factory->message('foo'));
+        $this->assertInstanceOf(Alert::class, $this->factory->raw('bar'));
+        $this->assertInstanceOf(Alert::class, $this->factory->lang('baz'));
+        $this->assertInstanceOf(Alert::class, $this->factory->dismiss());
+        $this->assertInstanceOf(Alert::class, $this->factory->fixed());
         $this->assertInstanceOf(Alert::class, $this->factory->primary());
         $this->assertInstanceOf(Alert::class, $this->factory->secondary());
         $this->assertInstanceOf(Alert::class, $this->factory->success());
@@ -159,18 +107,14 @@ class AlertFactoryTest extends TestCase
         $this->assertInstanceOf(Alert::class, $this->factory->info());
         $this->assertInstanceOf(Alert::class, $this->factory->light());
         $this->assertInstanceOf(Alert::class, $this->factory->dark());
-        $this->assertInstanceOf(Alert::class, $this->factory->dismissible());
-        $this->assertInstanceOf(Alert::class, $this->factory->fixed());
-        $this->assertInstanceOf(Alert::class, $this->factory->classes('test-class'));
+        $this->assertInstanceOf(Alert::class, $this->factory->classes('test', 'test'));
     }
 
-    public function testDoesNotPassthroughsAlert()
+    public function testExceptionOnInvalidMethodToBypass()
     {
         $this->expectException(BadMethodCallException::class);
 
-        $this->mockAlertBag->shouldNotReceive('add');
-        $this->mockSession->shouldNotReceive('flash');
-
-        $this->factory->anInvalidMethod('with', 'invalid', 'arguments');
+        $this->factory->invalidType();
     }
+
 }

@@ -3,13 +3,10 @@
 namespace DarkGhostHunter\Laralerts;
 
 use BadMethodCallException;
-use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Contracts\View\Factory as ViewFactory;
+use Illuminate\Session\Store as Session;
 
-class AlertFactory implements Htmlable
+class AlertFactory
 {
-    use Concerns\HasDefaults;
-
     /**
      * Alert Bag
      *
@@ -18,29 +15,44 @@ class AlertFactory implements Htmlable
     protected $alertBag;
 
     /**
-     * View Factory
+     * Session Store
      *
-     * @var \Illuminate\Contracts\View\Factory
+     * @var \Illuminate\Session\Store
      */
-    protected $viewFactory;
+    protected $store;
 
     /**
-     * AlertFactory constructor.
+     * The default type for the Alerts
+     *
+     * @var string
+     */
+    protected $type;
+
+    /**
+     * If the Alerts should be dismissible by default
+     *
+     * @var bool
+     */
+    protected $dismiss;
+
+    /**
+     * Creates a new Alert Factory instance
      *
      * @param \DarkGhostHunter\Laralerts\AlertBag $alertBag
-     * @param \Illuminate\Contracts\View\Factory $viewFactory
-     * @param string $defaultType
+     * @param \Illuminate\Session\Store $session
+     * @param string $type
+     * @param bool $dismiss
      */
-    public function __construct(AlertBag $alertBag, ViewFactory $viewFactory, string $defaultType)
+    public function __construct(AlertBag $alertBag, Session $session, ?string $type, bool $dismiss)
     {
         $this->alertBag = $alertBag;
-        $this->defaultType = $defaultType;
-        $this->viewFactory = $viewFactory;
+        $this->store = $session;
+        $this->type = $type;
+        $this->dismiss = $dismiss;
     }
 
-
     /**
-     * Return the current Alert Bag
+     * Return the Alert Bag
      *
      * @return \DarkGhostHunter\Laralerts\AlertBag
      */
@@ -53,19 +65,36 @@ class AlertFactory implements Htmlable
      * Set the Alert Bag
      *
      * @param \DarkGhostHunter\Laralerts\AlertBag $alertBag
-     * @return \DarkGhostHunter\Laralerts\AlertFactory
      */
     public function setAlertBag(AlertBag $alertBag)
     {
         $this->alertBag = $alertBag;
-
-        return $this;
     }
 
     /**
-     * Adds a new Alert into the Alert Bag
+     * Return the Session Store
      *
-     * @param \DarkGhostHunter\Laralerts\Alert|null $alert
+     * @return \Illuminate\Session\Store
+     */
+    public function getStore()
+    {
+        return $this->store;
+    }
+
+    /**
+     * Set the Session Store
+     *
+     * @param \Illuminate\Session\Store $store
+     */
+    public function setStore(Session $store)
+    {
+        $this->store = $store;
+    }
+
+    /**
+     * Adds an Alert and returns the same added Alert.
+     *
+     * @param \DarkGhostHunter\Laralerts\Alert $alert
      * @return \DarkGhostHunter\Laralerts\Alert
      */
     public function add(Alert $alert)
@@ -76,37 +105,21 @@ class AlertFactory implements Htmlable
     }
 
     /**
-     * Creates a new Alert
+     * Makes a new Alert instance
      *
+     * @param string|null $message
+     * @param string|null $type
+     * @param bool|null $dismiss
+     * @param string|null $classes
      * @return \DarkGhostHunter\Laralerts\Alert
      */
-    public function make()
+    public function make(string $message = null, string $type = null, bool $dismiss = null, string $classes = null)
     {
-        $alert = new Alert($this->viewFactory);
-
-        if ($this->defaultDismiss) {
-            $alert->dismiss();
-        }
-
-        if ($this->defaultType) {
-            $alert->setType($this->defaultType);
-        }
-
-        return $alert;
+        return new Alert($message, $type ?? $this->type, $dismiss ?? $this->dismiss, $classes);
     }
 
     /**
-     * Get content as a string of HTML.
-     *
-     * @return string
-     */
-    public function toHtml()
-    {
-        return $this->alertBag->toHtml();
-    }
-
-    /**
-     * If the call can be called to the Alert instance, we create a new one.
+     * Gracefully pass the call to a new Alert instance
      *
      * @param $name
      * @param $arguments
@@ -115,10 +128,8 @@ class AlertFactory implements Htmlable
      */
     public function __call($name, $arguments)
     {
-        if (is_callable([Alert::class, $name])) {
-            return $this->add(
-                $this->make()
-            )->{$name}(...$arguments);
+        if (is_callable([Alert::class, $name]) || in_array($name, Alert::getTypes(), false)) {
+            return $this->add($this->make())->{$name}(...$arguments);
         }
 
         throw new BadMethodCallException("Method $name does not exist.");

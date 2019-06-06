@@ -4,16 +4,16 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Blade component name
+    | Blade Directive name
     |--------------------------------------------------------------------------
     |
-    | This library registers a Blade component called "alerts", but you may be
+    | This library registers a Blade directive called "alerts", but you may be
     | already using tha name in your application. In that case, you may want
-    | to change it for anything else it doesn't collide your other aliases.
+    | to change it so the directive doesn't collide with other directives.
     |
     */
 
-    'component' => 'alerts',
+    'directive' => 'alerts',
 
     /*
     |--------------------------------------------------------------------------
@@ -26,7 +26,7 @@ return [
     |
     */
 
-    'session_key' => '_alerts',
+    'key' => '_alerts',
 
     /*
     |--------------------------------------------------------------------------
@@ -40,6 +40,19 @@ return [
     */
 
     'type' => null,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Dismiss
+    |--------------------------------------------------------------------------
+    |
+    | When creating an Alert, these are not dismissible by default. To override
+    | this, set this key to "true", making every Alert dismissible by default.
+    | Of course you can override this default behaviour when making an Alert.
+    |
+    */
+
+    'dismiss' => false,
 
 ];
 
