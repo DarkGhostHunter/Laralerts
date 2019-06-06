@@ -347,6 +347,20 @@ You can change the HTML to whatever you want, like adapting the Alert to be used
 </div>
 ```
 
+#### Adding an Alert from JSON
+
+Sometimes your application may receive a JSON Alert from an external service. You can quickly add this JSON as an Alert to your application using the `addFromJson()` method.
+
+```php
+<?php
+
+$json = '"{"message":"Email delivered"}"';
+
+alert()->addFromJson($json)->success()->dismiss();
+```
+
+This will work as long the JSON **has the `message` key** with the text to include inside the Alert. Additionally, you can add the `type`, `dismiss` and `classes` keys to add an Alert, with the possibility of override them afterwards. 
+
 ### Security
 
 If you discover any security related issues, please email darkghosthunter@gmail.com instead of using the issue tracker.

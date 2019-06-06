@@ -222,4 +222,86 @@ class AlertTest extends TestCase
             'classes' => 'test-class',
         ], json_decode(json_encode($alert), true));
     }
+
+    public function testFromArray()
+    {
+        $array = [
+            'type' => 'info',
+            'message' => 'test-message',
+            'classes' => 'test-class',
+            'dismiss' => false,
+        ];
+
+        $alert = Alert::fromArray($array);
+
+        $this->assertInstanceOf(Alert::class, $alert);
+
+        $this->assertEquals([
+            'message' => 'test-message',
+            'type' => 'info',
+            'dismiss' => false,
+            'classes' => 'test-class',
+        ], $alert->toArray());
+    }
+
+    public function testFromPartialArray()
+    {
+        $array = [
+            'message' => 'test-message',
+        ];
+
+        $alert = Alert::fromArray($array);
+
+        $this->assertInstanceOf(Alert::class, $alert);
+
+        $this->assertEquals([
+            'message' => 'test-message',
+            'type' => null,
+            'dismiss' => null,
+            'classes' => null,
+        ], $alert->toArray());
+    }
+
+    public function testFromJson()
+    {
+        $array = [
+            'type' => 'info',
+            'message' => 'test-message',
+            'classes' => 'test-class',
+            'dismiss' => false,
+        ];
+
+        $json = json_encode($array);
+
+        $alert = Alert::fromJson($json);
+
+        $this->assertInstanceOf(Alert::class, $alert);
+
+        $this->assertEquals([
+            'message' => 'test-message',
+            'type' => 'info',
+            'dismiss' => false,
+            'classes' => 'test-class',
+        ], $alert->toArray());
+    }
+
+    public function testFromPartialJson()
+    {
+        $array = [
+            'message' => 'test-message',
+        ];
+
+        $json = json_encode($array);
+
+        $alert = Alert::fromJson($json);
+
+        $this->assertInstanceOf(Alert::class, $alert);
+
+        $this->assertEquals([
+            'message' => 'test-message',
+            'type' => null,
+            'dismiss' => null,
+            'classes' => null,
+        ], $alert->toArray());
+    }
 }

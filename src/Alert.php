@@ -237,6 +237,33 @@ class Alert implements Arrayable, Serializable, Jsonable, JsonSerializable
     }
 
     /**
+     * Creates a new Alert instance from an array
+     *
+     * @param array $attributes
+     * @return \DarkGhostHunter\Laralerts\Alert
+     */
+    public static function fromArray(array $attributes)
+    {
+        return new Alert(...[
+            $attributes['message'],
+            $attributes['type'] ?? null,
+            $attributes['dismiss'] ?? null,
+            $attributes['classes'] ?? null,
+        ]);
+    }
+
+    /**
+     * Creates a new Alert instance from a JSON string
+     *
+     * @param string $json
+     * @return \DarkGhostHunter\Laralerts\Alert
+     */
+    public static function fromJson(string $json)
+    {
+        return static::fromArray(json_decode($json, true));
+    }
+
+    /**
      * Specify data which should be serialized to JSON
      *
      * @return array

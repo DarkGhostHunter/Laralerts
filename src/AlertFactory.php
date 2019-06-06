@@ -105,6 +105,28 @@ class AlertFactory
     }
 
     /**
+     * Adds an Alert from a JSON string
+     *
+     * @param string $json
+     * @return \DarkGhostHunter\Laralerts\Alert
+     */
+    public function addFromJson(string $json)
+    {
+        return $this->add(Alert::fromJson($json));
+    }
+
+    /**
+     * Adds an Alert from an array
+     *
+     * @param array $attributes
+     * @return \DarkGhostHunter\Laralerts\Alert
+     */
+    public function addFromArray(array $attributes)
+    {
+        return $this->add(Alert::fromArray($attributes));
+    }
+
+    /**
      * Makes a new Alert instance
      *
      * @param string|null $message

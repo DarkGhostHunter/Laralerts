@@ -70,6 +70,36 @@ class AlertFactoryTest extends TestCase
         $this->assertEquals($alert, $added);
     }
 
+    public function testAddFromJson()
+    {
+        $array = ['message'=> 'test-message', 'type' => 'test-type'];
+
+        $json = json_encode($array);
+
+        $this->mockBag->shouldReceive('add')
+            ->once()
+            ->with(Mockery::type(Alert::class))
+            ->andReturnUsing(function ($alert) { return $alert; });
+
+        $added = $this->factory->addFromJson($json);
+
+        $this->assertEquals(array_merge($array, ['dismiss' => null, 'classes' => null]), $added->toArray());
+    }
+
+    public function testAddFromArray()
+    {
+        $array = ['message'=> 'test-message', 'type' => 'test-type'];
+
+        $this->mockBag->shouldReceive('add')
+            ->once()
+            ->with(Mockery::type(Alert::class))
+            ->andReturnUsing(function ($alert) { return $alert; });
+
+        $added = $this->factory->addFromArray($array);
+
+        $this->assertEquals(array_merge($array, ['dismiss' => null, 'classes' => null]), $added->toArray());
+    }
+
     public function testMake()
     {
         $this->mockBag->shouldNotReceive('add');
