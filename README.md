@@ -24,7 +24,7 @@ And that's it. Everything works out of the box.
 
 ## Basic Usage
 
-To set an Alert in your frontend, you can use the `alert()` helper, or the `Alert` Facade. It's always a good place to use them before sending a Response to the browser. 
+To set an Alert in your frontend, you can use the `alert()` helper, or the `Alert` Facade. A good place to use them is before sending a Response to the browser, like in your Controllers.
 
 ```php
 <?php
