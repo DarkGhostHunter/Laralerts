@@ -220,7 +220,7 @@ Route::group('api', function () {
 
 ```
 
-When you receive a JSON Response, you will see something the Alerts appended to whichever key you used. Using the above example, we should see the `alerts` array under the `_status` key: 
+When you receive a JSON Response, you will see the Alerts appended to whichever key you issued. Using the above example, we should see the `alerts` key under the `_status` key: 
 
 ```json
 {
@@ -242,7 +242,7 @@ When you receive a JSON Response, you will see something the Alerts appended to 
 }
 ```
 
-To keep good performance, the Alerts will be injected into the Session only if it has started. Since the `api` routes are stateless, there is no need to worry about disabling the Session in these routes.
+To keep good performance, the Alerts will be injected into the Session only if it has started. Since the `api` routes are stateless, there is no need to worry about disabling the Session in these routes since here the Session usually doesn't starts.
 
 ### Configuration
 
