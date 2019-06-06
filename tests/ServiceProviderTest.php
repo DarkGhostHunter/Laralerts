@@ -3,9 +3,7 @@
 namespace DarkGhostHunter\Laralerts\Tests;
 
 use DarkGhostHunter\Laralerts\Facades\Alert;
-use DarkGhostHunter\Laralerts\AlertFactory;
 use DarkGhostHunter\Laralerts\LaralertsServiceProvider;
-use DarkGhostHunter\Laralerts\Tests\Concerns\RegistersPackage;
 use Orchestra\Testbench\TestCase;
 
 class ServiceProviderTest extends TestCase

@@ -4,149 +4,181 @@ namespace DarkGhostHunter\Laralerts\Tests;
 
 use DarkGhostHunter\Laralerts\Alert;
 use DarkGhostHunter\Laralerts\AlertBag;
-use DOMDocument;
 use Orchestra\Testbench\TestCase;
 
 class AlertBagTest extends TestCase
 {
     use Concerns\RegistersPackage;
 
-    /** @var AlertBag */
-    protected $alertBag;
-
-    /** @var Alert */
-    protected $alert;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->alertBag = new AlertBag();
-
-        $this->alert = (new Alert())->message('test-message');
-    }
-
     public function testGetAndSetAlerts()
     {
-        $this->assertEmpty($this->alertBag->getAlerts());
-        $this->alertBag->setAlerts($alerts = [$this->alert]);
-        $this->assertEquals($alerts, $this->alertBag->getAlerts());
-    }
+        $bag = new AlertBag;
 
-    public function testAdd()
-    {
-        $this->alertBag->add($this->alert);
-        $this->assertEquals([$this->alert], $this->alertBag->getAlerts());
-    }
+        $this->assertEmpty($bag->getAlerts());
 
-    public function testPrepend()
-    {
-        $this->alertBag->add($this->alert);
+        $alerts = [
+            new Alert, new Alert
+        ];
 
-        $prepended = (new Alert())->message('prepended');
-
-        $this->alertBag->prepend($prepended);
-
-        $this->assertEquals($prepended, $this->alertBag->getAlerts()[0]);
-        $this->assertCount(2, $this->alertBag->getAlerts());
-    }
-
-    public function testAppend()
-    {
-        $this->alertBag->add($this->alert);
-
-        $appended = (new Alert())->message('prepended');
-
-        $this->alertBag->append($appended);
-
-        $this->assertEquals($appended, $this->alertBag->getAlerts()[1]);
-        $this->assertCount(2, $this->alertBag->getAlerts());
-    }
-
-    public function testRemoveFirst()
-    {
-        $this->alertBag->add($this->alert);
-        $this->alertBag->add($second = (new Alert())->message('second'));
-
-        $this->assertCount(2, $this->alertBag->getAlerts());
-
-        $this->alertBag->removeFirst();
-
-        $this->assertEquals($second, $this->alertBag->getAlerts()[0]);
-        $this->assertCount(1, $this->alertBag->getAlerts());
-    }
-
-    public function testRemoveLast()
-    {
-        $this->alertBag->add($this->alert);
-        $this->alertBag->add($second = (new Alert())->message('second'));
-
-        $this->assertCount(2, $this->alertBag->getAlerts());
-
-        $this->alertBag->removeLast();
-
-        $this->assertEquals($this->alert, $this->alertBag->getAlerts()[0]);
-        $this->assertCount(1, $this->alertBag->getAlerts());
+        $bag->setAlerts($alerts);
+        $this->assertEquals($alerts, $bag->getAlerts());
     }
 
     public function testHasAlerts()
     {
-        $this->assertFalse($this->alertBag->hasAlerts());
+        $bag = new AlertBag;
 
-        $this->alertBag->add($this->alert);
-        $this->alertBag->add($second = (new Alert())->message('second'));
+        $this->assertFalse($bag->hasAlerts());
+        $this->assertTrue($bag->doesntHaveAlerts());
 
-        $this->assertTrue($this->alertBag->hasAlerts());
+        $bag->setAlerts([
+            new Alert, new Alert
+        ]);
+
+        $this->assertTrue($bag->hasAlerts());
+        $this->assertFalse($bag->doesntHaveAlerts());
+    }
+
+    public function testAddAlert()
+    {
+        $bag = new AlertBag;
+
+        $bag->add($alert = new Alert);
+
+        $this->assertEquals([$alert], $bag->getAlerts());
+    }
+
+    public function testRemoveFirst()
+    {
+        $bag = new AlertBag();
+
+        $bag->setAlerts([
+            new Alert('foo'), $bar = new Alert('bar'),
+        ]);
+
+        $bag->removeFirst();
+
+        $this->assertEquals([$bar], $bag->getAlerts());
+    }
+
+    public function testRemoveLast()
+    {
+        $bag = new AlertBag();
+
+        $bag->setAlerts([
+            $foo = new Alert('foo'), new Alert('bar'),
+        ]);
+
+        $bag->removeLast();
+
+        $this->assertEquals([$foo], $bag->getAlerts());
     }
 
     public function testFlush()
     {
-        $this->alertBag->add($this->alert);
-        $this->alertBag->add((new Alert())->message('second'));
+        $bag = new AlertBag();
 
-        $this->assertCount(2, $this->alertBag->getAlerts());
+        $bag->setAlerts([
+            new Alert('foo'), new Alert('bar'),
+        ]);
 
-        $this->alertBag->flush();
+        $bag->flush();
 
-        $this->assertCount(0, $this->alertBag->getAlerts());
+        $this->assertEquals([], $bag->getAlerts());
     }
 
     public function testToArray()
     {
-        $this->alertBag->add($this->alert);
-        $this->alertBag->add((new Alert())->message('second'));
+        $bag = new AlertBag();
 
-        $this->assertCount(2, $this->alertBag->toArray());
-        $this->assertIsArray($this->alertBag->toArray());
-        $this->assertIsArray($this->alertBag->toArray()[0]);
+        $bag->setAlerts([
+            $foo = new Alert('foo'), $bar = new Alert('bar'),
+        ]);
+
+        $array = $bag->toArray();
+
+        $this->assertEquals([
+            $foo->toArray(),
+            $bar->toArray(),
+        ], $array);
     }
 
     public function testCountable()
     {
-        $this->alertBag->add($this->alert);
-        $this->alertBag->add((new Alert())->message('second'));
+        $bag = new AlertBag();
 
-        $this->assertCount(2, $this->alertBag);
+        $bag->setAlerts([
+            new Alert('foo'), new Alert('bar'), new Alert('baz')
+        ]);
+
+        $this->assertCount(3, $bag);
     }
 
-    public function testValidJSON()
+    public function testIterator()
     {
-        $this->alertBag->add($this->alert);
-        $this->alertBag->add((new Alert())->message('second'));
+        $bag = new AlertBag();
 
-        $this->assertJson($this->alertBag->toJson());
+        $bag->setAlerts([
+            new Alert('foo'), new Alert('bar'), new Alert('baz')
+        ]);
+
+        $string = '';
+
+        foreach ($bag as $alert) {
+            $string .= $alert->getMessage();
+        }
+
+        $this->assertEquals('foobarbaz', $string);
     }
 
-    public function testRendersToHTML()
+    public function testSerialization()
     {
-        $this->alertBag->add($this->alert);
-        $this->alertBag->add((new Alert())->message('second'));
+        $bag = new AlertBag();
 
-        $html = '<div class="alert" role="alert">test-message</div><div class="alert" role="alert">second</div>';
+        $bag->setAlerts($alerts = [
+            $foo = new Alert('foo'), $bar = new Alert('bar'), $baz = new Alert('baz')
+        ]);
 
-        $this->assertEquals($html, $this->alertBag->toHtml());
-        $this->assertEquals($html, $this->alertBag->render());
-        $this->assertEquals($html, (string)$this->alertBag);
+        $serialized = serialize($bag);
+
+        $unserialize = unserialize($serialized);
+
+        $this->assertEquals($alerts, $unserialize->getAlerts());
+    }
+
+    public function testJson()
+    {
+        $bag = new AlertBag();
+
+        $bag->setAlerts($alerts = [
+            $foo = new Alert('foo'), $bar = new Alert('bar'), $baz = new Alert('baz')
+        ]);
+
+        $json = json_encode($bag->toArray());
+
+        $this->assertJson(json_encode($bag));
+        $this->assertEquals($json, json_encode($bag));
+        $this->assertEquals($json, $bag->toJson());
+        $this->assertEquals([
+            [
+                'message' => 'foo',
+                'type' => null,
+                'dismiss' => false,
+                'classes' => null,
+            ],
+            [
+                'message' => 'bar',
+                'type' => null,
+                'dismiss' => false,
+                'classes' => null,
+            ],
+            [
+                'message' => 'baz',
+                'type' => null,
+                'dismiss' => false,
+                'classes' => null,
+            ],
+        ], json_decode(json_encode($bag), true));
     }
 
 }

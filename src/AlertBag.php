@@ -2,24 +2,25 @@
 
 namespace DarkGhostHunter\Laralerts;
 
+use ArrayIterator;
 use Countable;
 use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Contracts\Support\Jsonable;
-use Illuminate\Contracts\Support\Renderable;
+use IteratorAggregate;
 use JsonSerializable;
+use Serializable;
 
-class AlertBag implements Arrayable, Countable, Jsonable, JsonSerializable, Htmlable, Renderable
+class AlertBag implements Arrayable, Countable, IteratorAggregate, Serializable, JsonSerializable, Jsonable
 {
     /**
-     * Alerts inside the Session
+     * Alerts active in the application lifecycle
      *
      * @var array
      */
     protected $alerts = [];
 
     /**
-     * Return the Alerts array
+     * Return all the active Alerts
      *
      * @return array
      */
@@ -29,10 +30,9 @@ class AlertBag implements Arrayable, Countable, Jsonable, JsonSerializable, Html
     }
 
     /**
-     * Set the Alerts array
+     * Set all the active Alerts
      *
      * @param array $alerts
-     * @return void
      */
     public function setAlerts(array $alerts)
     {
@@ -40,10 +40,29 @@ class AlertBag implements Arrayable, Countable, Jsonable, JsonSerializable, Html
     }
 
     /**
+     * If the Alert Bag has Alerts
+     *
+     * @return bool
+     */
+    public function hasAlerts()
+    {
+        return $this->alerts !== [];
+    }
+
+    /**
+     * If the Alert Bag doesn't have Alerts
+     *
+     * @return bool
+     */
+    public function doesntHaveAlerts()
+    {
+        return ! $this->hasAlerts();
+    }
+
+    /**
      * Adds an Alert
      *
      * @param \DarkGhostHunter\Laralerts\Alert $alert
-     * @return void
      */
     public function add(Alert $alert)
     {
@@ -51,65 +70,39 @@ class AlertBag implements Arrayable, Countable, Jsonable, JsonSerializable, Html
     }
 
     /**
-     * Alias for the add method
+     * Remove the first Alert
      *
-     * @param \DarkGhostHunter\Laralerts\Alert $alert
-     * @return void
-     */
-    public function append(Alert $alert)
-    {
-        $this->add($alert);
-    }
-
-    /**
-     * Prepends an Alert to the bag
-     *
-     * @param \DarkGhostHunter\Laralerts\Alert $alert
-     * @return void
-     */
-    public function prepend(Alert $alert)
-    {
-        array_unshift($this->alerts, $alert);
-    }
-
-    /**
-     * Removes the first Alert of the Bag
-     *
-     * @return void
+     * @return $this
      */
     public function removeFirst()
     {
         array_shift($this->alerts);
+
+        return $this;
     }
 
     /**
-     * Removes the last Alert of the bag
+     * Remove the last Alert
      *
-     * @return void
+     * @return $this
      */
     public function removeLast()
     {
         array_pop($this->alerts);
+
+        return $this;
     }
 
     /**
-     * Return if the AlertBag has Alerts
+     * Flushes all Alerts to the toilet
      *
-     * @return bool
-     */
-    public function hasAlerts()
-    {
-        return !empty($this->alerts);
-    }
-
-    /**
-     * Removes all Alerts of the bag
-     *
-     * @return void
+     * @return $this
      */
     public function flush()
     {
         $this->alerts = [];
+
+        return $this;
     }
 
     /**
@@ -139,14 +132,34 @@ class AlertBag implements Arrayable, Countable, Jsonable, JsonSerializable, Html
     }
 
     /**
-     * Convert the object to its JSON representation.
+     * Retrieve an external iterator
      *
-     * @param int $options
+     * @return \ArrayIterator
+     */
+    public function getIterator()
+    {
+        return new ArrayIterator($this->alerts);
+    }
+
+    /**
+     * String representation of object
+     *
      * @return string
      */
-    public function toJson($options = 0)
+    public function serialize()
     {
-        return json_encode($this->jsonSerialize(), $options);
+        return serialize($this->alerts);
+    }
+
+    /**
+     * Constructs the object
+     *
+     * @param string
+     * @return void
+     */
+    public function unserialize($serialized)
+    {
+        $this->alerts = unserialize($serialized, [__CLASS__, Alert::class]);
     }
 
     /**
@@ -160,39 +173,13 @@ class AlertBag implements Arrayable, Countable, Jsonable, JsonSerializable, Html
     }
 
     /**
-     * Get content as a string of HTML.
+     * Convert the object to its JSON representation.
      *
+     * @param int $options
      * @return string
      */
-    public function toHtml()
+    public function toJson($options = 0)
     {
-        $tag = '';
-
-        foreach ($this->alerts as $alert) {
-            /** @var \DarkGhostHunter\Laralerts\Alert $alert */
-            $tag .= $alert->toHtml();
-        }
-
-        return $tag;
-    }
-
-    /**
-     * Get the evaluated contents of the object.
-     *
-     * @return string
-     */
-    public function render()
-    {
-        return $this->toHtml();
-    }
-
-    /**
-     * Return a string representation of this instance
-     *
-     * @return string
-     */
-    public function __toString()
-    {
-        return $this->render();
+        return json_encode($this->jsonSerialize(), $options);
     }
 }

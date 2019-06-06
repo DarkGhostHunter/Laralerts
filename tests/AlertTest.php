@@ -4,88 +4,161 @@ namespace DarkGhostHunter\Laralerts\Tests;
 
 use BadMethodCallException;
 use DarkGhostHunter\Laralerts\Alert;
+use Illuminate\Support\Facades\Lang;
 use Orchestra\Testbench\TestCase;
 
 class AlertTest extends TestCase
 {
     use Concerns\RegistersPackage;
 
-    /** @var \DarkGhostHunter\Laralerts\Alert */
-    protected $alert;
-
-    protected function setUp(): void
+    public function testCreatesDefaultInstance()
     {
-        parent::setUp();
+        $alert = new Alert;
 
-        $this->alert = new Alert;
+        $this->assertNull($alert->getMessage());
+        $this->assertNull($alert->getType());
+        $this->assertNull($alert->getDismiss());
+        $this->assertNull($alert->getClasses());
     }
 
-    public function testGetAndSetCloseHtml()
+    public function testCreatesAlertWithArguments()
     {
-        $html = '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>';
+        $alert = new Alert('test-message', 'info', false, 'test-class');
 
-        $this->assertEquals($html, Alert::getCloseHtml());
-        Alert::setCloseHtml('test-close');
-        $this->assertEquals('test-close', Alert::getCloseHtml());
-        Alert::setCloseHtml($html);
+        $this->assertEquals('test-message', $alert->getMessage());
+        $this->assertEquals('info', $alert->getType());
+        $this->assertFalse($alert->getDismiss());
+        $this->assertEquals('test-class', $alert->getClasses());
     }
 
-    public function testGetAndSetMessage()
+    public function testAcceptsInvalidTypeOnManualInstancing()
     {
-        $this->assertNull($this->alert->getMessage());
-        $this->alert->message('test-message');
-        $this->assertEquals('test-message', $this->alert->getMessage());
+        $alert = new Alert('test-message', 'invalid-type');
+
+        $this->assertInstanceOf(Alert::class, $alert);
     }
 
-    public function testMessageLocalization()
+    public function testExceptionOnInvalidTypeSet()
     {
-        /** @var \Illuminate\Translation\Translator $translator */
-        $translator = $this->app->make('translator');
+        $this->expectException(BadMethodCallException::class);
 
-        $translator->addLines([
-            'trans.test' => 'successful'
-        ], 're');
-
-        $translator->setLocale('re');
-
-        $this->assertNull($this->alert->getMessage());
-        $this->alert->lang('trans.test');
-        $this->assertEquals('successful', $this->alert->getMessage());
+        $alert = (new Alert())->setType('invalid-type');
     }
 
-    public function testMessageEncode()
+    public function testSetsMessage()
     {
-        $this->assertNull($this->alert->getMessage());
+        $alert = new Alert('dont-see-this', 'info', false, 'test-class');
 
-        $this->alert->escape('<script>alert("should be escaped")</script>');
+        $alert->message('test-message');
 
-        $escaped = '&lt;script&gt;alert(&quot;should be escaped&quot;)&lt;/script&gt;';
-
-        $this->assertEquals($escaped, $this->alert->getMessage());
+        $this->assertEquals('test-message', $alert->getMessage());
     }
 
-    public function testToJson()
+    public function testEncodedMessage()
     {
-        $this->alert->message('test-message');
+        $alert = new Alert;
 
-        $this->assertJson($this->alert->toJson());
-        $this->assertStringContainsString('test-message', $this->alert->toJson());
+        $alert->message('<script>alert("rofl")</script>');
+
+        $this->assertEquals('&lt;script&gt;alert(&quot;rofl&quot;)&lt;/script&gt;', $alert->getMessage());
+    }
+
+    public function testRawMessage()
+    {
+        $alert = new Alert;
+
+        $alert->raw('<script>alert("rofl")</script>');
+
+        $this->assertEquals('<script>alert("rofl")</script>', $alert->getMessage());
+    }
+
+    public function testLocalizedMessage()
+    {
+        Lang::shouldReceive('getFromJson')
+            ->once()
+            ->with('test-key', [], null)
+            ->andReturn('test-translation');
+
+        $alert = new Alert;
+
+        $alert->lang('test-key');
+
+        $this->assertEquals('test-translation', $alert->getMessage());
+    }
+
+    public function testGetAndSetDismiss()
+    {
+        $alert = new Alert('test-message', 'info', false);
+
+        $this->assertFalse($alert->getDismiss());
+        $alert->setDismiss(true);
+        $this->assertTrue($alert->getDismiss());
+
+        $alert->setDismiss(false);
+        $alert->dismiss();
+        $this->assertTrue($alert->getDismiss());
+
+        $alert->fixed();
+        $this->assertFalse($alert->getDismiss());
+    }
+
+    public function testGetAndSetClasses()
+    {
+        $alert = new Alert('test-message', 'info', false, 'test-class');
+
+        $this->assertEquals('test-class', $alert->getClasses());
+
+        $alert->setClasses('class-one class-two');
+        $this->assertEquals('class-one class-two', $alert->getClasses());
+
+        $alert->classes('one', 'two');
+        $this->assertEquals('one two', $alert->getClasses());
+
+        $alert->classes(['one', 'two']);
+        $this->assertEquals('one two', $alert->getClasses());
     }
 
     public function testToArray()
     {
-        $this->alert->message('test-message')->dismissible()->info();
+        $alert = new Alert('test-message', 'info', false, 'test-class');
 
-        $array = [
+        $array = $alert->toArray();
+
+        $this->assertEquals([
             'message' => 'test-message',
             'type' => 'info',
-            'dismissible' => true,
-        ];
-
-        $this->assertEquals($array, $this->alert->toArray());
+            'dismiss' => false,
+            'classes' => 'test-class',
+        ], $array);
     }
 
-    public function testTypes()
+    public function testSerialization()
+    {
+        $alert = new Alert('test-message', 'info', false, 'test-class');
+
+        $serialized = serialize($alert);
+
+        $unserialize = unserialize($serialized);
+
+        $this->assertInstanceOf(Alert::class, $unserialize);
+        $this->assertEquals('test-message', $unserialize->getMessage());
+        $this->assertEquals('info', $unserialize->getType());
+        $this->assertFalse($unserialize->getDismiss());
+        $this->assertEquals('test-class', $unserialize->getClasses());
+    }
+
+    public function testGetSetTypes()
+    {
+        $original = Alert::getTypes();
+
+        Alert::setTypes(['foo', 'bar']);
+
+        $this->assertEquals(['foo', 'bar'], Alert::getTypes());
+
+        Alert::setTypes($original);
+    }
+
+    public function testDynamicTypeCalls()
     {
         $primary = (new Alert)->primary();
         $secondary = (new Alert)->secondary();
@@ -106,73 +179,47 @@ class AlertTest extends TestCase
         $this->assertEquals('dark', $dark->getType());
     }
 
-    public function testInvalidType()
+    public function testDynamicCustomTypeCall()
+    {
+        $original = Alert::getTypes();
+
+        Alert::setTypes(['foo', 'bar']);
+
+        $foo = (new Alert)->foo();
+        $bar = (new Alert)->bar();
+
+        $this->assertEquals('foo', $foo->getType());
+        $this->assertEquals('bar', $bar->getType());
+
+        Alert::setTypes($original);
+    }
+
+    public function testExceptionOnInvalidDynamicCustomTypeCall()
     {
         $this->expectException(BadMethodCallException::class);
 
-        $this->alert->setType('invalid-type');
+        $alert = new class extends Alert
+        {
+            protected static $types = ['foo', 'bar'];
+        };
+
+        $alert->baz();
     }
 
-    public function testClasses()
+    public function testJson()
     {
-        $this->alert->classes('foo', 'bar', 'baz asd');
-        $this->assertStringContainsString('foo bar baz asd', $this->alert->toHtml());
-        $this->assertEquals('foo bar baz asd', $this->alert->getClasses());
+        $alert = new Alert('test-message', 'info', false, 'test-class');
 
-        $this->alert->classes('replaced');
-        $this->assertStringContainsString('replaced', $this->alert->toHtml());
-        $this->assertEquals('replaced', $this->alert->getClasses());
-        $this->assertStringNotContainsString('foo bar baz asd', $this->alert->toHtml());
+        $json = json_encode($alert->toArray());
 
-        $this->alert->classes(['foo', 'bar']);
-        $this->assertEquals('foo bar', $this->alert->getClasses());
-    }
-
-    public function testRenderToHtml()
-    {
-        $this->alert->message('test-message')->dismissible()->classes('test-class')->info();
-
-        $expected = '<div class="alert alert-info alert-dismissible fade show test-class" role="alert">test-message<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>';
-
-        $this->assertEquals($expected, $this->alert->toHtml());
-        $this->assertEquals($expected, (string)$this->alert);
-        $this->assertEquals($expected, $this->alert->__toString());
-    }
-
-    public function testDismissible()
-    {
-        $this->alert->message('test-message')->dismissible();
-
-        $this->assertTrue($this->alert->isDismissible());
-        $this->assertTrue($this->alert->isShow());
-        $this->assertEquals('fade', $this->alert->getAnimationClass());
-        $this->assertStringContainsString('show', $this->alert->toHtml());
-        $this->assertStringContainsString('alert-dismissible', $this->alert->toHtml());
-    }
-
-    public function testCustomDismissible()
-    {
-        $this->alert->message('test-message')->dismissible(false, 'test-fade');
-
-        $this->assertTrue($this->alert->isDismissible());
-        $this->assertFalse($this->alert->isShow());
-        $this->assertEquals('test-fade', $this->alert->getAnimationClass());
-        $this->assertStringNotContainsString('show', $this->alert->toHtml());
-        $this->assertStringContainsString('test-fade', $this->alert->toHtml());
-    }
-
-
-    public function testGetAndSetShow()
-    {
-        $this->assertTrue($this->alert->isShow());
-        $this->alert->setShow(false);
-        $this->assertFalse($this->alert->isShow());
-    }
-
-    public function testAnimationClass()
-    {
-        $this->assertEquals('fade', $this->alert->getAnimationClass());
-        $this->alert->setAnimationClass('test-animation');
-        $this->assertEquals('test-animation', $this->alert->getAnimationClass());
+        $this->assertJson(json_encode($alert));
+        $this->assertEquals($json, json_encode($alert));
+        $this->assertEquals($json, $alert->toJson());
+        $this->assertEquals([
+            'message' => 'test-message',
+            'type' => 'info',
+            'dismiss' => false,
+            'classes' => 'test-class',
+        ], json_decode(json_encode($alert), true));
     }
 }

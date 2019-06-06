@@ -3,8 +3,6 @@
 namespace DarkGhostHunter\Laralerts\Tests;
 
 use Closure;
-use DarkGhostHunter\Laralerts\Alert;
-use DarkGhostHunter\Laralerts\AlertBag;
 use DarkGhostHunter\Laralerts\Facades\Alert as AlertFacade;
 use Orchestra\Testbench\TestCase;
 
@@ -26,9 +24,12 @@ class BladeDirectiveTest extends TestCase
         /** @var \Illuminate\View\Compilers\BladeCompiler $compiler */
         $compiler = $this->app->make('blade.compiler');
 
-        AlertFacade::message('test-message');
+        AlertFacade::message('foo');
+        AlertFacade::message('bar');
 
-        $this->assertEquals('<div class="alert" role="alert">test-message</div>', $compiler->compileString('@alerts'));
+        $this->assertStringContainsString('alerts', $compiler->compileString('@alerts'));
+        $this->assertStringContainsString('foo', $compiler->compileString('@alerts'));
+        $this->assertStringContainsString('bar', $compiler->compileString('@alerts'));
     }
 
     public function testCompilesToEmptyString()
