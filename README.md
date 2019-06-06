@@ -8,7 +8,7 @@
 
 Quickly set one or multiple Alerts in your backend, and render them in the frontend.
 
-This version 2.0 is compatible with any framework, and allows you to edit the rendered HTML.
+This version 2.0 is compatible with any frontend framework, and allows you to modify the rendered HTML.
 
 ## Installation
 
@@ -20,11 +20,11 @@ composer require darkghosthunter/laralerts
 
 Additionally, [download Bootstrap 4](https://getbootstrap.com) for your frontend if you don't have anything. 
 
-And that's it. This works out of the box.
+And that's it. Everything works out of the box.
 
 ## Basic Usage
 
-To set an Alert in your frontend, you can use the `alert()` helper, or the `Alert` Facade. For example, before sending a Response to the browser. 
+To set an Alert in your frontend, you can use the `alert()` helper, or the `Alert` Facade. A good place to use them is before sending a Response to the browser, like in your Controllers.
 
 ```php
 <?php
@@ -43,17 +43,17 @@ class ExampleController extends Controller
     public function sent()
     {
         alert('Your message was sent!', 'success', true);
-            
+
         Alert::message('We will also email you a copy!')
             ->info()
             ->dismiss();
-        
+
         return response()->view('page');
     }
 }
 ```
 
-The `alert()` helper accepts the text *message*, alert *type*, and if it should be *dismissible*, quickly making your alerts into one-liners.
+The `alert()` helper accepts the text *message*, alert *type*, and if it should be *dismissible*, expressively making your alerts into identifiable one-liners.
 
 To render them in the frontend, use the `@alerts` Blade directive which will take care of the magic.
 
@@ -68,7 +68,7 @@ And if there is no Alerts to show, don't worry, nothing will be rendered.
 
 ### Message
 
-Add text inside the Alert using the `message()` method. You can use a simple string, or HTML for more personalized messages.
+Add the text inside the Alert using the `message()` method. Yeah, that's it.
 
 ```php
 <?php
@@ -83,11 +83,11 @@ Alert::message('We will email you a copy!')
 ```
 
 ```html
-<div class="alert alert-success">
+<div class="alert alert-success" role="alert">
     Your message was sent!
 </div>
 
-<div class="alert alert-info">
+<div class="alert alert-info" role="alert">
     <strong>We will email you a copy!</strong>
 </div>
 ```
@@ -96,17 +96,17 @@ Alert::message('We will email you a copy!')
 
 #### Raw message
 
-Since the `message()` method escape the text for safety, you can use the `raw()` method to do the same with the untouched string.
+Since the `message()` method escape the text for safety, you can use the `raw()` method to do the same with the untouched string. This allows you to use HTML for more personalized messages, like adding some style. 
 
 ```php
 <?php
 
 alert()->raw('<strong>This is very important</strong>')
-    ->success();
+    ->warning();
 ```
 
 ```html
-<div class="alert alert-success">
+<div class="alert warning" role="alert">
     <strong>This is very important</strong>
 </div>
 ```
@@ -152,16 +152,17 @@ alert()->message('Your message was sent!')
 ```
 
 ```html
-<div class="alert alert-primary">
+<div class="alert alert-primary" role="alert">
     Your message was sent!
 </div>
 ```
 
-> By default, the Alert type is not set in your Alert, so they will be transparent, but you can [set a default](#configuration).
+> By default, the Alert type is not set in your Alert, so they will be *transparent*. Don't worry, you can easily [set a default](#type).
 
 ### Dismiss
 
-To make an Alert dismissible, use the `dismiss()` method. This will change the HTML to make the alert dismissible.
+To make an Alert dismissible, use the `dismiss()` method. This will change the HTML to make the alert dismissible. 
+Using the `fixed()` method will make the Alert non-dismissible.
 
 ```php
 <?php
@@ -172,7 +173,7 @@ alert()->message('Your message was sent!')
 ```
 
 ```html
-<div class="alert alert-info alert-dismissible fade show">
+<div class="alert alert-info alert-dismissible fade show" role="alert">
     Your message was sent!
     <button type="button" class="close" data-dismiss="alert" aria-label="Close">
         <span aria-hidden="true">&times;</span>
@@ -193,16 +194,16 @@ alert()->message('Your message was sent!')
 ```
 
 ```html
-<div class="alert alert-success message-sent global-alert">
+<div class="alert alert-success message-sent global-alert" role="alert">
     Your message was sent!
 </div>
 ```
 
 ### Adding Alerts to a JSON Response
 
-This library has a convenient way to return alerts into your JSON Responses. Just simply add the `AppendAlertsToJsonResponse` middleware into your routes or `app/Http/Kernel`, [as the documentation says](https://laravel.com/docs/middleware#registering-middleware).
+This library has a convenient way to add Alerts into your JSON Responses. Just simply add the `AppendAlertsToJsonResponse` middleware into your routes or `app/Http/Kernel`, [as the documentation says](https://laravel.com/docs/middleware#registering-middleware). If you ask me, the `alerts` is a very straightforward middleware alias to use.
 
-When you return a `JsonResponse` to the browser, the middleware will append the Alerts as JSON using the same Session Key defined in the configuration, which is `_alerts` by default, but it also accepts the `key` parameter to use as an alternative. Here is the lazy way to do it:
+When you return a `JsonResponse` to the browser, the middleware will append the Alerts as JSON using the same Session Key defined in the configuration, which is `_alerts` by default, but it also accepts the `key` parameter to use as an alternative, compatible with *dot notation*. Here is the lazy way to do it as example:
 
 ```php
 <?php
@@ -210,28 +211,38 @@ When you return a `JsonResponse` to the browser, the middleware will append the 
 use Illuminate\Support\Facades\Route;
 use DarkGhostHunter\Laralerts\Http\Middleware\AppendAlertsToJsonResponse;
 
-Route::post('json')
-    ->uses('JsonController@postJson')
-    ->middleware(AppendAlertsToJsonResponse::class.':_app-alerts');
+Route::group('api', function () {
+    
+    Route::post('create')->uses('UserController@create');
+    Route::post('update')->uses('UserController@update');
+    
+})->middleware(AppendAlertsToJsonResponse::class.':_status.alerts');
+
 ```
 
-You should see a response
+When you receive a JSON Response, you will see the Alerts appended to whichever key you issued. Using the above example, we should see the `alerts` key under the `_status` key: 
 
 ```json
 {
-    "is_good": "true",
-    "_app-alerts": [
-        {
-            "message": "Your email has been sent!",
-            "type" : "success",
-            "dismiss": true,
-            "classes": null
-        }
-    ]
+    "resource": "users",
+    "url": "/v1/users",
+    "_status": {
+        "timestamp":  "2019-06-05T03:47:24Z",
+        "action" : "created",
+        "id": 648,
+        "alerts": [
+            {
+                "message": "The user has been created!",
+                "type" : "success",
+                "dismiss": true,
+                "classes": null
+            }
+        ]
+    },
 }
 ```
 
-The Alert will be injected into the Session only if it has started. Since the `api` routes are stateless, there is no need to worry about disabling the Session in these routes. 
+To keep good performance, the Alerts will be injected into the Session only if it has started. Since the `api` routes are stateless, there is no need to worry about disabling the Session in these routes since here the Session usually doesn't starts.
 
 ### Configuration
 
@@ -255,7 +266,9 @@ return [
 
 #### Directive
 
-This library registers the `@alerts` blade component, that has the container where all the Alerts will be rendered. If you're using the same namespace, you may want to change it so it doesn't collide with other Blade directives, like using the safe `@laralerts`.
+This library registers the `@alerts` blade component, that has the container where all the Alerts will be rendered. 
+
+If you're using the same namespace, you may want to change it so it doesn't collide with other Blade directives. I totally recommend you to use `@laralerts` as a safe bet.
 
 ```php
 <?php 
@@ -277,7 +290,7 @@ return [
 ];
 ```
 
-> For your safety, the Alerts serialize and unserialize as `array`, so you don't have to worry about storage concerns. In prior versions, the whole Alert Bag was included, which added a lot of overhead.
+> For your ease of mind, the Alerts serialize and unserialize as `array`, so you don't have to worry about storage concerns. In prior versions, the whole Alert Bag was included, which added a lot of overhead.
 
 #### Type
 
@@ -324,16 +337,31 @@ The Alert view receives:
 * `$message`: The message to show inside the Alert.
 * `$type`: The type of Alert.  
 * `$classes`: The classes to add to the HTML tag.
-* `$dismiss`: If the Alert should be dismissible.
 
 You can change the HTML to whatever you want, like adapting the Alert to be used with [Bulma.io Notifications](https://bulma.io/documentation/elements/notification/).
 
+`/resources/views/vendor/laralerts/alert-dismiss.blde.php`
+
 ```blade
 <div class="notification is-{{ $type }} {{ $classes }}">
-    @if($dismiss)<button class="delete"></button>@endif 
+    <button class="delete"></button>
     {!! $message !!}
 </div>
 ```
+
+#### Adding an Alert from JSON
+
+Sometimes your application may receive a JSON Alert from an external service. You can quickly add this JSON as an Alert to your application using the `addFromJson()` method.
+
+```php
+<?php
+
+$json = '"{"message":"Email delivered"}"';
+
+alert()->addFromJson($json)->success()->dismiss();
+```
+
+This will work as long the JSON **has the `message` key** with the text to include inside the Alert. Additionally, you can add the `type`, `dismiss` and `classes` keys to add an Alert, with the possibility of override them afterwards. 
 
 ### Security
 
