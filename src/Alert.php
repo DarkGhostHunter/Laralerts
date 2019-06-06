@@ -3,54 +3,17 @@
 namespace DarkGhostHunter\Laralerts;
 
 use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Contracts\Support\Jsonable;
 use JsonSerializable;
+use Serializable;
 
-class Alert implements Arrayable, Jsonable, JsonSerializable, Htmlable
+
+class Alert implements Arrayable, Serializable, Jsonable, JsonSerializable
 {
-    use Concerns\HasClasses,
-        Concerns\HasDismissible;
+    use Concerns\HasTypes;
 
     /**
-     * Default class to use as base to the alert
-     *
-     * @const string
-     */
-    protected const ALERT_CLASS = 'alert';
-
-    /**
-     * Accepted types of alert
-     *
-     * @const array
-     */
-    public const TYPES = [
-        'primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark',
-    ];
-
-    /**
-     * The HTML string to use as dismissible button
-     *
-     * @var string
-     */
-    protected static $closeHtml = '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>';
-
-    /**
-     * Type of Alert (class)
-     *
-     * @var string
-     */
-    protected $type;
-
-    /**
-     * Additional classes to add to the HTML tag
-     *
-     * @var string
-     */
-    protected $classes;
-
-    /**
-     * HTML message
+     * Alert message
      *
      * @var string
      */
@@ -61,44 +24,36 @@ class Alert implements Arrayable, Jsonable, JsonSerializable, Htmlable
      *
      * @var bool
      */
-    protected $dismissible = false;
+    protected $dismiss;
 
     /**
-     * If the dismissible Alert should start displayed using the 'show' class
-     *
-     * @var boolean
-     */
-    protected $show = true;
-
-    /**
-     * The animation class for dismissal
+     * Classes to add into the Alert HTML string
      *
      * @var string
      */
-    protected $animationClass = 'fade';
+    protected $classes;
 
     /**
-     * Return the HTML to use as Close button
+     * Create a new Alert instance
      *
-     * @return string
+     * @param string $message
+     * @param string $type
+     * @param bool $dismiss
+     * @param string $classes
      */
-    public static function getCloseHtml()
+    public function __construct(string $message = null,
+                                string $type = null,
+                                bool $dismiss = null,
+                                string $classes = null)
     {
-        return self::$closeHtml;
+        $this->message = $message;
+        $this->type = $type;
+        $this->dismiss = $dismiss;
+        $this->classes = $classes;
     }
 
     /**
-     * Set the HTML to use as Close button
-     *
-     * @param string $closeHtml
-     */
-    public static function setCloseHtml(string $closeHtml)
-    {
-        self::$closeHtml = $closeHtml;
-    }
-
-    /**
-     * Return the Alert message
+     * Return the Message for this Alert
      *
      * @return string
      */
@@ -108,38 +63,166 @@ class Alert implements Arrayable, Jsonable, JsonSerializable, Htmlable
     }
 
     /**
-     * Localizes the message of the Alert
+     * Set the message for this Alert
      *
-     * @param string $key
+     * @param string $message
      * @return \DarkGhostHunter\Laralerts\Alert
      */
-    public function lang(string $key)
+    public function message(string $message)
     {
-        return $this->message(__($key));
+        return $this->raw(e($message));
     }
 
     /**
-     * Encodes and sets the message of the Alert
+     * Set a raw string into the Alert
      *
-     * @param string $text
+     * @param string $message
      * @return \DarkGhostHunter\Laralerts\Alert
      */
-    public function escape(string $text)
+    public function raw(string $message)
     {
-        return $this->message(e($text));
-    }
-
-    /**
-     * Sets the message of the Alert
-     *
-     * @param string $text
-     * @return \DarkGhostHunter\Laralerts\Alert
-     */
-    public function message(string $text)
-    {
-        $this->message = $text;
+        $this->message = $message;
 
         return $this;
+    }
+
+    /**
+     * Set a localized message into the Alert
+     *
+     * @param string $lang
+     * @return \DarkGhostHunter\Laralerts\Alert
+     */
+    public function lang(string $lang)
+    {
+        return $this->raw(__($lang));
+    }
+
+    /**
+     * Return if the Alert should be dismissible
+     *
+     * @return bool
+     */
+    public function getDismiss()
+    {
+        return $this->dismiss;
+    }
+
+    /**
+     * Set if the Alert should be dismissible
+     *
+     * @param bool $dismiss
+     * @return $this
+     */
+    public function setDismiss(bool $dismiss)
+    {
+        $this->dismiss = $dismiss;
+
+        return $this;
+    }
+
+    /**
+     * Set the Alert as dismissible
+     *
+     * @return $this
+     */
+    public function dismiss()
+    {
+        $this->dismiss = true;
+
+        return $this;
+    }
+
+    /**
+     * Set the Alert as not dismissible (fixed)
+     *
+     * @return $this
+     */
+    public function fixed()
+    {
+        $this->dismiss = false;
+
+        return $this;
+    }
+
+    /**
+     * Return the classes to use in the Alert HTML code
+     *
+     * @return string
+     */
+    public function getClasses()
+    {
+        return $this->classes;
+    }
+
+    /**
+     * Set the classes to use in the Alert HTML code
+     *
+     * @param string $classes
+     * @return $this
+     */
+    public function setClasses(string $classes)
+    {
+        $this->classes = $classes;
+
+        return $this;
+    }
+
+    /**
+     * Set a list of classes to use in the Alert HTML code
+     *
+     * @param mixed ...$classes
+     * @return $this
+     */
+    public function classes(...$classes)
+    {
+        if (is_array($classes) && func_num_args() === 1) {
+            $classes = $classes[0];
+        }
+
+        $this->classes = implode(' ', $classes);
+
+        return $this;
+    }
+
+    /**
+     * Get the instance as an array.
+     *
+     * @return array
+     */
+    public function toArray()
+    {
+        return [
+            'message' => $this->message,
+            'type' => $this->type,
+            'dismiss' => $this->dismiss,
+            'classes' => $this->classes,
+        ];
+    }
+
+    /**
+     * String representation of object
+     *
+     * @return string
+     */
+    public function serialize()
+    {
+        return serialize($this->toArray());
+    }
+
+    /**
+     * Constructs the object
+     *
+     * @param string $serialized
+     * @return void
+     */
+    public function unserialize($serialized)
+    {
+        [
+            'message' => $this->message,
+            'type' => $this->type,
+            'dismiss' => $this->dismiss,
+            'classes' => $this->classes,
+        ] = unserialize($serialized, [__CLASS__]);
     }
 
     /**
@@ -161,72 +244,5 @@ class Alert implements Arrayable, Jsonable, JsonSerializable, Htmlable
     public function jsonSerialize()
     {
         return $this->toArray();
-    }
-
-    /**
-     * Get the instance as an array.
-     *
-     * @return array
-     */
-    public function toArray()
-    {
-        return [
-            'message' => $this->message,
-            'type' => $this->type,
-            'dismissible' => $this->dismissible,
-        ];
-    }
-
-    /**
-     * Get content as a string of HTML.
-     *
-     * @return string
-     */
-    public function toHtml()
-    {
-        return '<div class="' . $this->parseTagClasses() . '" role="alert">'
-            . $this->message . ($this->dismissible ? self::$closeHtml : '')
-            . '</div>';
-    }
-
-    /**
-     * Transforms this Alert as an HTML string
-     *
-     * @return string
-     */
-    public function __toString()
-    {
-        return $this->toHtml();
-    }
-
-    /**
-     * Parses the whole class for the Alert
-     *
-     * @return string
-     */
-    protected function parseTagClasses()
-    {
-        return implode(' ', array_filter([
-            self::ALERT_CLASS,
-            $this->type ? self::ALERT_CLASS .'-'. $this->type : '',
-            $this->parseDismissClasses(),
-            $this->classes,
-        ]));
-    }
-
-    /**
-     * Return the classes if the alert is dismissible
-     *
-     * @return string|void
-     */
-    protected function parseDismissClasses()
-    {
-        if ($this->dismissible) {
-            return implode(' ', array_filter([
-                self::ALERT_CLASS . '-dismissible',
-                $this->animationClass,
-                $this->show ? 'show' : null,
-            ]));
-        }
     }
 }

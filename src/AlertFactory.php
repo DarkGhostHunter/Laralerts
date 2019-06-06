@@ -7,14 +7,6 @@ use Illuminate\Session\Store as Session;
 
 class AlertFactory
 {
-    use Concerns\HasDefaults;
-    /**
-     * Key to use in the Session to identify the AlertBag
-     *
-     * @var string
-     */
-    protected $key = 'alerts';
-
     /**
      * Alert Bag
      *
@@ -23,50 +15,44 @@ class AlertFactory
     protected $alertBag;
 
     /**
-     * Session handler
+     * Session Store
      *
-     * @var \Illuminate\Contracts\Session\Session
+     * @var \Illuminate\Session\Store
      */
-    protected $session;
+    protected $store;
 
     /**
-     * AlertFactory constructor.
+     * The default type for the Alerts
+     *
+     * @var string
+     */
+    protected $type;
+
+    /**
+     * If the Alerts should be dismissible by default
+     *
+     * @var bool
+     */
+    protected $dismiss;
+
+    /**
+     * Creates a new Alert Factory instance
      *
      * @param \DarkGhostHunter\Laralerts\AlertBag $alertBag
      * @param \Illuminate\Session\Store $session
+     * @param string $type
+     * @param bool $dismiss
      */
-    public function __construct(AlertBag $alertBag, Session $session)
+    public function __construct(AlertBag $alertBag, Session $session, ?string $type, bool $dismiss)
     {
         $this->alertBag = $alertBag;
-        $this->session = $session;
+        $this->store = $session;
+        $this->type = $type;
+        $this->dismiss = $dismiss;
     }
 
     /**
-     * Return the Key to put in the Session for the AlertBag
-     *
-     * @return string
-     */
-    public function getKey()
-    {
-        return $this->key;
-    }
-
-    /**
-     * Sets the Key to put in the Session for the AlertBag
-     *
-     * @param string $key
-     * @return \DarkGhostHunter\Laralerts\AlertFactory
-     */
-    public function setKey(string $key)
-    {
-        $this->key = $key;
-
-        return $this;
-    }
-
-
-    /**
-     * Return the current Alert Bag
+     * Return the Alert Bag
      *
      * @return \DarkGhostHunter\Laralerts\AlertBag
      */
@@ -79,68 +65,61 @@ class AlertFactory
      * Set the Alert Bag
      *
      * @param \DarkGhostHunter\Laralerts\AlertBag $alertBag
-     * @return \DarkGhostHunter\Laralerts\AlertFactory
      */
     public function setAlertBag(AlertBag $alertBag)
     {
         $this->alertBag = $alertBag;
-
-        return $this;
     }
 
     /**
-     * Creates and adds a new Alert
+     * Return the Session Store
      *
-     * @param \DarkGhostHunter\Laralerts\Alert|null $alert
+     * @return \Illuminate\Session\Store
+     */
+    public function getStore()
+    {
+        return $this->store;
+    }
+
+    /**
+     * Set the Session Store
+     *
+     * @param \Illuminate\Session\Store $store
+     */
+    public function setStore(Session $store)
+    {
+        $this->store = $store;
+    }
+
+    /**
+     * Adds an Alert and returns the same added Alert.
+     *
+     * @param \DarkGhostHunter\Laralerts\Alert $alert
      * @return \DarkGhostHunter\Laralerts\Alert
      */
-    public function add(Alert $alert = null)
+    public function add(Alert $alert)
     {
-        $alert = $alert ?? $this->make();
-
         $this->alertBag->add($alert);
 
-        $this->putAlertBag($this->alertBag);
-
         return $alert;
     }
 
     /**
-     * Puts the AlertBag into the Session
+     * Makes a new Alert instance
      *
-     * @param \DarkGhostHunter\Laralerts\AlertBag $alertBag
-     * @return \DarkGhostHunter\Laralerts\AlertFactory
-     */
-    public function putAlertBag(AlertBag $alertBag)
-    {
-        $this->session->flash($this->key, $alertBag);
-
-        return $this;
-    }
-
-    /**
-     * Creates a new Alert
-     *
+     * @param string|null $message
+     * @param string|null $type
+     * @param bool|null $dismiss
+     * @param string|null $classes
      * @return \DarkGhostHunter\Laralerts\Alert
      */
-    public function make()
+    public function make(string $message = null, string $type = null, bool $dismiss = null, string $classes = null)
     {
-        $alert = (new Alert)
-            ->classes($this->defaultClasses);
-
-        if ($this->defaultDismissible) {
-            $alert->dismissible($this->defaultShow, $this->defaultAnimationClass);
-        }
-
-        if ($this->defaultType) {
-            $alert->{$this->defaultType}();
-        }
-
-        return $alert;
+        return new Alert($message, $type ?? $this->type, $dismiss ?? $this->dismiss, $classes);
     }
 
     /**
-     * If the call can be called to the Alert instance, we create a new one.
+     * Gracefully pass the call to a new Alert instance
      *
      * @param $name
      * @param $arguments
@@ -149,11 +128,10 @@ class AlertFactory
      */
     public function __call($name, $arguments)
     {
-        if (is_callable([Alert::class, $name])) {
-            return $this->add()->{$name}(...$arguments);
+        if (is_callable([Alert::class, $name]) || in_array($name, Alert::getTypes(), false)) {
+            return $this->add($this->make())->{$name}(...$arguments);
         }
 
         throw new BadMethodCallException("Method $name does not exist.");
     }
-
 }
