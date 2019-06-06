@@ -65,4 +65,17 @@ class AlertHtmlTest extends TestCase
         $this->assertInstanceOf(HtmlString::class, $string);
         $this->assertEquals($string, (string)$this->alertHtml);
     }
+
+    public function testToHtmlRendersNothingWhenEmptyAlerts()
+    {
+        $this->mockBag->shouldReceive('doesntHaveAlerts')
+            ->once()
+            ->andReturnTrue();
+
+        $this->mockBag->shouldNotReceive('getIterator');
+        $this->mockViewFactory->shouldNotReceive('make');
+        $this->mockViewFactory->shouldNotReceive('render');
+
+        $this->assertEmpty($this->alertHtml->toHtml());
+    }
 }
