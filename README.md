@@ -266,7 +266,9 @@ return [
 
 #### Directive
 
-This library registers the `@alerts` blade component, that has the container where all the Alerts will be rendered. If you're using the same namespace, you may want to change it so it doesn't collide with other Blade directives, like using the safe `@laralerts`.
+This library registers the `@alerts` blade component, that has the container where all the Alerts will be rendered. 
+
+If you're using the same namespace, you may want to change it so it doesn't collide with other Blade directives. I totally recommend you to use `@laralerts` as a safe bet.
 
 ```php
 <?php 
