@@ -91,4 +91,29 @@ class AppendAlertsToJsonResponseTest extends TestCase
             ]
         ])->assertSessionMissing('_alerts');
     }
+
+    public function testMiddlewareParameterWithDotNotation()
+    {
+        $this->app->make('router')->get('test', function () {
+            alert('foo');
+
+            return response()->json([
+                'bar' => 'baz',
+            ]);
+        })->middleware(AppendAlertsToJsonResponse::class . ':foo.bar');
+
+        $this->getJson('test')->assertExactJson([
+            'bar' => 'baz',
+            'foo' => [
+                'bar' => [
+                    [
+                        'message' => 'foo',
+                        'type' => null,
+                        'dismiss' => false,
+                        'classes' => null,
+                    ]
+                ]
+            ]
+        ])->assertSessionMissing('_alerts');
+    }
 }
