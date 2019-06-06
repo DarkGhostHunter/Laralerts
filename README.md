@@ -20,7 +20,7 @@ composer require darkghosthunter/laralerts
 
 Additionally, [download Bootstrap 4](https://getbootstrap.com) for your frontend if you don't have anything. 
 
-And that's it. This works out of the box.
+And that's it. Everything works out of the box.
 
 ## Basic Usage
 
