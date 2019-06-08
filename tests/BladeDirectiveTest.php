@@ -21,22 +21,27 @@ class BladeDirectiveTest extends TestCase
 
     public function testCompilesToHTML()
     {
-        /** @var \Illuminate\View\Compilers\BladeCompiler $compiler */
-        $compiler = $this->app->make('blade.compiler');
+        /** @var \Illuminate\View\Factory $factory */
+        $factory = $this->app->make('view');
+        $factory->addLocation(__DIR__ . '/');
 
         AlertFacade::message('foo');
         AlertFacade::message('bar');
 
-        $this->assertStringContainsString('alerts', $compiler->compileString('@alerts'));
-        $this->assertStringContainsString('foo', $compiler->compileString('@alerts'));
-        $this->assertStringContainsString('bar', $compiler->compileString('@alerts'));
+        $rendered = $factory->make('test-view')->render();
+
+        $this->assertStringContainsString('alerts', $rendered);
+        $this->assertStringContainsString('foo', $rendered);
+        $this->assertStringContainsString('bar', $rendered);
     }
 
     public function testCompilesToEmptyString()
     {
-        /** @var \Illuminate\View\Compilers\BladeCompiler $compiler */
-        $compiler = $this->app->make('blade.compiler');
+        /** @var \Illuminate\View\Factory $factory */
+        $factory = $this->app->make('view');
+        $factory->addLocation(__DIR__ . '/');
+        $rendered = $factory->make('test-view')->render();
 
-        $this->assertEmpty($compiler->compileString('@alerts'));
+        $this->assertEmpty($rendered);
     }
 }
