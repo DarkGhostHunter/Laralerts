@@ -3,12 +3,12 @@
 namespace DarkGhostHunter\Laralerts;
 
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Contracts\Support\Jsonable;
 use JsonSerializable;
 use Serializable;
 
-
-class Alert implements Arrayable, Serializable, Jsonable, JsonSerializable
+class Alert implements Arrayable, Serializable, Jsonable, JsonSerializable, Htmlable
 {
     use Concerns\HasTypes;
 
@@ -271,5 +271,15 @@ class Alert implements Arrayable, Serializable, Jsonable, JsonSerializable
     public function jsonSerialize()
     {
         return $this->toArray();
+    }
+
+    /**
+     * Get content as a string of HTML.
+     *
+     * @return string
+     */
+    public function toHtml()
+    {
+        return view($this->dismiss ? 'laralerts::alert-dismiss' : 'laralerts::alert', $this->toArray());
     }
 }
