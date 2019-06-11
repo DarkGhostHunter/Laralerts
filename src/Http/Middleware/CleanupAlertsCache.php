@@ -41,7 +41,11 @@ class CleanupAlertsCache
     public function terminate($request, $response)
     {
         $key = $this->config->get('laralerts.key');
+        $session = $request->session();
 
-        $request->session()->forget($key);
+        if ($session->has($key)) {
+            $session->forget($key);
+            $session->save();
+        }
     }
 }
