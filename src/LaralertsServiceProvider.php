@@ -17,11 +17,8 @@ class LaralertsServiceProvider extends ServiceProvider
             __DIR__ . '/../config/laralerts.php', 'laralerts'
         );
 
-        $this->app->singleton(AlertBag::class, static function ($app) {
-            return $app->make('session')->get($app->make('config')->get('laralerts.key')) ?? new AlertBag;
-        });
-
-        $this->app->singleton(AlertFactory::class, static function ($app) {
+        $this->app->singleton(AlertBag::class);
+        $this->app->singleton(AlertFactory::class, function ($app) {
             return AlertBuilder::build($app);
         });
     }
@@ -42,7 +39,7 @@ class LaralertsServiceProvider extends ServiceProvider
 
         $this->app['blade.compiler']->directive(
             $this->app->make('config')->get('laralerts.directive'),
-            static function () {
+            function () {
                 return "<?php echo \$__env->make('laralerts::alerts', [], ['alerts' => app(\DarkGhostHunter\Laralerts\AlertBag::class)->getAlerts()])->render(); ?>";
             }
         );
