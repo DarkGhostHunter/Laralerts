@@ -3,7 +3,7 @@
 namespace DarkGhostHunter\Laralerts;
 
 use BadMethodCallException;
-use Illuminate\Session\Store as Session;
+use Illuminate\Session\Store;
 
 class AlertFactory
 {
@@ -39,14 +39,14 @@ class AlertFactory
      * Creates a new Alert Factory instance
      *
      * @param \DarkGhostHunter\Laralerts\AlertBag $alertBag
-     * @param \Illuminate\Session\Store $session
+     * @param \Illuminate\Session\Store $store
      * @param string $type
      * @param bool $dismiss
      */
-    public function __construct(AlertBag $alertBag, Session $session, ?string $type, bool $dismiss)
+    public function __construct(AlertBag $alertBag, Store $store, ?string $type, bool $dismiss)
     {
         $this->alertBag = $alertBag;
-        $this->store = $session;
+        $this->store = $store;
         $this->type = $type;
         $this->dismiss = $dismiss;
     }
@@ -86,7 +86,7 @@ class AlertFactory
      *
      * @param \Illuminate\Session\Store $store
      */
-    public function setStore(Session $store)
+    public function setStore(Store $store)
     {
         $this->store = $store;
     }

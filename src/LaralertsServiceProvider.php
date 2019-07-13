@@ -40,7 +40,7 @@ class LaralertsServiceProvider extends ServiceProvider
         $this->app['blade.compiler']->directive(
             $this->app->make('config')->get('laralerts.directive'),
             function () {
-                return "<?php echo \$__env->make('laralerts::alerts', [], ['alerts' => app(\DarkGhostHunter\Laralerts\AlertBag::class)->getAlerts()])->render(); ?>";
+                return "<?php echo \$__env->make('laralerts::alerts', [], ['alerts' => optional(session()->pull(config('laralerts.key')))->getAlerts()])->render(); ?>";
             }
         );
     }
