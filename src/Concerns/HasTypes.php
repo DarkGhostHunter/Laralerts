@@ -23,7 +23,7 @@ trait HasTypes
     /**
      * Accepted types of alert
      *
-     * @const array
+     * @var array
      */
     protected static $types = [
         'primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark',
@@ -49,9 +49,9 @@ trait HasTypes
     /**
      * Set the available types for the Alert
      *
-     * @param mixed $types
+     * @param array $types
      */
-    public static function setTypes($types)
+    public static function setTypes(array $types)
     {
         static::$types = $types;
     }

@@ -8,7 +8,7 @@
 
 Quickly set one or multiple Alerts in your backend, and render them in the frontend.
 
-This version 3.0 is compatible with any frontend framework, and allows you to modify the rendered HTML.
+Laralerts is compatible with any frontend framework, and allows you to modify the rendered HTML.
 
 ## Installation
 
@@ -18,7 +18,7 @@ You can install the package via composer:
 composer require darkghosthunter/laralerts
 ```
 
-Additionally, [download Bootstrap 4](https://getbootstrap.com) for your frontend if you don't have anything. 
+Additionally, [download Bootstrap 4](https://getbootstrap.com) for your frontend if you don't have anything to start. Good alternatives are [Bulma.io](https://bulma.io/), [Materialize](https://materializecss.com/), [Semantic UI](https://semantic-ui.com/), [Material UI](https://material-ui.com), [UI kit](https://getuikit.com/) and [INK](http://ink.sapo.pt/).
 
 And that's it. Everything works out of the box.
 
