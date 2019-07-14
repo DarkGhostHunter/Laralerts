@@ -2,6 +2,7 @@
 
 namespace DarkGhostHunter\Laralerts\Tests;
 
+use DarkGhostHunter\Laralerts\AlertManager;
 use DarkGhostHunter\Laralerts\Facades\Alert;
 use DarkGhostHunter\Laralerts\LaralertsServiceProvider;
 use Orchestra\Testbench\TestCase;
@@ -17,7 +18,7 @@ class ServiceProviderTest extends TestCase
 
     public function testFacades()
     {
-        $this->assertInstanceOf(\DarkGhostHunter\Laralerts\AlertFactory::class, Alert::getFacadeRoot());
+        $this->assertInstanceOf(AlertManager::class, Alert::getFacadeRoot());
         $this->assertInstanceOf(\DarkGhostHunter\Laralerts\Alert::class, Alert::make());
     }
 }

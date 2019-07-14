@@ -71,11 +71,12 @@ trait HasTypes
      *
      * @param string $type
      * @return \DarkGhostHunter\Laralerts\Alert
+     * @throws \BadMethodCallException
      */
     public function setType(string $type)
     {
         if (! in_array($type, static::$types, false)) {
-            throw new \BadMethodCallException("The [$type] is not a valid Alert type");
+            throw new BadMethodCallException("The [$type] is not a valid Alert type");
         }
 
         $this->type = $type;

@@ -8,7 +8,7 @@
 
 Quickly set one or multiple Alerts in your backend, and render them in the frontend.
 
-This version 2.0 is compatible with any frontend framework, and allows you to modify the rendered HTML.
+This version 3.0 is compatible with any frontend framework, and allows you to modify the rendered HTML.
 
 ## Installation
 
@@ -24,38 +24,55 @@ And that's it. Everything works out of the box.
 
 ## Basic Usage
 
-To set an Alert in your frontend, you can use the `alert()` helper, or the `Alert` Facade. A good place to use them is before sending a Response to the browser, like in your Controllers.
+To set an Alert in your frontend, you can use the `alert()` helper, or the `Alert` Facade. A good place to use them is before sending a Response or Redirect to the browser, like in your Controllers.
 
 ```php
 <?php
 
 namespace App\Http\Controllers;
 
-use DarkGhostHunter\Laralerts\Facades\Alert;
+use Illuminate\Http\Request;
+use App\Article;
 
-class ExampleController extends Controller
+class ArticleController extends Controller
 {
     /**
      * Tell the User the message was sent 
      * 
+     * @param \App\Article $article
      * @return \Illuminate\Http\Response
      */
-    public function sent()
+    public function edit(Article $article)
     {
-        alert('Your message was sent!', 'success', true);
+        return view('alert.edit')->with('article', $article);
+    }
 
-        Alert::message('We will also email you a copy!')
-            ->info()
-            ->dismiss();
-
-        return response()->view('page');
+    /**
+     * Tell the User the message was sent 
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Article $article
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, Article $article)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'body' => 'required|string'
+        ]);
+        
+        $article->fill($request)->save();
+        
+        alert('Your article has been updated!', 'success', true);
+        
+        return redirect()->action('ArticleController@edit', $article);
     }
 }
 ```
 
 The `alert()` helper accepts the text *message*, alert *type*, and if it should be *dismissible*, expressively making your alerts into identifiable one-liners.
 
-To render them in the frontend, use the `@alerts` Blade directive which will take care of the magic.
+To render them in the frontend, use the `@alerts` Blade directive which will take care of the magic. Put it anywhere you want, and done.
 
 ```blade
 <div class="header">
@@ -65,6 +82,17 @@ To render them in the frontend, use the `@alerts` Blade directive which will tak
 ```
 
 And if there is no Alerts to show, don't worry, nothing will be rendered.
+
+#### Conditional Alerts
+
+You can also push an alert if a condition evaluates to true or false. Just simple use the `alert_if` and `alert_unless`, respectively.
+
+```php
+<?php
+
+alert_if(true, 'You should see this alert');
+alert_unless(false, 'You should also see this alert');
+```
 
 ### Message
 
@@ -199,6 +227,18 @@ alert()->message('Your message was sent!')
 </div>
 ```
 
+### Persisting the Alerts
+
+By default, in every request lifecycle (except on Redirects) you will start with an empty Alert Bag.
+
+You can retrieve the last Alert Bag using the `withOld()` method. If you create a new alert, it will be appended to the existing bag of alerts from the request or redirect made before. 
+
+```php
+<?php
+
+alert()->withOld()->message('Be sure to check the other alerts')->warning();
+``` 
+
 ### Adding Alerts to a JSON Response
 
 This library has a convenient way to add Alerts into your JSON Responses. Just simply add the `AppendAlertsToJsonResponse` middleware into your routes or `app/Http/Kernel`, [as the documentation says](https://laravel.com/docs/middleware#registering-middleware). If you ask me, the `alerts` is a very straightforward middleware alias to use.
@@ -268,7 +308,7 @@ return [
 
 This library registers the `@alerts` blade component, that has the container where all the Alerts will be rendered. 
 
-If you're using the same namespace, you may want to change it so it doesn't collide with other Blade directives. I totally recommend you to use `@laralerts` as a safe bet.
+If you're using a directive with the same name, you may want to change it so it doesn't collide. I totally recommend you to use `@laralerts` as a safe bet.
 
 ```php
 <?php 
@@ -280,7 +320,7 @@ return [
 
 #### Session Key
 
-The Alert Bag is registered into the Session by a given key, called `_alerts`. If you're using this key name for other things, you should change for other key, since if it collides the Alert Bag won't be flashed into the session.
+The Alert Bag is registered into the Session by a given key, `_alerts` by default. If you're using this key name for other things, you should change the key name.
 
 ```php
 <?php 
@@ -362,6 +402,22 @@ alert()->addFromJson($json)->success()->dismiss();
 ```
 
 This will work as long the JSON **has the `message` key** with the text to include inside the Alert. Additionally, you can add the `type`, `dismiss` and `classes` keys to add an Alert, with the possibility of override them afterwards. 
+
+### Macros
+
+This package `AlertManager` is totally compatible with Macros. You can add your own macros the usual way, preferably through the class itself.
+
+```php
+<?php
+
+use DarkGhostHunter\Laralerts\AlertManager;
+
+AlertManager::macro('remove', function () {
+    return $this->alertBag->count();
+});
+
+
+```
 
 ### Security
 

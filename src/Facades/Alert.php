@@ -2,18 +2,13 @@
 
 namespace DarkGhostHunter\Laralerts\Facades;
 
-use DarkGhostHunter\Laralerts\AlertFactory;
+use DarkGhostHunter\Laralerts\AlertManager;
 use Illuminate\Support\Facades\Facade;
 
 /**
  * Class Alert
- * @method static string getKey()
- * @method static \DarkGhostHunter\Laralerts\AlertFactory setKey(string $key)
- * @method static \DarkGhostHunter\Laralerts\AlertBag getAlertBag()
- * @method static \DarkGhostHunter\Laralerts\AlertFactory setAlertBag(\DarkGhostHunter\Laralerts\AlertBag $alertBag)
- * @method static \Illuminate\Session\Store getStore()
- * @method static \DarkGhostHunter\Laralerts\AlertFactory setStore(\Illuminate\Session\Store $alertBag)
- * @method static \DarkGhostHunter\Laralerts\Alert add(\DarkGhostHunter\Laralerts\Alert $alert)
+ * @method static \DarkGhostHunter\Laralerts\AlertManager withOld()
+ *
  * @method static \DarkGhostHunter\Laralerts\Alert make(string $message = null, string $type = null, bool $dismiss = null, string $classes = null)
  *
  * @method static \DarkGhostHunter\Laralerts\Alert message(string $text)
@@ -31,7 +26,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \DarkGhostHunter\Laralerts\Alert dark()
  * @method static \DarkGhostHunter\Laralerts\Alert classes(...$classes)
  *
- * @see \DarkGhostHunter\Laralerts\AlertFactory
+ * @see \DarkGhostHunter\Laralerts\AlertManager
  */
 class Alert extends Facade
 {
@@ -42,6 +37,6 @@ class Alert extends Facade
      */
     protected static function getFacadeAccessor()
     {
-        return AlertFactory::class;
+        return AlertManager::class;
     }
 }

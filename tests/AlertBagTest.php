@@ -10,11 +10,37 @@ class AlertBagTest extends TestCase
 {
     use Concerns\RegistersPackage;
 
+    public function testGetAndSetDirty()
+    {
+        $bag = new AlertBag;
+
+        $this->assertFalse($bag->isDirty());
+
+        $bag->setDirty(true);
+
+        $this->assertTrue($bag->isDirty());
+    }
+
+    public function testGetAndSetReflash()
+    {
+        $bag = new AlertBag;
+
+        $this->assertFalse($bag->shouldReflash());
+
+        $bag->markForReflash();
+
+        $this->assertTrue($bag->shouldReflash());
+
+
+    }
+
     public function testGetAndSetAlerts()
     {
         $bag = new AlertBag;
 
         $this->assertEmpty($bag->getAlerts());
+
+        $this->assertFalse($bag->isDirty());
 
         $alerts = [
             new Alert, new Alert
@@ -22,6 +48,8 @@ class AlertBagTest extends TestCase
 
         $bag->setAlerts($alerts);
         $this->assertEquals($alerts, $bag->getAlerts());
+
+        $this->assertTrue($bag->isDirty());
     }
 
     public function testHasAlerts()
@@ -43,14 +71,20 @@ class AlertBagTest extends TestCase
     {
         $bag = new AlertBag;
 
+        $this->assertFalse($bag->isDirty());
+
         $bag->add($alert = new Alert);
 
         $this->assertEquals([$alert], $bag->getAlerts());
+
+        $this->assertTrue($bag->isDirty());
     }
 
     public function testRemoveFirst()
     {
         $bag = new AlertBag();
+
+        $this->assertFalse($bag->isDirty());
 
         $bag->setAlerts([
             new Alert('foo'), $bar = new Alert('bar'),
@@ -59,11 +93,15 @@ class AlertBagTest extends TestCase
         $bag->removeFirst();
 
         $this->assertEquals([$bar], $bag->getAlerts());
+
+        $this->assertTrue($bag->isDirty());
     }
 
     public function testRemoveLast()
     {
         $bag = new AlertBag();
+
+        $this->assertFalse($bag->isDirty());
 
         $bag->setAlerts([
             $foo = new Alert('foo'), new Alert('bar'),
@@ -72,11 +110,15 @@ class AlertBagTest extends TestCase
         $bag->removeLast();
 
         $this->assertEquals([$foo], $bag->getAlerts());
+
+        $this->assertTrue($bag->isDirty());
     }
 
     public function testFlush()
     {
         $bag = new AlertBag();
+
+        $this->assertFalse($bag->isDirty());
 
         $bag->setAlerts([
             new Alert('foo'), new Alert('bar'),
@@ -85,6 +127,8 @@ class AlertBagTest extends TestCase
         $bag->flush();
 
         $this->assertEquals([], $bag->getAlerts());
+
+        $this->assertTrue($bag->isDirty());
     }
 
     public function testToArray()
@@ -135,6 +179,8 @@ class AlertBagTest extends TestCase
     {
         $bag = new AlertBag();
 
+        $this->assertFalse($bag->isDirty());
+
         $bag->setAlerts($alerts = [
             $foo = new Alert('foo'), $bar = new Alert('bar'), $baz = new Alert('baz')
         ]);
@@ -144,15 +190,21 @@ class AlertBagTest extends TestCase
         $unserialize = unserialize($serialized);
 
         $this->assertEquals($alerts, $unserialize->getAlerts());
+
+        $this->assertFalse($unserialize->isDirty());
     }
 
     public function testJson()
     {
         $bag = new AlertBag();
 
+        $this->assertFalse($bag->isDirty());
+
         $bag->setAlerts($alerts = [
             $foo = new Alert('foo'), $bar = new Alert('bar'), $baz = new Alert('baz')
         ]);
+
+        $this->assertTrue($bag->isDirty());
 
         $json = json_encode($bag->toArray());
 

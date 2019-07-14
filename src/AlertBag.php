@@ -13,11 +13,70 @@ use Serializable;
 class AlertBag implements Arrayable, Countable, IteratorAggregate, Serializable, JsonSerializable, Jsonable
 {
     /**
+     * If the Alert Bag should be kept for another Request
+     *
+     * @var bool
+     */
+    protected $reflash = false;
+
+    /**
+     * If the Alert Bag has been modified;
+     *
+     * @var bool
+     */
+    protected $dirty = false;
+
+    /**
      * Alerts active in the application lifecycle
      *
      * @var array
      */
     protected $alerts = [];
+
+    /**
+     * Sets if the Alert Bag has been modified
+     *
+     * @param bool $dirty
+     * @return AlertBag
+     */
+    public function setDirty(bool $dirty)
+    {
+        $this->dirty = $dirty;
+
+        return $this;
+    }
+
+    /**
+     * Returns if the Alert Bag has been modified
+     *
+     * @return bool
+     */
+    public function isDirty()
+    {
+        return $this->dirty;
+    }
+
+    /**
+     * Sets if the Alert Bag should be kept for another Request
+     *
+     * @return \DarkGhostHunter\Laralerts\AlertBag
+     */
+    public function markForReflash()
+    {
+        $this->reflash = true;
+
+        return $this;
+    }
+
+    /**
+     * Returns if the Alert Bag should be kept for another Request
+     *
+     * @return bool
+     */
+    public function shouldReflash()
+    {
+        return $this->reflash;
+    }
 
     /**
      * Return all the active Alerts
@@ -33,10 +92,15 @@ class AlertBag implements Arrayable, Countable, IteratorAggregate, Serializable,
      * Set all the active Alerts
      *
      * @param array $alerts
+     * @return \DarkGhostHunter\Laralerts\AlertBag
      */
     public function setAlerts(array $alerts)
     {
         $this->alerts = $alerts;
+
+        $this->dirty = true;
+
+        return $this;
     }
 
     /**
@@ -63,10 +127,15 @@ class AlertBag implements Arrayable, Countable, IteratorAggregate, Serializable,
      * Adds an Alert
      *
      * @param \DarkGhostHunter\Laralerts\Alert $alert
+     * @return \DarkGhostHunter\Laralerts\AlertBag
      */
     public function add(Alert $alert)
     {
         $this->alerts[] = $alert;
+
+        $this->dirty = true;
+
+        return $this;
     }
 
     /**
@@ -77,6 +146,8 @@ class AlertBag implements Arrayable, Countable, IteratorAggregate, Serializable,
     public function removeFirst()
     {
         array_shift($this->alerts);
+
+        $this->dirty = true;
 
         return $this;
     }
@@ -90,6 +161,8 @@ class AlertBag implements Arrayable, Countable, IteratorAggregate, Serializable,
     {
         array_pop($this->alerts);
 
+        $this->dirty = true;
+
         return $this;
     }
 
@@ -101,6 +174,8 @@ class AlertBag implements Arrayable, Countable, IteratorAggregate, Serializable,
     public function flush()
     {
         $this->alerts = [];
+
+        $this->dirty = true;
 
         return $this;
     }
@@ -148,7 +223,10 @@ class AlertBag implements Arrayable, Countable, IteratorAggregate, Serializable,
      */
     public function serialize()
     {
-        return serialize($this->alerts);
+        return serialize([
+            'alerts' => $this->alerts,
+            'keep' => $this->reflash
+        ]);
     }
 
     /**
@@ -159,7 +237,7 @@ class AlertBag implements Arrayable, Countable, IteratorAggregate, Serializable,
      */
     public function unserialize($serialized)
     {
-        $this->alerts = unserialize($serialized, [__CLASS__, Alert::class]);
+        ['alerts' => $this->alerts, 'keep' => $this->reflash] = unserialize($serialized, [__CLASS__, Alert::class]);
     }
 
     /**
