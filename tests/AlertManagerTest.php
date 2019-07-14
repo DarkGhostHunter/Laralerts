@@ -203,6 +203,46 @@ class AlertManagerTest extends TestCase
         $this->manager->message('test-message');
     }
 
+    public function testAddManyFromArray()
+    {
+        $this->alertBag->shouldReceive('isDirty')
+            ->once()
+            ->andReturnFalse();
+
+        $this->alertBag->shouldReceive('isDirty')
+            ->twice()
+            ->andReturnTrue();
+
+        $this->alertBag->shouldReceive('shouldReflash')
+            ->once()
+            ->andReturnFalse();
+
+        $this->alertBag->shouldReceive('flush')
+            ->once();
+
+        $this->session->shouldReceive('isStarted')
+            ->times(3)
+            ->andReturnTrue();
+
+        $this->session->shouldReceive('has')
+            ->times(3)
+            ->with('test_key')
+            ->andReturnFalse();
+
+        $this->session->shouldReceive('flash')
+            ->with('test_key', Mockery::type(AlertBag::class));
+
+        $this->alertBag->shouldReceive('add')
+            ->times(3)
+            ->with(Mockery::type(Alert::class));
+
+        $this->manager->addManyFromArray([
+            ['message' => 'test-message', 'type' => 'test-type'],
+            ['message' => 'test-message', 'type' => 'test-type'],
+            ['message' => 'test-message', 'type' => 'test-type'],
+        ]);
+    }
+
     public function testMake()
     {
         $this->alertBag->shouldNotReceive('add');

@@ -83,21 +83,4 @@ trait HasTypes
 
         return $this;
     }
-
-    /**
-     * If the call was made to a type, set that type or bail out.
-     *
-     * @param $name
-     * @param $arguments
-     * @return \DarkGhostHunter\Laralerts\Alert
-     * @throws \BadMethodCallException
-     */
-    public function __call($name, $arguments)
-    {
-        if (in_array($name, self::$types, false)) {
-            return $this->setType($name);
-        }
-
-        throw new BadMethodCallException("Method $name does not exist.");
-    }
 }

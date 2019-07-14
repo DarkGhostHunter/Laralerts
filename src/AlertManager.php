@@ -2,6 +2,7 @@
 
 namespace DarkGhostHunter\Laralerts;
 
+use BadMethodCallException;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Session\Store;
 use Illuminate\Support\Traits\Macroable;
@@ -170,6 +171,24 @@ class AlertManager
     }
 
     /**
+     * Add many alerts from an Array. Returns the number of alerts added.
+     *
+     * @param array $alerts
+     * @return int
+     */
+    public function addManyFromArray(array $alerts)
+    {
+        $i = 0;
+
+        foreach ($alerts as $alert) {
+            $this->addFromArray($alert);
+            ++$i;
+        }
+
+        return $i;
+    }
+
+    /**
      * Makes a new Alert instance
      *
      * @param string|null $message
@@ -197,6 +216,12 @@ class AlertManager
             return $this->macroCall($method, $parameters);
         }
 
-        return $this->add($this->make())->{$method}(...$parameters);
+        if (is_callable([Alert::class, $method]) || in_array($method, Alert::getTypes(), false)) {
+            return $this->add($this->make())->{$method}(...$parameters);
+        }
+
+        throw new BadMethodCallException(sprintf(
+            'Method %s::%s does not exist.', static::class, $method
+        ));
     }
 }
