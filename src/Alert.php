@@ -11,7 +11,8 @@ use Serializable;
 
 class Alert implements Arrayable, Serializable, Jsonable, JsonSerializable, Htmlable
 {
-    use Concerns\HasTypes;
+    use Concerns\Alert\HasTypes,
+        Concerns\Alert\HasGettersAndSetters;
 
     /**
      * Alert message
@@ -52,17 +53,6 @@ class Alert implements Arrayable, Serializable, Jsonable, JsonSerializable, Html
         $this->dismiss = $dismiss;
         $this->classes = $classes;
     }
-
-    /**
-     * Return the Message for this Alert
-     *
-     * @return string
-     */
-    public function getMessage()
-    {
-        return $this->message;
-    }
-
     /**
      * Set the message for this Alert
      *
@@ -99,29 +89,6 @@ class Alert implements Arrayable, Serializable, Jsonable, JsonSerializable, Html
     }
 
     /**
-     * Return if the Alert should be dismissible
-     *
-     * @return bool
-     */
-    public function getDismiss()
-    {
-        return $this->dismiss;
-    }
-
-    /**
-     * Set if the Alert should be dismissible
-     *
-     * @param bool $dismiss
-     * @return $this
-     */
-    public function setDismiss(bool $dismiss)
-    {
-        $this->dismiss = $dismiss;
-
-        return $this;
-    }
-
-    /**
      * Set the Alert as dismissible
      *
      * @return $this
@@ -141,29 +108,6 @@ class Alert implements Arrayable, Serializable, Jsonable, JsonSerializable, Html
     public function fixed()
     {
         $this->dismiss = false;
-
-        return $this;
-    }
-
-    /**
-     * Return the classes to use in the Alert HTML code
-     *
-     * @return string
-     */
-    public function getClasses()
-    {
-        return $this->classes;
-    }
-
-    /**
-     * Set the classes to use in the Alert HTML code
-     *
-     * @param string $classes
-     * @return $this
-     */
-    public function setClasses(string $classes)
-    {
-        $this->classes = $classes;
 
         return $this;
     }

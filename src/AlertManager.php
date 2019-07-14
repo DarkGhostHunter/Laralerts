@@ -29,7 +29,7 @@ use Illuminate\Support\Traits\Macroable;
  */
 class AlertManager
 {
-    use Concerns\HasGettersAndSetters,
+    use Concerns\AlertManager\HasGettersAndSetters,
         Macroable {
         __call as macroCall;
     }

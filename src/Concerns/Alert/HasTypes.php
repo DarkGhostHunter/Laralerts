@@ -1,6 +1,6 @@
 <?php
 
-namespace DarkGhostHunter\Laralerts\Concerns;
+namespace DarkGhostHunter\Laralerts\Concerns\Alert;
 
 use BadMethodCallException;
 
