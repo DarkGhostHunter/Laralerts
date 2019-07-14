@@ -4,29 +4,11 @@ namespace DarkGhostHunter\Laralerts\Http\Middleware;
 
 use Closure;
 use DarkGhostHunter\Laralerts\AlertBag;
-use Illuminate\Config\Repository as Config;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
 
 class AppendAlertsToJsonResponse
 {
-    /**
-     * Config Repository
-     *
-     * @var \Illuminate\Config\Repository
-     */
-    protected $config;
-
-    /**
-     * Creates a new middleware instance
-     *
-     * @param \Illuminate\Config\Repository $config
-     */
-    public function __construct(Config $config)
-    {
-        $this->config = $config;
-    }
-
     /**
      * Handle an incoming request.
      *
@@ -49,7 +31,7 @@ class AppendAlertsToJsonResponse
         // Second, let's extract the data, append the Alert Bag using the same Alerts Session
         // Key in the configuration, and finally put the modified data inside the response.
         // If the key in the data is being used, we won't do anything to avoid collision.
-        if (! Arr::has($array = $response->getData(true), $key ?? $key = $this->config->get('laralerts.key'))) {
+        if (! Arr::has($array = $response->getData(true), $key ?? $key = config('laralerts.key'))) {
             $response->setData(Arr::add($array, $key, app(AlertBag::class)));
         }
 

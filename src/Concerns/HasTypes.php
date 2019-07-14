@@ -23,7 +23,7 @@ trait HasTypes
     /**
      * Accepted types of alert
      *
-     * @const array
+     * @var array
      */
     protected static $types = [
         'primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark',
@@ -49,9 +49,9 @@ trait HasTypes
     /**
      * Set the available types for the Alert
      *
-     * @param mixed $types
+     * @param array $types
      */
-    public static function setTypes($types)
+    public static function setTypes(array $types)
     {
         static::$types = $types;
     }
@@ -71,32 +71,16 @@ trait HasTypes
      *
      * @param string $type
      * @return \DarkGhostHunter\Laralerts\Alert
+     * @throws \BadMethodCallException
      */
     public function setType(string $type)
     {
         if (! in_array($type, static::$types, false)) {
-            throw new \BadMethodCallException("The [$type] is not a valid Alert type");
+            throw new BadMethodCallException("The [$type] is not a valid Alert type");
         }
 
         $this->type = $type;
 
         return $this;
-    }
-
-    /**
-     * If the call was made to a type, set that type or bail out.
-     *
-     * @param $name
-     * @param $arguments
-     * @return \DarkGhostHunter\Laralerts\Alert
-     * @throws \BadMethodCallException
-     */
-    public function __call($name, $arguments)
-    {
-        if (in_array($name, self::$types, false)) {
-            return $this->setType($name);
-        }
-
-        throw new BadMethodCallException("Method $name does not exist.");
     }
 }

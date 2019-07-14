@@ -1,9 +1,10 @@
 <?php
 
-namespace DarkGhostHunter\Laralerts\Tests;
+namespace DarkGhostHunter\Laralerts\Tests\Blade;
 
 use Closure;
 use DarkGhostHunter\Laralerts\Facades\Alert as AlertFacade;
+use DarkGhostHunter\Laralerts\Tests\Concerns;
 use Orchestra\Testbench\TestCase;
 
 class BladeDirectiveTest extends TestCase

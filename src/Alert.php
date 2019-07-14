@@ -2,6 +2,7 @@
 
 namespace DarkGhostHunter\Laralerts;
 
+use BadMethodCallException;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Contracts\Support\Jsonable;
@@ -281,5 +282,22 @@ class Alert implements Arrayable, Serializable, Jsonable, JsonSerializable, Html
     public function toHtml()
     {
         return view($this->dismiss ? 'laralerts::alert-dismiss' : 'laralerts::alert', $this->toArray());
+    }
+
+    /**
+     * If the call was made to a type, set that type or bail out.
+     *
+     * @param $method
+     * @param $parameters
+     * @return \DarkGhostHunter\Laralerts\Alert
+     * @throws \BadMethodCallException
+     */
+    public function __call($method, $parameters)
+    {
+        if (in_array($method, self::$types, false)) {
+            return $this->setType($method);
+        }
+
+        throw new BadMethodCallException("Method $method does not exist.");
     }
 }

@@ -17,10 +17,11 @@ class LaralertsServiceProvider extends ServiceProvider
             __DIR__ . '/../config/laralerts.php', 'laralerts'
         );
 
-        $this->app->singleton(AlertBag::class);
-        $this->app->singleton(AlertFactory::class, function ($app) {
-            return AlertBuilder::build($app);
+        $this->app->singleton(AlertBag::class, function ($app) {
+            return $app['session']->get($app['config']['laralerts.key']) ?? new AlertBag();
         });
+
+        $this->app->singleton(AlertManager::class);
     }
 
     /**
@@ -37,11 +38,13 @@ class LaralertsServiceProvider extends ServiceProvider
             __DIR__.'/../resources/views' => resource_path('views/vendor/laralerts'),
         ]);
 
+        // @codeCoverageIgnoreStart
         $this->app['blade.compiler']->directive(
             $this->app->make('config')->get('laralerts.directive'),
             function () {
-                return "<?php echo \$__env->make('laralerts::alerts', [], ['alerts' => optional(session()->pull(config('laralerts.key')))->getAlerts()])->render(); ?>";
+                return "<?php echo \$__env->make('laralerts::alerts', [], ['alerts' => app(\DarkGhostHunter\Laralerts\AlertBag::class)->getAlerts()])->render(); ?>";
             }
         );
+        // @codeCoverageIgnoreEnd
     }
 }

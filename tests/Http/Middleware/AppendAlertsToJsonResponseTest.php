@@ -14,7 +14,6 @@ class AppendAlertsToJsonResponseTest extends TestCase
     {
         $this->app->make('router')->get('test', function () {
             alert('foo');
-
             return response()->json([
                 'bar' => 'baz'
             ]);

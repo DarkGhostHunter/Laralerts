@@ -1,6 +1,6 @@
 <?php
 
-use DarkGhostHunter\Laralerts\AlertFactory;
+use DarkGhostHunter\Laralerts\AlertManager;
 
 if (! function_exists('alert')) {
 
@@ -10,18 +10,17 @@ if (! function_exists('alert')) {
      * @param string|null $message
      * @param string|null $type
      * @param bool|null $dismiss
-     * @return \DarkGhostHunter\Laralerts\AlertFactory|\DarkGhostHunter\Laralerts\Alert
+     * @return \DarkGhostHunter\Laralerts\AlertManager|\DarkGhostHunter\Laralerts\Alert
      */
     function alert(string $message = null, string $type = null, bool $dismiss = null)
     {
-        /** @var AlertFactory $factory */
-        $factory = app(AlertFactory::class);
+        $manager = app(AlertManager::class);
 
         if (! $message) {
-            return $factory;
+            return $manager;
         }
 
-        $alert = $factory->message($message);
+        $alert = $manager->message($message);
 
         if ($type) {
             $alert->setType($type);
@@ -32,5 +31,40 @@ if (! function_exists('alert')) {
         }
 
         return $alert;
+    }
+}
+
+if (! function_exists('alert_if')) {
+
+    /**
+     * Creates an Alert based on condition
+     *
+     * @param mixed $condition
+     * @param string $message
+     * @param string|null $type
+     * @param bool|null $dismiss
+     * @return \DarkGhostHunter\Laralerts\Alert|void
+     */
+    function alert_if($condition, string $message, string $type = null, bool $dismiss = null)
+    {
+        if ($condition) {
+            return alert($message, $type, $dismiss);
+        }
+    }
+}
+
+if (! function_exists('alert_unless')) {
+    /**
+     * Creates an Alert unless the condition evaluates as false
+     *
+     * @param mixed $condition
+     * @param string $message
+     * @param string|null $type
+     * @param bool|null $dismiss
+     * @return \DarkGhostHunter\Laralerts\Alert|void
+     */
+    function alert_unless($condition, string $message, string $type = null, bool $dismiss = null)
+    {
+        return alert_if(!$condition, $message, $type, $dismiss);
     }
 }
