@@ -2,7 +2,6 @@
 
 namespace DarkGhostHunter\Laralerts;
 
-use BadMethodCallException;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Session\Store;
 use Illuminate\Support\Traits\Macroable;
@@ -187,21 +186,17 @@ class AlertManager
     /**
      * Gracefully pass the call to a new Alert instance
      *
-     * @param $name
-     * @param $arguments
+     * @param $method
+     * @param $parameters
      * @return \DarkGhostHunter\Laralerts\Alert
      * @throws \BadMethodCallException
      */
-    public function __call($name, $arguments)
+    public function __call($method, $parameters)
     {
-        if (static::hasMacro($name)) {
-            return $this->macroCall($name, $arguments);
+        if (static::hasMacro($method)) {
+            return $this->macroCall($method, $parameters);
         }
 
-        if (is_callable([Alert::class, $name]) || in_array($name, Alert::getTypes(), false)) {
-            return $this->add($this->make())->{$name}(...$arguments);
-        }
-
-        throw new BadMethodCallException("Method $name does not exist.");
+        return $this->add($this->make())->{$method}(...$parameters);
     }
 }

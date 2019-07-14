@@ -94,10 +94,6 @@ trait HasTypes
      */
     public function __call($name, $arguments)
     {
-        if (static::hasMacro($name)) {
-            return $this->macroCall($name, $arguments);
-        }
-
         if (in_array($name, self::$types, false)) {
             return $this->setType($name);
         }
