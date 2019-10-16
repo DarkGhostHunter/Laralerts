@@ -3,9 +3,9 @@
 namespace DarkGhostHunter\Laralerts;
 
 use BadMethodCallException;
-use Illuminate\Contracts\Config\Repository;
 use Illuminate\Session\Store;
 use Illuminate\Support\Traits\Macroable;
+use Illuminate\Contracts\Config\Repository;
 
 /**
  * Class AlertManager
@@ -220,8 +220,6 @@ class AlertManager
             return $this->add($this->make())->{$method}(...$parameters);
         }
 
-        throw new BadMethodCallException(sprintf(
-            'Method %s::%s does not exist.', static::class, $method
-        ));
+        throw new BadMethodCallException("Method $method does not exist.");
     }
 }

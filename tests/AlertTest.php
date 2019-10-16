@@ -3,9 +3,9 @@
 namespace DarkGhostHunter\Laralerts\Tests;
 
 use BadMethodCallException;
-use DarkGhostHunter\Laralerts\Alert;
-use Illuminate\Support\Facades\Lang;
 use Orchestra\Testbench\TestCase;
+use Illuminate\Support\Facades\Lang;
+use DarkGhostHunter\Laralerts\Alert;
 
 class AlertTest extends TestCase
 {
@@ -74,7 +74,7 @@ class AlertTest extends TestCase
 
     public function testLocalizedMessage()
     {
-        Lang::shouldReceive('getFromJson')
+        Lang::shouldReceive('get')
             ->once()
             ->with('test-key', [], null)
             ->andReturn('test-translation');
