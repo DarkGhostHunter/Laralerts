@@ -462,12 +462,14 @@ This will work as long the JSON **has the `message` key** with the text to inclu
 
 If you need to add many alerts from a JSON string, use the `addManyFromJson()` method and (optionally) issue the key where they are using dot notation.
 
+When doing this, the alerts will be created using the `message`, `type`, `dismiss` and `classes` respectively.
+
 ```php
 <?php
 
 $json = '"{"content": {"alerts": {"message":"Email delivered"} } }"';
 
-alert()->addManyFromJson($json, 'content.alerts')->success()->dismiss();
+alert()->addManyFromJson($json, 'content.alerts');
 ```
 
 ### Macros
