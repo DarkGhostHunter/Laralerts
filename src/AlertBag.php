@@ -2,13 +2,13 @@
 
 namespace DarkGhostHunter\Laralerts;
 
-use ArrayIterator;
 use Countable;
-use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Contracts\Support\Jsonable;
-use IteratorAggregate;
-use JsonSerializable;
 use Serializable;
+use ArrayIterator;
+use JsonSerializable;
+use IteratorAggregate;
+use Illuminate\Contracts\Support\Jsonable;
+use Illuminate\Contracts\Support\Arrayable;
 
 class AlertBag implements Arrayable, Countable, IteratorAggregate, Serializable, JsonSerializable, Jsonable
 {
@@ -101,6 +101,39 @@ class AlertBag implements Arrayable, Countable, IteratorAggregate, Serializable,
         $this->dirty = true;
 
         return $this;
+    }
+
+    /**
+     * Filter Alerts by message or type
+     *
+     * @param  string $message
+     * @param  string|null $type
+     * @return array
+     */
+    public function filterByMessage(string $message, string $type = null)
+    {
+        return collect($this->alerts)
+            ->filter(function($alert) use ($message) {
+                return $alert->getMessage() === $message;
+            })
+            ->when($type, function ($alerts, $value) {
+                return $alerts->filter(function($alert) use ($value) {
+                    return $alert->getType() === $value;
+                });
+            })->values()->all();
+    }
+
+    /**
+     * Filter Alerts by type
+     *
+     * @param  string $type
+     * @return array
+     */
+    public function filterByType(string $type)
+    {
+        return collect($this->alerts)->filter(function($alert) use ($type) {
+            return $alert->getType() === $type;
+        })->values()->all();
     }
 
     /**

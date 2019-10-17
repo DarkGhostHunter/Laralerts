@@ -2,9 +2,9 @@
 
 namespace DarkGhostHunter\Laralerts\Tests;
 
+use Orchestra\Testbench\TestCase;
 use DarkGhostHunter\Laralerts\Alert;
 use DarkGhostHunter\Laralerts\AlertBag;
-use Orchestra\Testbench\TestCase;
 
 class AlertBagTest extends TestCase
 {
@@ -65,6 +65,50 @@ class AlertBagTest extends TestCase
 
         $this->assertTrue($bag->hasAlerts());
         $this->assertFalse($bag->doesntHaveAlerts());
+    }
+
+    public function testFilterAlertsByMessage()
+    {
+        $bag = new AlertBag;
+        $bag->setAlerts([
+            $message = new Alert('foo'),
+            $type_a = new Alert('bar', 'baz'),
+            $type_b = new Alert('qux', 'baz'),
+            $both = new Alert('foo', 'baz'),
+        ]);
+
+        $this->assertEquals([
+            $message,
+            $both
+        ], $bag->filterByMessage('foo'));
+
+        $this->assertEquals([
+            $type_a
+        ], $bag->filterByMessage('bar'));
+
+        $this->assertEquals([
+            $both
+        ], $bag->filterByMessage('foo', 'baz'));
+    }
+
+    public function testFiltersAlertsByType()
+    {
+        $bag = new AlertBag;
+
+        $bag->setAlerts([
+            $message = new Alert('foo'),
+            $type_a = new Alert('bar', 'baz'),
+            $type_b = new Alert('qux', 'baz'),
+            $both = new Alert('foo', 'baz'),
+        ]);
+
+        $this->assertEquals([], $bag->filterByType('foo'));
+
+        $this->assertEquals([
+            $type_a,
+            $type_b,
+            $both,
+        ], $bag->filterByType('baz'));
     }
 
     public function testAddAlert()
