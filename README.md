@@ -165,12 +165,12 @@ To gracefully localize messages on the fly, use the `lang()` method, which is a 
 ```php
 <?php
 
-alert()->lang('email.sent')->success();
+alert()->lang('email.sent', ['email' => $email], 'es')->success();
 ```
 
 ```html
 <div class="alert alert-success" role="alert">>
-    Your email has been sent successfully!
+    ¡Tu email ha sido cambiado a "margarita@madrid.cl" con éxito!
 </div>
 ```
 
@@ -178,16 +178,16 @@ alert()->lang('email.sent')->success();
 
 You can use multiple fluent methods that mirror the Alert class from Bootstrap 4:
 
-| Method | Class |
-| --- | --- |
-| `primary()` | `alert-primary` |
-| `secondary()` | `alert-secondary` |
-| `success()` | `alert-success` |
-| `danger()` | `alert-danger` |
-| `warning()` | `alert-warning` |
-| `info()` | `alert-info` |
-| `light()` | `alert-light` |
-| `dark()` | `alert-dark` |
+| Method       | Class              |
+| ---         | ---              |
+| `primary()`  | `alert-primary`    |
+| `secondary()`| `alert-secondary`  |
+| `success()`  | `alert-success`    |
+| `danger()`   | `alert-danger`     |
+| `warning()`  | `alert-warning`    |
+| `info()`     | `alert-info`       |
+| `light()`    | `alert-light`      |
+| `dark()`     | `alert-dark`       |
 
 ```php
 <?php
@@ -202,7 +202,7 @@ alert()->message('Your message was sent!')
 </div>
 ```
 
-> By default, Alert have not default type, so at rendering they will be *transparent*. Don't worry, you can easily [set a default](#type).
+> By default, Alerts don't have any default type, so when they're rendered they will be *transparent* (without style or color). Don't worry, you can easily [set a default](#default-type).
 
 ##### Adding your own fluid classes
 
@@ -237,11 +237,19 @@ alert()->message('Popping colors!')
 </div> 
 ```
 
+The array you supply is not added, but replaced entirely. If you want to just add some types, use the `addTypes()` static method.
+
+```php
+<?php
+
+\DarkGhostHunter\Laralerts\Alert::addTypes(['these', 'are', 'added']);
+```
+
 #### Dismiss
 
-To make an Alert dismissible, use the `dismiss()` method. This will change the HTML to make the Alert dismissible.
+To make an Alert dismissible, use the `dismiss()` method. This will change the Blade view used to render the Alert in HTML to make it dismissible.
 
-By contrast, if you have set dismissible Alerts by default, using the `fixed()` method will make a particular Alert non-dismissible. 
+By contrast, if you have set dismissible Alerts by default, using the `fixed()` method will make a particular Alert non-dismissible by using the default Blade view. 
 
 ```php
 <?php
@@ -260,9 +268,11 @@ alert()->message('Your message was sent!')
 </div>
 ```
 
+> By using two different Blade views for dismissable and non-dismissable alerts, there is more flexibility on how to render them.
+
 #### Additional Classes
 
-You can issue additional classes to your Alert seamlessly using the `classes()` method, which accepts a list of classes to be added into the HTML code.
+You can issue additional classes to your Alert by seamlessly using the `classes()` method, which accepts a list of classes to be added into the HTML code.
 
 ```php
 <?php
@@ -289,7 +299,10 @@ Once you create a new alert, it will be appended to the existing bag of alerts f
 ```php
 <?php
 
-alert()->withOld()->message('Be sure to check the other alerts.')->warning();
+alert()
+    ->withOld()
+    ->message('Be sure to check the other alerts.')
+    ->warning();
 ``` 
 
 ```html
@@ -344,17 +357,17 @@ When you receive a JSON Response, you will see the alerts appended to whichever 
 }
 ```
 
-To keep good performance, the Alerts will be injected into the Session only if it has started. Since the `api` routes are stateless, there is no need to worry about disabling the Session in these routes since here the Session is not used.
+To keep good performance, the Alerts will be injected into the Session only if it has started. The `api` routes are stateless, and here the Sessions are not used.
 
 ## Configuration
 
-Laralerts works out-of-the-box with some common defaults, but if you need a better approach, you can set configure some parameters. First, publish the configuration file.
+Laralerts works out-of-the-box with some common defaults, but if you need a better approach for your particular application, you can configure some parameters. First, publish the configuration file.
 
 ```bash
 php artisan vendor:publish --provider="DarkGhostHunter\Laralerts\LaralertsServiceProvider"
 ``` 
 
-Let's examine the configuration array:
+Let's examine the configuration array, which is quite simple:
 
 ```php
 <?php 
@@ -380,6 +393,8 @@ return [
 ];
 ```
 
+> When changing this parameter, you may want to use `php artisan view:clear` to rebuild your views with the new directive.
+
 ### Session Key
 
 The Alert Bag is registered into the Session by a given key, which is `_alerts` by default. If you're using this key name for other things, you should change the key name.
@@ -392,11 +407,11 @@ return [
 ];
 ```
 
-> For your ease of mind, the Alerts serialize and unserialize as `array`, so you don't have to worry about storage concerns. In prior versions, the whole Alert Bag was included, which added a lot of overhead.
+> For your ease of mind, the Alerts serialize and unserialize as `array`, so you don't have to worry about storage concerns.
 
-### Type
+### Default Type
 
-The default type of the Alerts in the Application. You can use any of the [included type names](#alert-type), like `success` or `info`. You can override the type anytime when you create an Alert manually.
+The default type of the Alerts in the Application. You can use any of the [included type names](#alert-type), like `success` or `info`. You can override the default type anytime when you create an Alert manually.
 
 ```php
 <?php 
@@ -445,11 +460,21 @@ alert()->addFromJson($json)->success()->dismiss();
 
 This will work as long the JSON **has the `message` key** with the text to include inside the Alert. Additionally, you can add the `type`, `dismiss` and `classes` keys to add an Alert, with the possibility of override them afterwards.
 
-> If you need to add many alerts from a JSON string, you're better decoding the JSON and passing the key with the alerts array to the `addManyFromArray()` method.
+If you need to add many alerts from a JSON string, use the `addManyFromJson()` method and (optionally) issue the key where they are using dot notation.
+
+```php
+<?php
+
+$json = '"{"content": {"alerts": {"message":"Email delivered"} } }"';
+
+alert()->addManyFromJson($json, 'content.alerts')->success()->dismiss();
+```
 
 ### Macros
 
-This package is totally compatible with Macros. You can add your own macros to the `AlertManager` class, which has access to the Session Store and the Alert Bag. You can add your own macros the usual way, preferably directly through the class itself.
+This package is totally compatible with Macros. You can add your own macros to the `AlertManager` class, which has access to the Session Store and the Alert Bag. 
+
+You can add your own macros the usual way, preferably directly through the class itself.
 
 ```php
 <?php

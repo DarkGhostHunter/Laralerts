@@ -3,6 +3,7 @@
 namespace DarkGhostHunter\Laralerts;
 
 use BadMethodCallException;
+use Illuminate\Support\Arr;
 use Illuminate\Session\Store;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Contracts\Config\Repository;
@@ -173,11 +174,14 @@ class AlertManager
     /**
      * Add many alerts from an Array. Returns the number of alerts added.
      *
-     * @param array $alerts
+     * @param  array $alerts
+     * @param  string|null $location
      * @return int
      */
-    public function addManyFromArray(array $alerts)
+    public function addManyFromArray(array $alerts, string $location = null)
     {
+        $alerts = Arr::get($alerts, $location, $alerts);
+
         $i = 0;
 
         foreach ($alerts as $alert) {
@@ -186,6 +190,18 @@ class AlertManager
         }
 
         return $i;
+    }
+
+    /**
+     * Add many Alerts from a JSON string
+     *
+     * @param  string $json
+     * @param  string|null $location
+     * @return int
+     */
+    public function addManyFromJson(string $json, string $location = null)
+    {
+        return $this->addManyFromArray(json_decode($json, true), $location);
     }
 
     /**

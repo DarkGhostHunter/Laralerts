@@ -158,6 +158,17 @@ class AlertTest extends TestCase
         Alert::setTypes($original);
     }
 
+    public function testAddTypes()
+    {
+        $original = Alert::getTypes();
+
+        Alert::addTypes(['foo', 'bar']);
+
+        $this->assertEquals(array_merge($original, ['foo', 'bar']), Alert::getTypes());
+
+        Alert::setTypes($original);
+    }
+
     public function testDynamicTypeCalls()
     {
         $primary = (new Alert)->primary();

@@ -43,7 +43,7 @@ trait HasTypes
      */
     public static function getTypes()
     {
-        return self::$types;
+        return static::$types;
     }
 
     /**
@@ -54,6 +54,16 @@ trait HasTypes
     public static function setTypes(array $types)
     {
         static::$types = $types;
+    }
+
+    /**
+     * Append types for the Alert
+     *
+     * @param  array $types
+     */
+    public static function addTypes(array $types)
+    {
+        static::$types = static::$types + $types;
     }
 
     /**

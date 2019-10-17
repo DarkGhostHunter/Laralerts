@@ -2,14 +2,14 @@
 
 namespace DarkGhostHunter\Laralerts\Tests;
 
+use Mockery;
 use BadMethodCallException;
+use Illuminate\Session\Store;
+use Orchestra\Testbench\TestCase;
 use DarkGhostHunter\Laralerts\Alert;
 use DarkGhostHunter\Laralerts\AlertBag;
-use DarkGhostHunter\Laralerts\AlertManager;
 use Illuminate\Contracts\Config\Repository;
-use Illuminate\Session\Store;
-use Mockery;
-use Orchestra\Testbench\TestCase;
+use DarkGhostHunter\Laralerts\AlertManager;
 
 class AlertManagerTest extends TestCase
 {
@@ -241,6 +241,138 @@ class AlertManagerTest extends TestCase
             ['message' => 'test-message', 'type' => 'test-type'],
             ['message' => 'test-message', 'type' => 'test-type'],
         ]);
+    }
+
+    public function testAddManyFromArrayWithLocation()
+    {
+        $this->alertBag->shouldReceive('isDirty')
+            ->once()
+            ->andReturnFalse();
+
+        $this->alertBag->shouldReceive('isDirty')
+            ->twice()
+            ->andReturnTrue();
+
+        $this->alertBag->shouldReceive('shouldReflash')
+            ->once()
+            ->andReturnFalse();
+
+        $this->alertBag->shouldReceive('flush')
+            ->once();
+
+        $this->session->shouldReceive('isStarted')
+            ->times(3)
+            ->andReturnTrue();
+
+        $this->session->shouldReceive('has')
+            ->times(3)
+            ->with('test_key')
+            ->andReturnFalse();
+
+        $this->session->shouldReceive('flash')
+            ->with('test_key', Mockery::type(AlertBag::class));
+
+        $this->alertBag->shouldReceive('add')
+            ->times(3)
+            ->with(Mockery::type(Alert::class));
+
+        $this->manager->addManyFromArray([
+            'foo' => [
+                'bar' => [
+                    ['message' => 'test-message', 'type' => 'test-type'],
+                    ['message' => 'test-message', 'type' => 'test-type'],
+                    ['message' => 'test-message', 'type' => 'test-type'],
+                ]
+            ]
+        ], 'foo.bar');
+    }
+
+    public function testAddManyFromJson()
+    {
+        $this->alertBag->shouldReceive('isDirty')
+            ->once()
+            ->andReturnFalse();
+
+        $this->alertBag->shouldReceive('isDirty')
+            ->twice()
+            ->andReturnTrue();
+
+        $this->alertBag->shouldReceive('shouldReflash')
+            ->once()
+            ->andReturnFalse();
+
+        $this->alertBag->shouldReceive('flush')
+            ->once();
+
+        $this->session->shouldReceive('isStarted')
+            ->times(3)
+            ->andReturnTrue();
+
+        $this->session->shouldReceive('has')
+            ->times(3)
+            ->with('test_key')
+            ->andReturnFalse();
+
+        $this->session->shouldReceive('flash')
+            ->with('test_key', Mockery::type(AlertBag::class));
+
+        $this->alertBag->shouldReceive('add')
+            ->times(3)
+            ->with(Mockery::type(Alert::class));
+
+        $json = json_encode([
+            ['message' => 'test-message', 'type' => 'test-type'],
+            ['message' => 'test-message', 'type' => 'test-type'],
+            ['message' => 'test-message', 'type' => 'test-type'],
+        ]);
+
+        $this->manager->addManyFromJson($json);
+    }
+
+    public function testAddManyFromJsonWithLocation()
+    {
+        $this->alertBag->shouldReceive('isDirty')
+            ->once()
+            ->andReturnFalse();
+
+        $this->alertBag->shouldReceive('isDirty')
+            ->twice()
+            ->andReturnTrue();
+
+        $this->alertBag->shouldReceive('shouldReflash')
+            ->once()
+            ->andReturnFalse();
+
+        $this->alertBag->shouldReceive('flush')
+            ->once();
+
+        $this->session->shouldReceive('isStarted')
+            ->times(3)
+            ->andReturnTrue();
+
+        $this->session->shouldReceive('has')
+            ->times(3)
+            ->with('test_key')
+            ->andReturnFalse();
+
+        $this->session->shouldReceive('flash')
+            ->with('test_key', Mockery::type(AlertBag::class));
+
+        $this->alertBag->shouldReceive('add')
+            ->times(3)
+            ->with(Mockery::type(Alert::class));
+
+        $json = json_encode([
+            'foo' => [
+                'bar' => [
+                    ['message' => 'test-message', 'type' => 'test-type'],
+                    ['message' => 'test-message', 'type' => 'test-type'],
+                    ['message' => 'test-message', 'type' => 'test-type'],
+                ]
+            ]
+        ]);
+
+        $this->manager->addManyFromJson($json, 'foo.bar');
     }
 
     public function testMake()
