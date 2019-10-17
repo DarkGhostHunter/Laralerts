@@ -63,7 +63,7 @@ trait HasTypes
      */
     public static function addTypes(array $types)
     {
-        static::$types = static::$types + $types;
+        static::$types = array_merge(static::$types, $types);
     }
 
     /**
