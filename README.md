@@ -18,7 +18,9 @@ You can install the package via composer:
 composer require darkghosthunter/laralerts
 ```
 
-Additionally, [download Bootstrap 4](https://getbootstrap.com) for your frontend if you don't have anything to start. Good alternatives are [Bulma.io](https://bulma.io/), [Materialize](https://materializecss.com/), [Semantic UI](https://semantic-ui.com/), [Material UI](https://material-ui.com), [UI kit](https://getuikit.com/) and [INK](http://ink.sapo.pt/).
+You can quick start your frontend scaffolding installing [Laravel UI](https://laravel.com/docs/6.x/frontend), specially if you don't have anything to start with.
+
+Good alternatives are [Bulma.io](https://bulma.io/), [Materialize](https://materializecss.com/), [Semantic UI](https://semantic-ui.com/), [Material UI](https://material-ui.com), [UI kit](https://getuikit.com/) and [INK](http://ink.sapo.pt/).
 
 And that's it. Everything works out of the box.
 
@@ -74,9 +76,9 @@ class ArticleController extends Controller
 }
 ```
 
-The `alert()` helper accepts the text *message*, the *type*, and if it should be *dismissible*, expressively making your alerts into identifiable one-liners.
+The `alert()` helper accepts the text *message*, the *type* of the alert, and if it should be *dismissible*, making your alerts into expressive one-liners.
 
-To render them in the frontend, use the `@alerts` Blade directive which will take care of the magic. Put it anywhere you want them to be showed.
+To render them in the frontend, use the `@alerts` Blade directive which will take care of the magic, anywhere you want.
 
 ```blade
 <div class="header">
@@ -85,18 +87,22 @@ To render them in the frontend, use the `@alerts` Blade directive which will tak
 </div>
 ```
 
-And if there is no Alerts to show, don't worry, nothing will be rendered.
+And if there is no Alerts to show, don't worry, no HTML will be rendered.
 
 #### Conditional Alerts
 
-You can also push an Alert if a condition evaluates to true or false. Just simple use the `alert_if` and `alert_unless`, respectively.
+You can also push an Alert if a condition evaluates to true or false. Just use the `alert_if` and `alert_unless`, respectively.
 
 ```php
 <?php
 
 alert_if(true, 'You should see this alert');
 alert_unless(false, 'And this too since the condition is false!');
+
+alert_if(false, 'No problem')->message('with chaining methods!');
 ```
+
+When `alert_if` and `alert_unless` evaluate to false, you will still receive an Alert instance, but this won't be persisted into the session or response, avoiding unwanted errors in your backend.
 
 #### Message
 
@@ -120,7 +126,7 @@ Alert::message('We will email you a copy!')
 </div>
 
 <div class="alert alert-info" role="alert">
-    <strong>We will email you a copy!</strong>
+    We will email you a copy!
 </div>
 ```
 
@@ -128,22 +134,29 @@ Alert::message('We will email you a copy!')
 
 #### Raw message
 
-Since the `message()` method escape the text for safety, you can use the `raw()` method to do the same with the untouched string. This allows you to use HTML for more personalized messages, like adding some _style_. 
+Since the `message()` method escape the text for safety, you can use the `raw()` method to do the same with the untouched string. This allows you to use HTML for more personalized messages, like adding some _style_, or even add JavaScript if you like to ride the wild side.
 
 ```php
 <?php
 
-alert()->raw('This is very <strong>important</strong>.')
+alert()->message('This is <strong>FUBAR</strong>.')
+    ->warning();
+
+alert()->raw('But this is <strong>important</strong>.')
     ->warning();
 ```
 
 ```html
 <div class="alert alert-warning" role="alert">
-    This is very <strong>important</strong>.
+    This is &lt;strong&gt;FUBAR&lt;/strong&gt;.
+</div>
+
+<div class="alert alert-warning" role="alert">
+    But this is <strong>important</strong>.
 </div>
 ```
 
-> **Warning: Don't use `raw()` to show user-generated content**.
+> **Warning: Don't use `raw()` to show user-generated content. You have been warned**.
 
 #### Using Localization
 

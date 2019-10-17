@@ -1,5 +1,6 @@
 <?php
 
+use DarkGhostHunter\Laralerts\Alert;
 use DarkGhostHunter\Laralerts\AlertManager;
 
 if (! function_exists('alert')) {
@@ -43,13 +44,11 @@ if (! function_exists('alert_if')) {
      * @param string $message
      * @param string|null $type
      * @param bool|null $dismiss
-     * @return \DarkGhostHunter\Laralerts\Alert|void
+     * @return \DarkGhostHunter\Laralerts\Alert
      */
     function alert_if($condition, string $message, string $type = null, bool $dismiss = null)
     {
-        if ($condition) {
-            return alert($message, $type, $dismiss);
-        }
+        return $condition ? alert($message, $type, $dismiss) : new Alert;
     }
 }
 
@@ -61,7 +60,7 @@ if (! function_exists('alert_unless')) {
      * @param string $message
      * @param string|null $type
      * @param bool|null $dismiss
-     * @return \DarkGhostHunter\Laralerts\Alert|void
+     * @return \DarkGhostHunter\Laralerts\Alert
      */
     function alert_unless($condition, string $message, string $type = null, bool $dismiss = null)
     {

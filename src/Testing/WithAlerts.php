@@ -33,7 +33,7 @@ trait WithAlerts
     {
         $bag = $this->app[AlertManager::class]->getAlertBag();
 
-        PHPUnit::assertEmpty($bag->getAlerts(), 'The Alert Bag has is not empty');
+        PHPUnit::assertEmpty($bag->getAlerts(), 'The Alert Bag is not empty');
     }
 
     /**

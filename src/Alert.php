@@ -2,12 +2,12 @@
 
 namespace DarkGhostHunter\Laralerts;
 
+use Serializable;
+use JsonSerializable;
 use BadMethodCallException;
-use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Contracts\Support\Jsonable;
-use JsonSerializable;
-use Serializable;
+use Illuminate\Contracts\Support\Arrayable;
 
 class Alert implements Arrayable, Serializable, Jsonable, JsonSerializable, Htmlable
 {
@@ -80,12 +80,14 @@ class Alert implements Arrayable, Serializable, Jsonable, JsonSerializable, Html
     /**
      * Set a localized message into the Alert
      *
-     * @param string $lang
+     * @param  string $lang
+     * @param  array $replace
+     * @param  null $locale
      * @return \DarkGhostHunter\Laralerts\Alert
      */
-    public function lang(string $lang)
+    public function lang(string $lang, $replace = [], $locale = null)
     {
-        return $this->raw(__($lang));
+        return $this->raw(__($lang, $replace, $locale));
     }
 
     /**

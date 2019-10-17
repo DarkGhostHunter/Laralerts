@@ -3,13 +3,14 @@
 namespace DarkGhostHunter\Laralerts\Tests;
 
 use BadMethodCallException;
+use Orchestra\Testbench\TestCase;
 use DarkGhostHunter\Laralerts\Alert;
 use DarkGhostHunter\Laralerts\AlertManager;
-use Orchestra\Testbench\TestCase;
+use DarkGhostHunter\Laralerts\Testing\WithAlerts;
 
 class HelpersTest extends TestCase
 {
-    use Concerns\RegistersPackage;
+    use Concerns\RegistersPackage, WithAlerts;
 
     public function testResolvesAlertFactory()
     {
@@ -37,14 +38,25 @@ class HelpersTest extends TestCase
 
     public function testAlertIf()
     {
-        $this->assertInstanceOf(Alert::class, alert_if(true, 'message'));
-        $this->assertNull(alert_if(false, 'message'));
+        $false = alert_if(false, 'message')->setType('success')->setClasses('test_class')->setDismiss(true);
+        $this->assertDoesntHaveAlerts();
+
+        $true = alert_if(true, 'message')->setType('success')->setClasses('test_class')->setDismiss(true);
+        $this->assertHasAnyAlert();
+
+        $this->assertInstanceOf(Alert::class, $true);
+        $this->assertInstanceOf(Alert::class, $false);
     }
 
     public function testAlertUnless()
     {
+        $false = alert_unless(true, 'message')->setType('success')->setClasses('test_class')->setDismiss(true);
+        $this->assertDoesntHaveAlerts();
 
-        $this->assertNull(alert_unless(true, 'message'));
-        $this->assertInstanceOf(Alert::class, alert_unless(false, 'message'));
+        $true = alert_unless(false, 'message')->setType('success')->setClasses('test_class')->setDismiss(true);
+        $this->assertHasAnyAlert();
+
+        $this->assertInstanceOf(Alert::class, $false);
+        $this->assertInstanceOf(Alert::class, $true);
     }
 }

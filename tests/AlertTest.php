@@ -76,12 +76,12 @@ class AlertTest extends TestCase
     {
         Lang::shouldReceive('get')
             ->once()
-            ->with('test-key', [], null)
+            ->with('test-key', ['foo' => 'bar'], 'test_lang')
             ->andReturn('test-translation');
 
         $alert = new Alert;
 
-        $alert->lang('test-key');
+        $alert->lang('test-key', ['foo' => 'bar'], 'test_lang');
 
         $this->assertEquals('test-translation', $alert->getMessage());
     }
