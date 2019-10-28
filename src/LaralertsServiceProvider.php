@@ -18,7 +18,7 @@ class LaralertsServiceProvider extends ServiceProvider
         );
 
         $this->app->singleton(AlertBag::class, function ($app) {
-            return $app['session']->get($app['config']['laralerts.key']) ?? new AlertBag();
+            return $app['session.store']->get($app['config']['laralerts.key']) ?? new AlertBag();
         });
 
         $this->app->singleton(AlertManager::class);
