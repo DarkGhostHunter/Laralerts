@@ -2,13 +2,33 @@
 
 namespace DarkGhostHunter\Laralerts\Tests;
 
+use Orchestra\Testbench\TestCase;
 use DarkGhostHunter\Laralerts\Alert;
 use DarkGhostHunter\Laralerts\AlertBag;
-use Orchestra\Testbench\TestCase;
 
 class AlertBagTest extends TestCase
 {
     use Concerns\RegistersPackage;
+
+    protected $original;
+
+    protected function setUp() : void
+    {
+        parent::setUp();
+
+        $this->original = Alert::getTypes();
+
+        Alert::setTypes([
+            'baz' => 'alert-baz'
+        ]);
+    }
+
+    protected function tearDown() : void
+    {
+        parent::tearDown();
+
+        Alert::setTypes($this->original);
+    }
 
     public function testGetAndSetDirty()
     {
@@ -19,19 +39,6 @@ class AlertBagTest extends TestCase
         $bag->setDirty(true);
 
         $this->assertTrue($bag->isDirty());
-    }
-
-    public function testGetAndSetReflash()
-    {
-        $bag = new AlertBag;
-
-        $this->assertFalse($bag->shouldReflash());
-
-        $bag->markForReflash();
-
-        $this->assertTrue($bag->shouldReflash());
-
-
     }
 
     public function testGetAndSetAlerts()
@@ -52,6 +59,46 @@ class AlertBagTest extends TestCase
         $this->assertTrue($bag->isDirty());
     }
 
+    public function testGetOldAlerts()
+    {
+        $bag = new AlertBag;
+        $bag->setAlerts($alerts = [
+            $message = new Alert('foo'),
+            $type_a = new Alert('bar', 'baz'),
+            $type_b = new Alert('qux', 'baz'),
+            $both = new Alert('foo', 'baz'),
+        ]);
+
+        $bag->ageAlerts();
+
+        $this->assertEquals($bag->getOld(), $alerts);
+    }
+
+    public function testReflashOldAlerts()
+    {
+        $bag = new AlertBag;
+        $bag->setAlerts($alerts = [
+            $message = new Alert('foo'),
+            $type_a = new Alert('bar', 'baz'),
+            $type_b = new Alert('qux', 'baz'),
+            $both = new Alert('foo', 'baz'),
+        ]);
+
+        $this->assertEquals($alerts, $bag->getAlerts());
+
+        $bag->ageAlerts();
+
+        $this->assertEmpty($bag->getAlerts());
+
+        $bag->add($alert = new Alert('qux'));
+
+        $bag->reflash();
+
+        $this->assertEquals(array_merge($alerts, [$alert]), $bag->getAlerts());
+
+        $this->assertEmpty($bag->getOld());
+    }
+
     public function testHasAlerts()
     {
         $bag = new AlertBag;
@@ -67,6 +114,50 @@ class AlertBagTest extends TestCase
         $this->assertFalse($bag->doesntHaveAlerts());
     }
 
+    public function testFilterAlertsByMessage()
+    {
+        $bag = new AlertBag;
+        $bag->setAlerts([
+            $message = new Alert('foo'),
+            $type_a = new Alert('bar', 'baz'),
+            $type_b = new Alert('qux', 'baz'),
+            $both = new Alert('foo', 'baz'),
+        ]);
+
+        $this->assertEquals([
+            $message,
+            $both
+        ], $bag->filterByMessage('foo'));
+
+        $this->assertEquals([
+            $type_a
+        ], $bag->filterByMessage('bar'));
+
+        $this->assertEquals([
+            $both
+        ], $bag->filterByMessage('foo', 'baz'));
+    }
+
+    public function testFiltersAlertsByType()
+    {
+        $bag = new AlertBag;
+
+        $bag->setAlerts([
+            $message = new Alert('foo'),
+            $type_a = new Alert('bar', 'baz'),
+            $type_b = new Alert('qux', 'baz'),
+            $both = new Alert('foo', 'baz'),
+        ]);
+
+        $this->assertEquals([], $bag->filterByType('foo'));
+
+        $this->assertEquals([
+            $type_a,
+            $type_b,
+            $both,
+        ], $bag->filterByType('baz'));
+    }
+
     public function testAddAlert()
     {
         $bag = new AlertBag;
@@ -76,40 +167,6 @@ class AlertBagTest extends TestCase
         $bag->add($alert = new Alert);
 
         $this->assertEquals([$alert], $bag->getAlerts());
-
-        $this->assertTrue($bag->isDirty());
-    }
-
-    public function testRemoveFirst()
-    {
-        $bag = new AlertBag();
-
-        $this->assertFalse($bag->isDirty());
-
-        $bag->setAlerts([
-            new Alert('foo'), $bar = new Alert('bar'),
-        ]);
-
-        $bag->removeFirst();
-
-        $this->assertEquals([$bar], $bag->getAlerts());
-
-        $this->assertTrue($bag->isDirty());
-    }
-
-    public function testRemoveLast()
-    {
-        $bag = new AlertBag();
-
-        $this->assertFalse($bag->isDirty());
-
-        $bag->setAlerts([
-            $foo = new Alert('foo'), new Alert('bar'),
-        ]);
-
-        $bag->removeLast();
-
-        $this->assertEquals([$foo], $bag->getAlerts());
 
         $this->assertTrue($bag->isDirty());
     }

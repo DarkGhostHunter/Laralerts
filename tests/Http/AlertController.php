@@ -2,11 +2,11 @@
 
 namespace DarkGhostHunter\Laralerts\Tests\Http;
 
-use DarkGhostHunter\Laralerts\AlertBag;
-use DarkGhostHunter\Laralerts\Tests\Concerns\RegistersPackage;
-use Illuminate\Support\Facades\Session;
-use Illuminate\View\Compilers\BladeCompiler;
 use Orchestra\Testbench\TestCase;
+use Illuminate\Support\Facades\Session;
+use DarkGhostHunter\Laralerts\AlertBag;
+use Illuminate\View\Compilers\BladeCompiler;
+use DarkGhostHunter\Laralerts\Tests\Concerns\RegistersPackage;
 
 class AlertController extends TestCase
 {
@@ -32,18 +32,23 @@ class AlertController extends TestCase
     public function testRendersAlert()
     {
         $this->get('foo')->assertSessionHas('_alerts', $this->app->make(AlertBag::class));
+
+        $this->refreshApplication();
+        $this->setUp();
+
         $this->get('bar')->assertSessionHas('_alerts', $this->app->make(AlertBag::class));
     }
 
     public function testRefreshesAlertBagsBetweenRequests()
     {
         $this->get('foo')->assertSessionHas('_alerts', $this->app->make(AlertBag::class));
-        $this->assertEquals('foo', Session::get('_alerts')->getAlerts()[0]->getMessage());
+        $this->assertEquals('foo', Session::get('_alerts')->getOld()[0]->getMessage());
 
         $this->refreshApplication();
         $this->setUp();
 
         $this->get('bar')->assertSessionHas('_alerts', $this->app->make(AlertBag::class));
-        $this->assertCount(1, Session::get('_alerts'));
+        $this->assertCount(1, Session::get('_alerts')->getOld());
+        $this->assertCount(0, Session::get('_alerts')->getAlerts());
     }
 }

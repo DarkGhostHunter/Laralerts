@@ -1,6 +1,6 @@
 <?php
 
-namespace DarkGhostHunter\Laralerts\Concerns;
+namespace DarkGhostHunter\Laralerts\Concerns\AlertManager;
 
 use DarkGhostHunter\Laralerts\AlertBag;
 use DarkGhostHunter\Laralerts\AlertManager;

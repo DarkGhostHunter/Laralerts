@@ -3,9 +3,9 @@
 namespace DarkGhostHunter\Laralerts\Tests;
 
 use BadMethodCallException;
-use DarkGhostHunter\Laralerts\Alert;
-use Illuminate\Support\Facades\Lang;
 use Orchestra\Testbench\TestCase;
+use Illuminate\Support\Facades\Lang;
+use DarkGhostHunter\Laralerts\Alert;
 
 class AlertTest extends TestCase
 {
@@ -31,8 +31,10 @@ class AlertTest extends TestCase
         $this->assertEquals('test-class', $alert->getClasses());
     }
 
-    public function testAcceptsInvalidTypeOnManualInstancing()
+    public function testExceptionOnInvalidTypeOnManualInstancing()
     {
+        $this->expectException(BadMethodCallException::class);
+
         $alert = new Alert('test-message', 'invalid-type');
 
         $this->assertInstanceOf(Alert::class, $alert);
@@ -74,14 +76,20 @@ class AlertTest extends TestCase
 
     public function testLocalizedMessage()
     {
-        Lang::shouldReceive('getFromJson')
-            ->once()
-            ->with('test-key', [], null)
+        Lang::shouldReceive('get')
+            ->twice()
+            ->with('test-key', ['foo' => 'bar'], 'test_lang')
             ->andReturn('test-translation');
 
         $alert = new Alert;
 
-        $alert->lang('test-key');
+        $alert->lang('test-key', ['foo' => 'bar'], 'test_lang');
+
+        $this->assertEquals('test-translation', $alert->getMessage());
+
+        $alert = new Alert;
+
+        $alert->trans('test-key', ['foo' => 'bar'], 'test_lang');
 
         $this->assertEquals('test-translation', $alert->getMessage());
     }
@@ -118,6 +126,17 @@ class AlertTest extends TestCase
         $this->assertEquals('one two', $alert->getClasses());
     }
 
+    public function testSetAndGetTestTypeClass()
+    {
+        $alert = new Alert('test-message', 'info', false, 'test-class');
+
+        $this->assertEquals('alert-info', $alert->getTypeClass());
+
+        $alert->setTypeClass('test_type-class');
+
+        $this->assertEquals('test_type-class', $alert->getTypeClass());
+    }
+
     public function testToArray()
     {
         $alert = new Alert('test-message', 'info', false, 'test-class');
@@ -151,9 +170,26 @@ class AlertTest extends TestCase
     {
         $original = Alert::getTypes();
 
-        Alert::setTypes(['foo', 'bar']);
+        Alert::setTypes($added = [
+            'foo' => 'alert-foo',
+            'bar' => 'alert-bar',
+        ]);
 
-        $this->assertEquals(['foo', 'bar'], Alert::getTypes());
+        $this->assertEquals($added, Alert::getTypes());
+
+        Alert::setTypes($original);
+    }
+
+    public function testAddTypes()
+    {
+        $original = Alert::getTypes();
+
+        Alert::addTypes($added = [
+            'foo' => 'alert-foo',
+            'bar' => 'alert-bar',
+        ]);
+
+        $this->assertEquals(array_merge($original, $added), Alert::getTypes());
 
         Alert::setTypes($original);
     }
@@ -177,19 +213,34 @@ class AlertTest extends TestCase
         $this->assertEquals('info', $info->getType());
         $this->assertEquals('light', $light->getType());
         $this->assertEquals('dark', $dark->getType());
+
+        $this->assertEquals('alert-primary', $primary->getTypeClass());
+        $this->assertEquals('alert-secondary', $secondary->getTypeClass());
+        $this->assertEquals('alert-success', $success->getTypeClass());
+        $this->assertEquals('alert-danger', $danger->getTypeClass());
+        $this->assertEquals('alert-warning', $warning->getTypeClass());
+        $this->assertEquals('alert-info', $info->getTypeClass());
+        $this->assertEquals('alert-light', $light->getTypeClass());
+        $this->assertEquals('alert-dark', $dark->getTypeClass());
     }
 
     public function testDynamicCustomTypeCall()
     {
         $original = Alert::getTypes();
 
-        Alert::setTypes(['foo', 'bar']);
+        Alert::setTypes([
+            'foo' => 'alert-foo',
+            'bar' => 'alert-bar',
+        ]);
 
         $foo = (new Alert)->foo();
         $bar = (new Alert)->bar();
 
         $this->assertEquals('foo', $foo->getType());
         $this->assertEquals('bar', $bar->getType());
+
+        $this->assertEquals('alert-foo', $foo->getTypeClass());
+        $this->assertEquals('alert-bar', $bar->getTypeClass());
 
         Alert::setTypes($original);
     }

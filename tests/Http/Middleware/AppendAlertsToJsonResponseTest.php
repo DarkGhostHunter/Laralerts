@@ -2,13 +2,35 @@
 
 namespace DarkGhostHunter\Laralerts\Tests\Http\Middleware;
 
-use DarkGhostHunter\Laralerts\Http\Middleware\AppendAlertsToJsonResponse;
-use DarkGhostHunter\Laralerts\Tests\Concerns\RegistersPackage;
 use Orchestra\Testbench\TestCase;
+use DarkGhostHunter\Laralerts\Tests\Concerns\RegistersPackage;
+use DarkGhostHunter\Laralerts\Http\Middleware\AppendAlertsToJsonResponse;
 
 class AppendAlertsToJsonResponseTest extends TestCase
 {
     use RegistersPackage;
+
+    public function testUsesAlias()
+    {
+        $this->app->make('router')->get('test', function () {
+            alert('foo');
+            return response()->json([
+                'bar' => 'baz'
+            ]);
+        })->middleware('alert.json');
+
+        $this->get('test')->assertExactJson([
+            'bar' => 'baz',
+            '_alerts' => [
+                [
+                    'message' => 'foo',
+                    'type' => null,
+                    'dismiss' => false,
+                    'classes' => null,
+                ]
+            ]
+        ])->assertSessionMissing('_alerts');
+    }
 
     public function testInjectsAlerts()
     {
@@ -19,7 +41,7 @@ class AppendAlertsToJsonResponseTest extends TestCase
             ]);
         })->middleware(AppendAlertsToJsonResponse::class);
 
-        $this->getJson('test')->assertExactJson([
+        $this->get('test')->assertExactJson([
             'bar' => 'baz',
             '_alerts' => [
                 [
@@ -76,7 +98,7 @@ class AppendAlertsToJsonResponseTest extends TestCase
             return response()->json([
                 'bar' => 'baz',
             ]);
-        })->middleware(AppendAlertsToJsonResponse::class . ':foo');
+        })->middleware('alert.json:foo');
 
         $this->getJson('test')->assertExactJson([
             'bar' => 'baz',
