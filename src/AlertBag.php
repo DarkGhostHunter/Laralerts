@@ -13,18 +13,18 @@ use Illuminate\Contracts\Support\Arrayable;
 class AlertBag implements Arrayable, Countable, IteratorAggregate, Serializable, JsonSerializable, Jsonable
 {
     /**
-     * If the Alert Bag should be kept for another Request
-     *
-     * @var bool
-     */
-    protected $reflash = false;
-
-    /**
      * If the Alert Bag has been modified;
      *
      * @var bool
      */
     protected $dirty = false;
+
+    /**
+     * Alerts from the past request
+     *
+     * @var array
+     */
+    protected $old = [];
 
     /**
      * Alerts active in the application lifecycle
@@ -57,25 +57,41 @@ class AlertBag implements Arrayable, Countable, IteratorAggregate, Serializable,
     }
 
     /**
-     * Sets if the Alert Bag should be kept for another Request
+     * Rescue the Alerts sent from the previous request into the Alert Bag
      *
      * @return \DarkGhostHunter\Laralerts\AlertBag
      */
-    public function markForReflash()
+    public function reflash()
     {
-        $this->reflash = true;
+        $this->alerts = array_merge($this->old, $this->alerts);
+
+        $this->old = [];
 
         return $this;
     }
 
     /**
-     * Returns if the Alert Bag should be kept for another Request
+     * Take the current alerts (sent) and set them as old
      *
-     * @return bool
+     * @return $this
      */
-    public function shouldReflash()
+    public function ageAlerts()
     {
-        return $this->reflash;
+        $this->old = $this->alerts;
+
+        $this->alerts = [];
+
+        return $this;
+    }
+
+    /**
+     * Return the old alerts, if any
+     *
+     * @return array
+     */
+    public function getOld()
+    {
+        return $this->old;
     }
 
     /**
@@ -172,34 +188,6 @@ class AlertBag implements Arrayable, Countable, IteratorAggregate, Serializable,
     }
 
     /**
-     * Remove the first Alert
-     *
-     * @return $this
-     */
-    public function removeFirst()
-    {
-        array_shift($this->alerts);
-
-        $this->dirty = true;
-
-        return $this;
-    }
-
-    /**
-     * Remove the last Alert
-     *
-     * @return $this
-     */
-    public function removeLast()
-    {
-        array_pop($this->alerts);
-
-        $this->dirty = true;
-
-        return $this;
-    }
-
-    /**
      * Flushes all Alerts to the toilet
      *
      * @return $this
@@ -257,8 +245,8 @@ class AlertBag implements Arrayable, Countable, IteratorAggregate, Serializable,
     public function serialize()
     {
         return serialize([
+            'old' => $this->old,
             'alerts' => $this->alerts,
-            'keep' => $this->reflash
         ]);
     }
 
@@ -270,7 +258,9 @@ class AlertBag implements Arrayable, Countable, IteratorAggregate, Serializable,
      */
     public function unserialize($serialized)
     {
-        ['alerts' => $this->alerts, 'keep' => $this->reflash] = unserialize($serialized, [__CLASS__, Alert::class]);
+        [
+            'alerts' => $this->alerts,
+        ] = unserialize($serialized, [__CLASS__, Alert::class]);
     }
 
     /**

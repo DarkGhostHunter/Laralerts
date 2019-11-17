@@ -6,27 +6,12 @@ use BadMethodCallException;
 use Illuminate\Support\Arr;
 use Illuminate\Session\Store;
 use Illuminate\Support\Traits\Macroable;
-use Illuminate\Contracts\Config\Repository;
 
 /**
  * Class AlertManager
  *
  * @package DarkGhostHunter\Laralerts
  *
- * @method \DarkGhostHunter\Laralerts\Alert message(string $text)
- * @method \DarkGhostHunter\Laralerts\Alert raw(string $text)
- * @method \DarkGhostHunter\Laralerts\Alert lang(string $key)
- * @method \DarkGhostHunter\Laralerts\Alert dismiss()
- * @method \DarkGhostHunter\Laralerts\Alert fixed()
- * @method \DarkGhostHunter\Laralerts\Alert primary()
- * @method \DarkGhostHunter\Laralerts\Alert secondary()
- * @method \DarkGhostHunter\Laralerts\Alert success()
- * @method \DarkGhostHunter\Laralerts\Alert danger()
- * @method \DarkGhostHunter\Laralerts\Alert warning()
- * @method \DarkGhostHunter\Laralerts\Alert info()
- * @method \DarkGhostHunter\Laralerts\Alert light()
- * @method \DarkGhostHunter\Laralerts\Alert dark()
- * @method \DarkGhostHunter\Laralerts\Alert classes(...$classes)
  */
 class AlertManager
 {
@@ -73,17 +58,23 @@ class AlertManager
     /**
      * Manager constructor.
      *
-     * @param \DarkGhostHunter\Laralerts\AlertBag $alertBag
-     * @param \Illuminate\Session\Store $session
-     * @param \Illuminate\Contracts\Config\Repository $config
+     * @param  \DarkGhostHunter\Laralerts\AlertBag $alertBag
+     * @param  \Illuminate\Session\Store $session
+     * @param  string $key
+     * @param  string $type
+     * @param  bool $dismiss
      */
-    public function __construct(AlertBag $alertBag, Store $session, Repository $config)
+    public function __construct(AlertBag $alertBag,
+                                Store $session,
+                                string $key,
+                                ?string $type,
+                                bool $dismiss)
     {
         $this->session = $session;
         $this->alertBag = $alertBag;
-        $this->key = $config->get('laralerts.key');
-        $this->type = $config->get('laralerts.type');
-        $this->dismiss = $config->get('laralerts.dismiss');
+        $this->key = $key;
+        $this->type = $type;
+        $this->dismiss = $dismiss;
     }
 
     /**
@@ -91,9 +82,9 @@ class AlertManager
      *
      * @return $this
      */
-    public function withOld()
+    public function reflash()
     {
-        $this->alertBag->markForReflash();
+        $this->alertBag->reflash();
 
         if ($this->session->isStarted()) {
             $this->session->keep($this->key);
@@ -105,7 +96,7 @@ class AlertManager
     /**
      * Adds an Alert from a JSON string
      *
-     * @param string $json
+     * @param  string $json
      * @return \DarkGhostHunter\Laralerts\Alert
      */
     public function addFromJson(string $json)
@@ -116,7 +107,7 @@ class AlertManager
     /**
      * Adds an Alert and returns the same added Alert.
      *
-     * @param \DarkGhostHunter\Laralerts\Alert $alert
+     * @param  \DarkGhostHunter\Laralerts\Alert $alert
      * @return \DarkGhostHunter\Laralerts\Alert
      */
     public function add(Alert $alert)
@@ -133,17 +124,8 @@ class AlertManager
      */
     protected function retrieveAlertBag()
     {
-        // If the Alert Bag is not marked for a "reflash", then we will reuse the same alert bag
-        // but flush all the alerts, keeping only one instance in the whole application. If the
-        // Alert Bag is dirty (modified), then we will by pass the reflash checking altogether.
-        if (!$this->alertBag->isDirty() && !$this->alertBag->shouldReflash()) {
-            $this->alertBag->flush();
-        }
-
         // Ensure the Alert Bag is in the session if it hasn't been already flashed into it.
-        $this->flashBagInSession();
-
-        return $this->alertBag;
+        return $this->flashBagInSession()->alertBag;
     }
 
     /**
@@ -153,7 +135,7 @@ class AlertManager
      */
     protected function flashBagInSession()
     {
-        if ($this->session->isStarted() && !$this->session->has($this->key)) {
+        if ($this->session->isStarted() && ! $this->session->has($this->key)) {
             $this->session->flash($this->key, $this->alertBag);
         }
 
@@ -163,7 +145,7 @@ class AlertManager
     /**
      * Adds an Alert from an array
      *
-     * @param array $attributes
+     * @param  array $attributes
      * @return \DarkGhostHunter\Laralerts\Alert
      */
     public function addFromArray(array $attributes)
@@ -176,20 +158,17 @@ class AlertManager
      *
      * @param  array $alerts
      * @param  string|null $location
-     * @return int
+     * @return \DarkGhostHunter\Laralerts\AlertManager
      */
     public function addManyFromArray(array $alerts, string $location = null)
     {
         $alerts = Arr::get($alerts, $location, $alerts);
 
-        $i = 0;
-
         foreach ($alerts as $alert) {
             $this->addFromArray($alert);
-            ++$i;
         }
 
-        return $i;
+        return $this;
     }
 
     /**
@@ -197,23 +176,28 @@ class AlertManager
      *
      * @param  string $json
      * @param  string|null $location
-     * @return int
+     * @return \DarkGhostHunter\Laralerts\AlertManager
      */
     public function addManyFromJson(string $json, string $location = null)
     {
-        return $this->addManyFromArray(json_decode($json, true), $location);
+        $this->addManyFromArray(json_decode($json, true), $location);
+
+        return $this;
     }
 
     /**
      * Makes a new Alert instance
      *
-     * @param string|null $message
-     * @param string|null $type
-     * @param bool|null $dismiss
-     * @param string|null $classes
+     * @param  string|null $message
+     * @param  string|null $type
+     * @param  bool|null $dismiss
+     * @param  string|null $classes
      * @return \DarkGhostHunter\Laralerts\Alert
      */
-    public function make(string $message = null, string $type = null, bool $dismiss = null, string $classes = null)
+    public function make(string $message = null,
+                         string $type = null,
+                         bool $dismiss = null,
+                         string $classes = null)
     {
         return new Alert($message, $type ?? $this->type, $dismiss ?? $this->dismiss, $classes);
     }
@@ -232,8 +216,12 @@ class AlertManager
             return $this->macroCall($method, $parameters);
         }
 
-        if (is_callable([Alert::class, $method]) || in_array($method, Alert::getTypes(), false)) {
+        if ((method_exists(Alert::class, $method) && is_callable([Alert::class, $method]))) {
             return $this->add($this->make())->{$method}(...$parameters);
+        }
+
+        if (isset(Alert::getTypes()[$method])) {
+            return $this->add($this->make())->setType($method);
         }
 
         throw new BadMethodCallException("Method $method does not exist.");

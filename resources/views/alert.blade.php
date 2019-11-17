@@ -1,3 +1,3 @@
-<div class="alert {{ $classes }} @if($type)alert-{{ $type }}@endif" role="alert">
+<div class="alert {{ $classes }} {{ $typeClass }}" role="alert">
     {!! $message !!}
 </div>

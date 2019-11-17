@@ -38,10 +38,10 @@ class Alert implements Arrayable, Serializable, Jsonable, JsonSerializable, Html
     /**
      * Create a new Alert instance
      *
-     * @param string $message
-     * @param string $type
-     * @param bool $dismiss
-     * @param string $classes
+     * @param  string $message
+     * @param  string $type
+     * @param  bool $dismiss
+     * @param  string $classes
      */
     public function __construct(string $message = null,
                                 string $type = null,
@@ -49,14 +49,18 @@ class Alert implements Arrayable, Serializable, Jsonable, JsonSerializable, Html
                                 string $classes = null)
     {
         $this->message = $message;
-        $this->type = $type;
         $this->dismiss = $dismiss;
         $this->classes = $classes;
+
+        if ($type) {
+            $this->setType($type);
+        }
     }
+
     /**
      * Set the message for this Alert
      *
-     * @param string $message
+     * @param  string $message
      * @return \DarkGhostHunter\Laralerts\Alert
      */
     public function message(string $message)
@@ -67,7 +71,7 @@ class Alert implements Arrayable, Serializable, Jsonable, JsonSerializable, Html
     /**
      * Set a raw string into the Alert
      *
-     * @param string $message
+     * @param  string $message
      * @return \DarkGhostHunter\Laralerts\Alert
      */
     public function raw(string $message)
@@ -87,7 +91,20 @@ class Alert implements Arrayable, Serializable, Jsonable, JsonSerializable, Html
      */
     public function lang(string $lang, $replace = [], $locale = null)
     {
-        return $this->raw(__($lang, $replace, $locale));
+        return $this->raw(trans($lang, $replace, $locale));
+    }
+
+    /**
+     * Alias for the lang method
+     *
+     * @param  string $lang
+     * @param  array $replace
+     * @param  null $locale
+     * @return \DarkGhostHunter\Laralerts\Alert
+     */
+    public function trans(string $lang, $replace = [], $locale = null)
+    {
+        return $this->lang($lang, $replace, $locale);
     }
 
     /**
@@ -117,16 +134,16 @@ class Alert implements Arrayable, Serializable, Jsonable, JsonSerializable, Html
     /**
      * Set a list of classes to use in the Alert HTML code
      *
-     * @param mixed ...$classes
+     * @param  mixed ...$classes
      * @return $this
      */
     public function classes(...$classes)
     {
-        if (is_array($classes) && func_num_args() === 1) {
+        if (is_array($classes[0]) && func_num_args() === 1) {
             $classes = $classes[0];
         }
 
-        $this->classes = implode(' ', $classes);
+        $this->classes = implode(' ', (array)$classes);
 
         return $this;
     }
@@ -139,10 +156,10 @@ class Alert implements Arrayable, Serializable, Jsonable, JsonSerializable, Html
     public function toArray()
     {
         return [
-            'message' => $this->message,
-            'type' => $this->type,
-            'dismiss' => $this->dismiss,
-            'classes' => $this->classes,
+            'message'   => $this->message,
+            'type'      => $this->type,
+            'dismiss'   => $this->dismiss,
+            'classes'   => $this->classes,
         ];
     }
 
@@ -159,23 +176,23 @@ class Alert implements Arrayable, Serializable, Jsonable, JsonSerializable, Html
     /**
      * Constructs the object
      *
-     * @param string $serialized
+     * @param  string $serialized
      * @return void
      */
     public function unserialize($serialized)
     {
         [
-            'message' => $this->message,
-            'type' => $this->type,
-            'dismiss' => $this->dismiss,
-            'classes' => $this->classes,
+            'message'   => $this->message,
+            'type'      => $this->type,
+            'dismiss'   => $this->dismiss,
+            'classes'   => $this->classes,
         ] = unserialize($serialized, [__CLASS__]);
     }
 
     /**
      * Convert the object to its JSON representation.
      *
-     * @param int $options
+     * @param  int $options
      * @return string
      */
     public function toJson($options = 0)
@@ -186,23 +203,23 @@ class Alert implements Arrayable, Serializable, Jsonable, JsonSerializable, Html
     /**
      * Creates a new Alert instance from an array
      *
-     * @param array $attributes
+     * @param  array $attributes
      * @return \DarkGhostHunter\Laralerts\Alert
      */
     public static function fromArray(array $attributes)
     {
-        return new Alert(...[
+        return new Alert(
             $attributes['message'],
             $attributes['type'] ?? null,
             $attributes['dismiss'] ?? null,
-            $attributes['classes'] ?? null,
-        ]);
+            $attributes['classes'] ?? null
+        );
     }
 
     /**
      * Creates a new Alert instance from a JSON string
      *
-     * @param string $json
+     * @param  string $json
      * @return \DarkGhostHunter\Laralerts\Alert
      */
     public static function fromJson(string $json)
@@ -224,10 +241,15 @@ class Alert implements Arrayable, Serializable, Jsonable, JsonSerializable, Html
      * Get content as a string of HTML.
      *
      * @return string
+     * @throws \Throwable
      */
     public function toHtml()
     {
-        return view($this->dismiss ? 'laralerts::alert-dismiss' : 'laralerts::alert', $this->toArray());
+        $array = array_merge($this->toArray(), [
+            'typeClass' => $this->typeClass
+        ]);
+
+        return view($this->dismiss ? 'laralerts::alert-dismiss' : 'laralerts::alert', $array)->render();
     }
 
     /**
@@ -240,7 +262,7 @@ class Alert implements Arrayable, Serializable, Jsonable, JsonSerializable, Html
      */
     public function __call($method, $parameters)
     {
-        if (in_array($method, self::$types, false)) {
+        if (isset(self::$types[$method])) {
             return $this->setType($method);
         }
 

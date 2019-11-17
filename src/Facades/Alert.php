@@ -2,8 +2,8 @@
 
 namespace DarkGhostHunter\Laralerts\Facades;
 
-use DarkGhostHunter\Laralerts\AlertManager;
 use Illuminate\Support\Facades\Facade;
+use DarkGhostHunter\Laralerts\AlertManager;
 
 /**
  * Class Alert
@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Facade;
  *
  * @method static \DarkGhostHunter\Laralerts\Alert message(string $text)
  * @method static \DarkGhostHunter\Laralerts\Alert raw(string $text)
- * @method static \DarkGhostHunter\Laralerts\Alert lang(string $key)
+ * @method static \DarkGhostHunter\Laralerts\Alert lang(string $key, $replace = [], $locale = null)
  * @method static \DarkGhostHunter\Laralerts\Alert dismiss()
  * @method static \DarkGhostHunter\Laralerts\Alert fixed()
  * @method static \DarkGhostHunter\Laralerts\Alert primary()
