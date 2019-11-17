@@ -175,6 +175,20 @@ class AlertManagerTest extends TestCase
         $this->manager->reflash();
     }
 
+    public function testDoesntReflashWhenSessionNotStarted()
+    {
+        $this->alertBag->shouldReceive('reflash')
+            ->once();
+
+        $this->session->shouldReceive('isStarted')
+            ->once()
+            ->andReturnFalse();
+
+        $this->session->shouldNotReceive('keep');
+
+        $this->manager->reflash();
+    }
+
     public function testAddManyFromArray()
     {
         $this->session->shouldReceive('isStarted')

@@ -128,15 +128,11 @@ class AlertBag implements Arrayable, Countable, IteratorAggregate, Serializable,
      */
     public function filterByMessage(string $message, string $type = null)
     {
-        return collect($this->alerts)
-            ->filter(function($alert) use ($message) {
-                return $alert->getMessage() === $message;
-            })
-            ->when($type, function ($alerts, $value) {
-                return $alerts->filter(function($alert) use ($value) {
-                    return $alert->getType() === $value;
-                });
-            })->values()->all();
+        $alerts = $type ? $this->filterByType($type) : $this->alerts;
+
+        return collect($alerts)->filter(function($alert) use ($message) {
+            return $alert->getMessage() === $message;
+        })->values()->all();
     }
 
     /**
