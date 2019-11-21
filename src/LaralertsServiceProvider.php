@@ -2,7 +2,11 @@
 
 namespace DarkGhostHunter\Laralerts;
 
+use Illuminate\Routing\Router;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\ServiceProvider;
+use DarkGhostHunter\Laralerts\Http\Middleware\ExpireAlerts;
+use DarkGhostHunter\Laralerts\Http\Middleware\AppendAlertsToJsonResponse;
 
 class LaralertsServiceProvider extends ServiceProvider
 {
@@ -18,10 +22,20 @@ class LaralertsServiceProvider extends ServiceProvider
         );
 
         $this->app->singleton(AlertBag::class, function ($app) {
-            return $app['session']->get($app['config']['laralerts.key']) ?? new AlertBag();
+            return $app['session.store']->get($app['config']['laralerts.key']) ?? new AlertBag();
         });
 
-        $this->app->singleton(AlertManager::class);
+        $this->app->singleton(AlertManager::class, function ($app) {
+            $config = $app['config'];
+
+            return new AlertManager(
+                $app->make(AlertBag::class),
+                $app['session.store'],
+                $config->get('laralerts.key'),
+                $config->get('laralerts.type'),
+                $config->get('laralerts.dismiss')
+            );
+        });
     }
 
     /**
@@ -38,13 +52,16 @@ class LaralertsServiceProvider extends ServiceProvider
             __DIR__.'/../resources/views' => resource_path('views/vendor/laralerts'),
         ]);
 
+        // Register the terminable middleware that ages the alerts automatically
+        $this->app[Kernel::class]->pushMiddleware(ExpireAlerts::class);
+
+        // Middleware aliasing
+        $this->app[Router::class]->aliasMiddleware('alert.json', AppendAlertsToJsonResponse::class);
+
         // @codeCoverageIgnoreStart
-        $this->app['blade.compiler']->directive(
-            $this->app->make('config')->get('laralerts.directive'),
-            function () {
-                return "<?php echo \$__env->make('laralerts::alerts', [], ['alerts' => app(\DarkGhostHunter\Laralerts\AlertBag::class)->getAlerts()])->render(); ?>";
-            }
-        );
+        $this->app['blade.compiler']->directive( $this->app->make('config')->get('laralerts.directive'), function () {
+            return "<?php echo \$__env->make('laralerts::alerts', [], ['alerts' => app(\DarkGhostHunter\Laralerts\AlertBag::class)->getAlerts()])->render(); ?>";
+        });
         // @codeCoverageIgnoreEnd
     }
 }

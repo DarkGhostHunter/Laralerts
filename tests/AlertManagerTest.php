@@ -2,14 +2,13 @@
 
 namespace DarkGhostHunter\Laralerts\Tests;
 
+use Mockery;
 use BadMethodCallException;
+use Illuminate\Session\Store;
+use Orchestra\Testbench\TestCase;
 use DarkGhostHunter\Laralerts\Alert;
 use DarkGhostHunter\Laralerts\AlertBag;
 use DarkGhostHunter\Laralerts\AlertManager;
-use Illuminate\Contracts\Config\Repository;
-use Illuminate\Session\Store;
-use Mockery;
-use Orchestra\Testbench\TestCase;
 
 class AlertManagerTest extends TestCase
 {
@@ -35,19 +34,32 @@ class AlertManagerTest extends TestCase
      */
     protected $manager;
 
+    /**
+     * @var array
+     */
+    protected $original;
+
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->alertBag = Mockery::mock(AlertBag::class);
         $this->session = Mockery::mock(Store::class);
-        $this->config = Mockery::mock(Repository::class);
 
-        $this->config->expects('get')->with('laralerts.key')->andReturn('test_key');
-        $this->config->expects('get')->with('laralerts.type')->andReturn('success');
-        $this->config->expects('get')->with('laralerts.dismiss')->andReturnTrue();
+        $this->manager = new AlertManager($this->alertBag, $this->session, 'test_key', 'success', true);
 
-        $this->manager = new AlertManager($this->alertBag, $this->session, $this->config);
+        $this->original = Alert::getTypes();
+
+        Alert::addTypes([
+            'test-type' => 'class-test-type'
+        ]);
+    }
+
+    protected function tearDown() : void
+    {
+        parent::tearDown();
+
+        Alert::setTypes($this->original);
     }
 
     public function testShouldNotFlashIfAlreadyFlashed()
@@ -64,17 +76,6 @@ class AlertManagerTest extends TestCase
         $this->session->shouldNotReceive('flash');
         $this->session->shouldNotReceive('keep');
 
-        $this->alertBag->shouldReceive('isDirty')
-            ->once()
-            ->andReturnFalse();
-
-        $this->alertBag->shouldReceive('shouldReflash')
-            ->once()
-            ->andReturnFalse();
-
-        $this->alertBag->shouldReceive('flush')
-            ->once();
-
         $this->alertBag->shouldReceive('add')
             ->once()
             ->andReturnSelf();
@@ -83,40 +84,6 @@ class AlertManagerTest extends TestCase
             ->with('test_key', Mockery::type(AlertBag::class));
 
         $this->manager->message('test-message');
-    }
-
-    public function testWithOldShouldNotFlashButKeep()
-    {
-        $this->alertBag->shouldReceive('markForReflash')
-            ->once();
-
-        $this->session->shouldReceive('isStarted')
-            ->twice()
-            ->andReturnTrue();
-
-        $this->session->shouldReceive('keep')
-            ->with('test_key');
-
-        $this->session->shouldNotReceive('flash');
-
-        $this->alertBag->shouldReceive('isDirty')
-            ->once()
-            ->andReturnFalse();
-
-        $this->alertBag->shouldReceive('shouldReflash')
-            ->once()
-            ->andReturnTrue();
-
-        $this->session->shouldReceive('has')
-            ->once()
-            ->with('test_key')
-            ->andReturnTrue();
-
-        $this->alertBag->shouldReceive('add')
-            ->once()
-            ->andReturnSelf();
-
-        $this->manager->withOld()->message('test-message');
     }
 
     public function testGetAndSetAlertBag()
@@ -173,17 +140,6 @@ class AlertManagerTest extends TestCase
 
     public function testAdd()
     {
-        $this->alertBag->shouldReceive('isDirty')
-            ->once()
-            ->andReturnFalse();
-
-        $this->alertBag->shouldReceive('shouldReflash')
-            ->once()
-            ->andReturnFalse();
-
-        $this->alertBag->shouldReceive('flush')
-            ->once();
-
         $this->session->shouldReceive('isStarted')
             ->once()
             ->andReturnTrue();
@@ -203,23 +159,38 @@ class AlertManagerTest extends TestCase
         $this->manager->message('test-message');
     }
 
-    public function testAddManyFromArray()
+    public function testReflashesOldAlerts()
     {
-        $this->alertBag->shouldReceive('isDirty')
-            ->once()
-            ->andReturnFalse();
-
-        $this->alertBag->shouldReceive('isDirty')
-            ->twice()
-            ->andReturnTrue();
-
-        $this->alertBag->shouldReceive('shouldReflash')
-            ->once()
-            ->andReturnFalse();
-
-        $this->alertBag->shouldReceive('flush')
+        $this->alertBag->shouldReceive('reflash')
             ->once();
 
+        $this->session->shouldReceive('isStarted')
+            ->once()
+            ->andReturnTrue();
+
+        $this->session->shouldReceive('keep')
+            ->once()
+            ->with('test_key');
+
+        $this->manager->reflash();
+    }
+
+    public function testDoesntReflashWhenSessionNotStarted()
+    {
+        $this->alertBag->shouldReceive('reflash')
+            ->once();
+
+        $this->session->shouldReceive('isStarted')
+            ->once()
+            ->andReturnFalse();
+
+        $this->session->shouldNotReceive('keep');
+
+        $this->manager->reflash();
+    }
+
+    public function testAddManyFromArray()
+    {
         $this->session->shouldReceive('isStarted')
             ->times(3)
             ->andReturnTrue();
@@ -243,10 +214,96 @@ class AlertManagerTest extends TestCase
         ]);
     }
 
+    public function testAddManyFromArrayWithLocation()
+    {
+        $this->session->shouldReceive('isStarted')
+            ->times(3)
+            ->andReturnTrue();
+
+        $this->session->shouldReceive('has')
+            ->times(3)
+            ->with('test_key')
+            ->andReturnFalse();
+
+        $this->session->shouldReceive('flash')
+            ->with('test_key', Mockery::type(AlertBag::class));
+
+        $this->alertBag->shouldReceive('add')
+            ->times(3)
+            ->with(Mockery::type(Alert::class));
+
+        $this->manager->addManyFromArray([
+            'foo' => [
+                'bar' => [
+                    ['message' => 'test-message', 'type' => 'test-type'],
+                    ['message' => 'test-message', 'type' => 'test-type'],
+                    ['message' => 'test-message', 'type' => 'test-type'],
+                ]
+            ]
+        ], 'foo.bar');
+    }
+
+    public function testAddManyFromJson()
+    {
+        $this->session->shouldReceive('isStarted')
+            ->times(3)
+            ->andReturnTrue();
+
+        $this->session->shouldReceive('has')
+            ->times(3)
+            ->with('test_key')
+            ->andReturnFalse();
+
+        $this->session->shouldReceive('flash')
+            ->with('test_key', Mockery::type(AlertBag::class));
+
+        $this->alertBag->shouldReceive('add')
+            ->times(3)
+            ->with(Mockery::type(Alert::class));
+
+        $json = json_encode([
+            ['message' => 'test-message', 'type' => 'test-type'],
+            ['message' => 'test-message', 'type' => 'test-type'],
+            ['message' => 'test-message', 'type' => 'test-type'],
+        ]);
+
+        $this->manager->addManyFromJson($json);
+    }
+
+    public function testAddManyFromJsonWithLocation()
+    {
+        $this->session->shouldReceive('isStarted')
+            ->times(3)
+            ->andReturnTrue();
+
+        $this->session->shouldReceive('has')
+            ->times(3)
+            ->with('test_key')
+            ->andReturnFalse();
+
+        $this->session->shouldReceive('flash')
+            ->with('test_key', Mockery::type(AlertBag::class));
+
+        $this->alertBag->shouldReceive('add')
+            ->times(3)
+            ->with(Mockery::type(Alert::class));
+
+        $json = json_encode([
+            'foo' => [
+                'bar' => [
+                    ['message' => 'test-message', 'type' => 'test-type'],
+                    ['message' => 'test-message', 'type' => 'test-type'],
+                    ['message' => 'test-message', 'type' => 'test-type'],
+                ]
+            ]
+        ]);
+
+        $this->manager->addManyFromJson($json, 'foo.bar');
+    }
+
     public function testMake()
     {
         $this->alertBag->shouldNotReceive('add');
-        $this->alertBag->shouldNotReceive('flush');
         $this->session->shouldNotReceive('flash');
 
         $this->assertInstanceOf(Alert::class, $this->manager->make('message', 'success', true, 'foo'));
@@ -254,20 +311,15 @@ class AlertManagerTest extends TestCase
 
     public function testAddFromJson()
     {
+        $original = Alert::getTypes();
+
+        Alert::setTypes([
+            'test-type' => 'test-type-class'
+        ]);
+
         $array = ['message' => 'test-message', 'type' => 'test-type'];
 
         $json = json_encode($array);
-
-        $this->alertBag->shouldReceive('isDirty')
-            ->once()
-            ->andReturnFalse();
-
-        $this->alertBag->shouldReceive('shouldReflash')
-            ->once()
-            ->andReturnFalse();
-
-        $this->alertBag->shouldReceive('flush')
-            ->once();
 
         $this->session->shouldReceive('isStarted')
             ->once()
@@ -290,22 +342,19 @@ class AlertManagerTest extends TestCase
         $added = $this->manager->addFromJson($json);
 
         $this->assertEquals(array_merge($array, ['dismiss' => null, 'classes' => null]), $added->toArray());
+
+        Alert::setTypes($original);
     }
 
     public function testAddFromArray()
     {
+        $original = Alert::getTypes();
+
+        Alert::setTypes([
+            'test-type' => 'test-type-class'
+        ]);
+
         $array = ['message' => 'test-message', 'type' => 'test-type'];
-
-        $this->alertBag->shouldReceive('isDirty')
-            ->once()
-            ->andReturnFalse();
-
-        $this->alertBag->shouldReceive('shouldReflash')
-            ->once()
-            ->andReturnFalse();
-
-        $this->alertBag->shouldReceive('flush')
-            ->once();
 
         $this->session->shouldReceive('isStarted')
             ->once()
@@ -328,15 +377,13 @@ class AlertManagerTest extends TestCase
         $added = $this->manager->addFromArray($array);
 
         $this->assertEquals(array_merge($array, ['dismiss' => null, 'classes' => null]), $added->toArray());
+
+        Alert::setTypes($original);
     }
 
 
     public function testBypassToAlert()
     {
-        $this->alertBag->shouldReceive('isDirty')
-            ->times(14)
-            ->andReturnTrue();
-
         $this->session->shouldReceive('isStarted')
             ->times(14)
             ->andReturnTrue();
@@ -365,6 +412,8 @@ class AlertManagerTest extends TestCase
         $this->assertInstanceOf(Alert::class, $this->manager->light());
         $this->assertInstanceOf(Alert::class, $this->manager->dark());
         $this->assertInstanceOf(Alert::class, $this->manager->classes('test', 'test'));
+
+        $original = Alert::getTypes();
     }
 
     public function testReceivesMacro()
