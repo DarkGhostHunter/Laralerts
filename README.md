@@ -2,13 +2,17 @@
 
 [![Latest Stable Version](https://poser.pugx.org/darkghosthunter/laralerts/v/stable)](https://packagist.org/packages/darkghosthunter/laralerts) [![License](https://poser.pugx.org/darkghosthunter/laralerts/license)](https://packagist.org/packages/darkghosthunter/laralerts)
 ![](https://img.shields.io/packagist/php-v/darkghosthunter/laralerts.svg)
- [![Build Status](https://travis-ci.com/DarkGhostHunter/Laralerts.svg?branch=master)](https://travis-ci.com/DarkGhostHunter/Laralerts) [![Coverage Status](https://coveralls.io/repos/github/DarkGhostHunter/Laralerts/badge.svg?branch=master)](https://coveralls.io/github/DarkGhostHunter/Laralerts?branch=master) [![Maintainability](https://api.codeclimate.com/v1/badges/eba13abff3c823c00f5b/maintainability)](https://codeclimate.com/github/DarkGhostHunter/Laralerts/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/eba13abff3c823c00f5b/test_coverage)](https://codeclimate.com/github/DarkGhostHunter/Laralerts/test_coverage)
+ ![](https://github.com/DarkGhostHunter/Lararut/workflows/PHP%20Composer/badge.svg) [![Coverage Status](https://coveralls.io/repos/github/DarkGhostHunter/Laralerts/badge.svg?branch=master)](https://coveralls.io/github/DarkGhostHunter/Laralerts?branch=master) [![Maintainability](https://api.codeclimate.com/v1/badges/eba13abff3c823c00f5b/maintainability)](https://codeclimate.com/github/DarkGhostHunter/Laralerts/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/eba13abff3c823c00f5b/test_coverage)](https://codeclimate.com/github/DarkGhostHunter/Laralerts/test_coverage)
 
 # Laralerts
 
 Quickly set one or multiple Alerts in your backend, and render them in the frontend.
 
 Laralerts is compatible with any frontend framework to better suit your app, not the other way around.
+
+## Requirements
+
+* Laravel 6 or Laravel 7
 
 ## Installation
 
@@ -18,9 +22,9 @@ You can install the package via composer:
 composer require darkghosthunter/laralerts
 ```
 
-You can quick start your frontend scaffolding installing [Laravel UI](https://laravel.com/docs/6.x/frontend), specially if you don't have anything to start with.
+You can quick start your frontend scaffolding installing [Laravel UI](https://laravel.com/docs/7.x/frontend), specially if you don't have anything to start with.
 
-Good alternatives are [Bulma.io](https://bulma.io/), [Materialize](https://materializecss.com/), [Semantic UI](https://semantic-ui.com/), [Material UI](https://material-ui.com), [UI kit](https://getuikit.com/) and [INK](http://ink.sapo.pt/).
+Good alternatives to [Bootstrap](https://getbootstrap.com) are [Bulma.io](https://bulma.io/), [Materialize](https://materializecss.com/), [Semantic UI](https://semantic-ui.com/), [Material UI](https://material-ui.com), [UI kit](https://getuikit.com/) and [INK](http://ink.sapo.pt/).
 
 And that's it. Everything works out of the box.
 
