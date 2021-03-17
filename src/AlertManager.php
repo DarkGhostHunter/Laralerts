@@ -3,8 +3,8 @@
 namespace DarkGhostHunter\Laralerts;
 
 use BadMethodCallException;
-use Illuminate\Support\Arr;
 use Illuminate\Session\Store;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Traits\Macroable;
 
 /**
@@ -216,7 +216,7 @@ class AlertManager
             return $this->macroCall($method, $parameters);
         }
 
-        if ((method_exists(Alert::class, $method) && is_callable([Alert::class, $method]))) {
+        if (method_exists(Alert::class, $method)) {
             return $this->add($this->make())->{$method}(...$parameters);
         }
 
