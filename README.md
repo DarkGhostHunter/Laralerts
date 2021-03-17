@@ -12,7 +12,9 @@ Laralerts is compatible with any frontend framework to better suit your app, not
 
 ## Requirements
 
-* Laravel 6 or Laravel 7
+* Laravel 7.0 or Laravel 8.0
+
+> For older versions support, consider helping by sponsoring or donating.
 
 ## Installation
 
