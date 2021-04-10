@@ -1,8 +1,6 @@
 ![Jeff Sheldon - Unsplash (UL) #eOLpJytrbsQ](https://images.unsplash.com/photo-1416339306562-f3d12fefd36f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1200&h=400&q=80)
 
-[![Latest Stable Version](https://poser.pugx.org/darkghosthunter/laralerts/v/stable)](https://packagist.org/packages/darkghosthunter/laralerts) [![License](https://poser.pugx.org/darkghosthunter/laralerts/license)](https://packagist.org/packages/darkghosthunter/laralerts)
-![](https://img.shields.io/packagist/php-v/darkghosthunter/laralerts.svg)
- ![](https://github.com/DarkGhostHunter/Lararut/workflows/PHP%20Composer/badge.svg) [![Coverage Status](https://coveralls.io/repos/github/DarkGhostHunter/Laralerts/badge.svg?branch=master)](https://coveralls.io/github/DarkGhostHunter/Laralerts?branch=master) [![Maintainability](https://api.codeclimate.com/v1/badges/eba13abff3c823c00f5b/maintainability)](https://codeclimate.com/github/DarkGhostHunter/Laralerts/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/eba13abff3c823c00f5b/test_coverage)](https://codeclimate.com/github/DarkGhostHunter/Laralerts/test_coverage)
+[![Latest Stable Version](https://poser.pugx.org/darkghosthunter/laralerts/v/stable)](https://packagist.org/packages/darkghosthunter/laralerts) [![License](https://poser.pugx.org/darkghosthunter/laralerts/license)](https://packagist.org/packages/darkghosthunter/laralerts) ![](https://img.shields.io/packagist/php-v/darkghosthunter/laralerts.svg) ![](https://github.com/DarkGhostHunter/Lararut/workflows/PHP%20Composer/badge.svg) [![Coverage Status](https://coveralls.io/repos/github/DarkGhostHunter/Laralerts/badge.svg?branch=master)](https://coveralls.io/github/DarkGhostHunter/Laralerts?branch=master) [![Maintainability](https://api.codeclimate.com/v1/badges/eba13abff3c823c00f5b/maintainability)](https://codeclimate.com/github/DarkGhostHunter/Laralerts/maintainability) [![Laravel Octane Compatible](https://img.shields.io/badge/Laravel%20Octane-Compatible-success?style=flat&logo=laravel)](https://github.com/laravel/octane) 
 
 # Laralerts
 
@@ -12,7 +10,8 @@ Laralerts is compatible with any frontend framework to better suit your app, not
 
 ## Requirements
 
-* Laravel 7.0 or Laravel 8.0
+* Laravel 7.x, 8.x or later
+* PHP 7.4 or later.
 
 > For older versions support, consider helping by sponsoring or donating.
 
@@ -24,15 +23,19 @@ You can install the package via composer:
 composer require darkghosthunter/laralerts
 ```
 
-You can quick start your frontend scaffolding installing [Laravel UI](https://laravel.com/docs/7.x/frontend), specially if you don't have anything to start with.
-
-Good alternatives to [Bootstrap](https://getbootstrap.com) are [Bulma.io](https://bulma.io/), [Materialize](https://materializecss.com/), [Semantic UI](https://semantic-ui.com/), [Material UI](https://material-ui.com), [UI kit](https://getuikit.com/) and [INK](http://ink.sapo.pt/).
+If you don't have anything to start with in your frontend, you can use [Bootstrap](https://getbootstrap.com), [Bulma.io](https://bulma.io/), [UI kit](https://getuikit.com/), [TailwindCSS](https://tailwindcss.com/) and [INK](http://ink.sapo.pt/).
 
 And that's it. Everything works out of the box.
 
+> Laralerts its **NOT** compatible with frontend-rending javascript frameworks, like [Material UI](https://material-ui.com) and similar.
+
 ## Usage
 
-### Creating an Alert
+Laralerts allows you to set a list of Alerts in your application and render them in the frontend.
+
+The default Alert renderer uses Bootstrap code to transform each alert into [Bootstrap Alerts](https://getbootstrap.com/docs/5.0/components/alerts/). Alternatively, you [create your own](#creating-a-custom-renderer).
+
+### Quickstart
 
 To set an Alert in your frontend, you can use the `alert()` helper, or the `Alert` Facade. A good place to use them is before sending a View or Redirect response to the browser, like in your HTTP Controllers.
 
@@ -62,44 +65,38 @@ class ArticleController extends Controller
         
         $article->fill($request)->save();
         
-        alert('Your article has been updated!', 'success', true);
+        alert('Your article has been updated!', 'success');
         
         return redirect()->action('ArticleController@edit', $article);
     }
-    
-    // ...
 }
 ```
 
-The `alert()` helper accepts the text *message*, the *type* of the alert, and if it should be *dismissible*, making your alerts into expressive one-liners.
+The `alert()` helper accepts the text *message*, and the **types** of the alert. In the above example, we created a "success" alert.
 
-To render them in the frontend, use the `@alerts` Blade directive which will take care of the magic, anywhere you want.
+To render them in the frontend, use the `<x-laralerts />` Blade component which will take care of the magic, anywhere you want to put it.
 
 ```blade
 <div class="header">
     <h1>Welcome to my site</h1>
-    @alerts
+    <x-laralerts />
 </div>
 ```
 
-And if there is no Alerts to show, don't worry, no HTML will be rendered.
+If there is at least one Alert in queue to be rendered, the above will be transformed into this:
 
-#### Conditional Alerts
-
-You can also push an Alert if a condition evaluates to true or false. Just use the `alert_if` and `alert_unless`, respectively.
-
-```php
-<?php
-
-alert_if(true, 'You should see this alert');
-alert_unless(false, 'And this too since the condition is false!');
-
-alert_if(false)->message('No problem with chaining methods!');
+```html
+<div class="header">
+    <h1>Welcome to my site</h1>
+    <div class="top-alerts">
+        <div class="alert alert-success" role="alert">
+            Your article has been updated!
+        </div>
+    </div>
+</div>
 ```
 
-When `alert_if` and `alert_unless` evaluate to false, you will still receive an Alert instance, but this won't be persisted into the session or response, avoiding unwanted errors in your backend.
-
-#### Message
+### Message
 
 Add the text inside the Alert using the `message()` method. Yeah, that's it.
 
@@ -108,11 +105,7 @@ Add the text inside the Alert using the `message()` method. Yeah, that's it.
 
 use DarkGhostHunter\Laralerts\Facades\Alert;
 
-alert()->message('Your message was sent!')
-    ->success();
-    
-Alert::message('We will email you a copy!')
-    ->info();
+alert()->message('Your message was sent!')->types('success');
 ```
 
 ```html
@@ -127,18 +120,16 @@ Alert::message('We will email you a copy!')
 
 > By default, the `message()` method escapes the text. If you want to send a raw message, you should use [`raw()`](#raw-message).
 
-#### Raw message
+### Raw message
 
-Since the `message()` method escapes the text for safety, you can use the `raw()` method to do output the raw string you set. This allows you to use HTML for personalized messages, like adding some _style_ or emojis like 😍.
+Since the `message()` method escapes the text for safety, you can use the `raw()` method to output the any raw string you set. This allows you to use HTML for personalized messages, like adding some _style_, HTML, or emojis like 😍.
 
 ```php
 <?php
 
-alert()->message('This is <strong>FUBAR</strong>.')
-    ->warning();
+alert()->message('This is <strong>FUBAR</strong>.')->types('warning');
 
-alert()->raw('But this is <strong>important</strong>.')
-    ->warning();
+alert()->raw('But this is <strong>important</strong>.')->types('warning');
 ```
 
 ```html
@@ -153,223 +144,135 @@ alert()->raw('But this is <strong>important</strong>.')
 
 **Warning: Don't use `raw()` to show user-generated content. You have been warned**.
 
-#### Using Localization
+### Alert Type
 
-To gracefully localize messages on the fly, use the `lang()` method, which is a mirror to [the `@lang` Blade directive](https://laravel.com/docs/localization#retrieving-translation-strings).
-
-```php
-<?php
-
-alert()->lang('email.sent', ['email' => $email], 'es')->success();
-```
-
-```html
-<div class="alert alert-success" role="alert">>
-    ¡Tu email ha sido cambiado a "margarita@madrid.cl" con éxito!
-</div>
-```
-
-#### Alert Type
-
-You're probably using Bootstrap 4, so in that case you can use multiple fluent methods that mirror the Alert class from Bootstrap 4, right out of the box.
-
-| Method       | Class              |
-| ---         | ---              |
-| `primary()`  | `alert-primary`    |
-| `secondary()`| `alert-secondary`  |
-| `success()`  | `alert-success`    |
-| `danger()`   | `alert-danger`     |
-| `warning()`  | `alert-warning`    |
-| `info()`     | `alert-info`       |
-| `light()`    | `alert-light`      |
-| `dark()`     | `alert-dark`       |
+You can set an alert "type" by its name by just simply setting it with the `types()` method.
 
 ```php
 <?php
 
-alert()->message('Your message was sent!')
-    ->primary();
+alert()->message('Your message was sent!')->types('primary');
+
+alert()->message('There is an unread message.')->types('info', 'fade');
 ```
 
 ```html
 <div class="alert alert-primary" role="alert">
     Your message was sent!
 </div>
-```
-
-If you're not using Bootstrap 4, you [can change this list with your own](#adding-your-own-fluid-classes).
-
-> By default, Alerts don't have any default type, so when they're rendered they will be *transparent* (without style or color). Don't worry, you can easily [set a default](#default-type).
-
-##### Adding your own fluid classes
-
-If you need to modify the Alert types, you can use the static method `Alert::setTypes()` with an array of accepted types of Alerts. You can do this on the boot method or register method of your `AppServiceProvider`.
-
-The alert classes must must be keyed by the name of the fluent method, and the underlying class to attach to the alert.
-
-```php
-<?php
-
-/**
- * Bootstrap any application services.
- *
- * @return void
- */
-public function boot()
-{
-    // ...
-    
-    \DarkGhostHunter\Laralerts\Alert::setTypes([
-        'gradient' => 'gradient',
-        'popping'  => 'bg-pop-color',
-    ]);
-}
-```
-
-```php
-<?php
-
-alert()->message('Popping colors!')->popping();
-```
-
-```html
-<div class="alert bg-pop-color" role="alert">
-    Popping colors!
-</div> 
-```
-
-The array you supply is not added, but replaced entirely. If you want to just add some types, use the `addTypes()` static method.
-
-```php
-<?php
-
-\DarkGhostHunter\Laralerts\Alert::addTypes([
-    'these' => 'class-these',
-    'are' => 'class-are',
-    'added' => 'class-added',
-]);
-```
-
-#### Dismiss
-
-To make an Alert dismissible, use the `dismiss()` method. This will change the Blade view used to render the Alert in HTML to make it dismissible.
-
-By contrast, if you have set dismissible Alerts by default, using the `fixed()` method will make a particular Alert non-dismissible by using the default Blade view. 
-
-```php
-<?php
-
-alert()->message('Your message was sent!')
-    ->success()
-    ->dismiss();
-```
-
-```html
-<div class="alert alert-info alert-dismissible fade show" role="alert">
-    Your message was sent!
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-    </button>
-</div>
-```
-
-> By using two different Blade views for dismissable and non-dismissable alerts, there is more flexibility on how to render them.
-
-#### Additional Classes
-
-You can issue additional classes to your Alert by seamlessly using the `classes()` method, which accepts a list of classes to be added into the HTML code.
-
-```php
-<?php
-
-alert()->message('Your message was sent!')
-    ->success()
-    ->classes('message-sent', 'global-alert');
-```
-
-```html
-<div class="alert alert-success message-sent global-alert" role="alert">
+<div class="alert alert-primary fade" role="alert">
     Your message was sent!
 </div>
 ```
 
-### Persisting the Alerts
+The types are just aliases for custom CSS classes and HTML, which are then translated by the Renderer to the proper code.
 
-By default, in every request lifecycle (except on Redirects) you will start with an empty Alert Bag.
+> You can issue more than one type. How the type gets rendered into the Alert will be the Rendered responsibility. The default Bootstrap renderer will set each unrecognized type as an additional CSS class.
 
-You can _rescue_ the old Alerts using the `reflash()` method. This will take the old alerts and put them into the Alert Bag, merging with any other alert you have set previously, but with the new ones taking precedence. 
+### Localization
 
-Once you create a new alert, it will be appended to the existing bag of alerts from the request or redirect made before.
+To gracefully localize messages on the fly, use the `trans()` method, which is a mirror to [the `__()` helper](https://laravel.com/docs/localization#retrieving-translation-strings).
 
 ```php
 <?php
 
-alert()
-    ->reflash()
-    ->message('Be sure to check the other alerts.')
-    ->warning();
+alert()->lang('email.sent', ['email' => $email], 'es')->types('success');
 ```
 
 ```html
-<div class="alert alert-success message-sent global-alert" role="alert">
-    Your message was sent!
-</div>
-
-<div class="alert alert-warning" role="alert">
-    Be sure to check the other alerts.
+<div class="alert alert-success" role="alert">
+    ¡Tu email ha sido cambiado a "margarita@madrid.cl" con éxito!
 </div>
 ```
 
-### Adding Alerts to a JSON Response
+### Links
 
-This library has a convenient way to add Alerts into your JSON Responses. Just simply add the `alert.json` middleware into your routes or `api` routes, [as the documentation says](https://laravel.com/docs/middleware#registering-middleware).
+Sometimes you will want to add links to your Alerts. You can use the `links()` method which accepts an array of keys and URLs or routes names to replace in the message. Links must be enclosed with curly braces, and must contain the text to include inside the link.
 
-When you return a `JsonResponse` to the browser, the middleware will append the alert as JSON using the same Session Key defined in the configuration, which is `_alerts` by default. It also accepts the `key` parameter to use as an alternative, compatible with *dot notation*. Here is an example:
+```php
+alert()->message('Please read {link:the privacy policy} for more information.')
+      ->types('success')
+      ->links([
+          'link' => route('home.privacy')
+      ]);
+```
+
+```html
+<div class="alert alert-success" role="alert">
+    Please read <a href="https://myapp.com/privacy" class="alert-link">the privacy policy</a> for more information.
+</div>
+```
+
+If you want to make a link forcefully open in another window, you can use `::` instead of `:`, before the link text.
+
+```php
+alert()->message('Please read {link::the privacy policy} for more information.')
+      ->types('success')
+      ->links([
+          'link' => route('home.privacy')
+      ]);
+```
+
+```html
+<div class="alert alert-success" role="alert">
+    Please read <a href="https://myapp.com/privacy" class="alert-link" target="_blank">the privacy policy</a> for more information.
+</div>
+```
+
+### Dismiss
+
+Most of frontend frameworks have alerts or notifications that can be dismissible. You can set an Alert to be dismissible using `dismiss()`.
+
+```php
+alert()->message('You can disregard this')->dismiss();
+```
+
+If you want to change your mind, you can use `dismiss(false)`:
+
+```php
+alert()->message('You can disregard this')->dismiss(false);
+```
+
+How the dismissible alert is transformed into code will depend on the renderer itself.
+
+> By default, alerts are not dismissible, you can change it in the configuration.
+
+### Conditional Alerts
+
+You can also push an Alert if a condition evaluates to true or false. You can chain the alert with `when()` and `unless()`.
 
 ```php
 <?php
 
-use Illuminate\Support\Facades\Route;
-use DarkGhostHunter\Laralerts\Http\Middleware\AppendAlertsToJsonResponse;
+use Illuminate\Support\Facades\Auth;
 
-Route::group('api', function () {
-    
-    Route::post('create')->uses('UserController@create');
-    Route::post('update')->uses('UserController@update');
-    
-})->middleware('alert.json:_status.alerts');
+alert('You are authenticated')->when(Auth::check());
+
+alert('You have messages in your inbox')->unless(Auth::user()->mailbox()->isEmpty());
 ```
 
-When you receive a JSON Response, you will see the alerts appended to whichever key you issued. Using the above example, we should see the `alerts` key under the `_status` key: 
+### Persistent Alerts
 
-```json
-{
-    "resource": "users",
-    "url": "/v1/users",
-    "_status": {
-        "timestamp":  "2019-06-05T03:47:24Z",
-        "action" : "created",
-        "id": 648,
-        "alerts": [
-            {
-                "message": "The user has been created!",
-                "type" : "success",
-                "dismiss": true,
-                "classes": null
-            }
-        ]
-    }
-}
+Alerts die as soon as the response is sent to the browser, so these are not rendered in the next. To avoid that, and make an alert "permanent", you can use the `persistAs()` method with a key for the alert.
+
+```php
+alert()->message('Your disk size is almost full')->types('danger')->persistAs('disk.full');
 ```
 
-To keep good performance, the Alerts will be injected into the Session only if it has started. For example, `api` routes are stateless and do not have exceptions, so there is no need to explicitly disable sessions in these places.
+The alert will be always render in all requests where there is an alert container. Once you're done, you can immediately delete the persistent Alert using `abandon()` directly from the helper, with the name of the persisted Alert. It will return `true` if the persisted Alert is found, or `false` if not.
+
+```php
+alert()->abandon('disk.full');
+```
+
+> Persistent alerts are only compatible on stateful sessions.
 
 ## Configuration
 
 Laralerts works out-of-the-box with some common defaults, but if you need a better approach for your particular application, you can configure some parameters. First, publish the configuration file.
 
 ```bash
-php artisan vendor:publish --provider="DarkGhostHunter\Laralerts\LaralertsServiceProvider"
+php artisan vendor:publish --provider="DarkGhostHunter\Laralerts\LaralertsServiceProvider" --tag="config"
 ``` 
 
 Let's examine the configuration array, which is quite simple:
@@ -378,28 +281,22 @@ Let's examine the configuration array, which is quite simple:
 <?php 
 
 return [
-    'directive' => 'alerts',
+    'renderer' => 'bootstrap',
     'key' => '_alerts',
-    'type' => null,
-    'dismiss' => false,
 ];
 ```
 
-### Directive
-
-This library registers the `@alerts` blade component, that has the container where all the Alerts will be rendered. 
-
-If you're using a directive with the same name, you may want to change it so it doesn't collide. I totally recommend you to use `@laralerts` as a safe bet.
+### Renderer
 
 ```php
 <?php 
 
 return [
-    'directive' => 'laralerts',
+    'renderer' => 'bootstrap',
 ];
 ```
 
-> When changing this parameter, you may want to use `php artisan view:clear` to rebuild your compiled views with the new directive.
+The default renderer to use with Laralerts. This package ships with Bootstrap 5 renderer, but you can [create your own](#renderers) for other frontend frameworks like [Bulma.io](https://bulma.io/), [UI kit](https://getuikit.com/), [TailwindCSS](https://tailwindcss.com/) and [INK](http://ink.sapo.pt/), or even your own custom frontend framework.
 
 ### Session Key
 
@@ -415,94 +312,160 @@ return [
 
 > For ease of mind, the Alerts serialize and unserialize as `array`, so you don't have to worry about storage concerns.
 
-### Default Type
+## Renderers
 
-The default type of the Alerts in the Application. You can use any of the [included type names](#alert-type), like `success` or `info`, or your own as long is [registered properly](#adding-your-own-fluid-classes). You can override the default type anytime when you create an Alert manually.
+Alerts get rendered by a Renderer, which takes the Alert data and transforms them into an HTML string. This makes swapping a frontend framework easier, or have better flexibility when rendering HTML.
 
-```php
-<?php 
+### Creating a custom renderer
 
-return [
-    'type' => 'primary',
-];
-```
-
-### Modifying the HTML
-
-You may be using another frontend framework different from Bootstrap 4, or you may want to change the HTML to better suit your application design. In any case, you can override the View files in `views/vendor/laralerts`:
-
-* `alert.blade.php`: The HTML for a single Alert.
-* `alert-dismiss.blade.php`: Same as above, but for a dismissible Alert.
-* `alerts.blade.php`: The HTML that contains all the Alerts
-
-The Alert view receives:
-
-* `$message`: The message to show inside the Alert.
-* `$type`: The type name.  
-* `$typeClass`: The type CSS class.  
-* `$classes`: The additional classes to add to the HTML block.
-
-You can change the HTML to whatever you want, like adapting the Alert to be used with [Bulma.io Notifications](https://bulma.io/documentation/elements/notification/).
-
-`/resources/views/vendor/laralerts/alert-dismiss.blde.php`
-
-```blade
-<div class="notification is-{{ $typeClass }} {{ $classes }}">
-    <button class="delete"></button>
-    {!! $message !!}
-</div>
-```
-
-#### Adding an Alert from JSON
-
-Sometimes your application may receive a JSON Alert from an external service using this package. You can quickly add this JSON as an Alert to your application using the `addFromJson()` method.
+You can create your own using the `Renderer` contract, and registering it into the `RendererManager` in your `AppServiceProvider`. You can use the `BootstrapRenderer` as a starting point.
 
 ```php
 <?php
 
-$json = '"{"message":"Email delivered"}"';
+use DarkGhostHunter\Laralerts\RendererManager;
+use App\Alerts\Renderers\BulmaRenderer;
 
-alert()->addFromJson($json)->success()->dismiss();
+/**
+ * Bootstrap any application services.
+ *
+ * @return void
+ */
+public function boot(RendererManager $alert)
+{
+    $alert->extend('bulma', function ($app) {
+        return new BulmaRenderer($app);
+    });
+}
 ```
 
-This will work as long the JSON **has the `message` key** with the text to include inside the Alert. Additionally, you can add the `type`, `dismiss` and `classes` keys to add an Alert, with the possibility of override them afterwards.
+Then, in your config file, set the renderer to the one you have registered.
 
-If you need to add many alerts from a JSON string, use the `addManyFromJson()` method and (optionally) issue the key where they are using dot notation.
+```php
+// config/laralerts.php
+return [
+    'renderer' => 'bulma'
+    
+    // ...
+];
+```
 
-When doing this, the alerts will be created using the `message`, `type`, `dismiss` and `classes` respectively.
+When you issue an alert, the alert will be rendered using the renderer you have set.
+
+```php
+<?php
+
+alert()->message('Popping colors!')->types('primary');
+```
+
+```html
+<div class="notification is-primary">
+    Popping colors!
+</div> 
+```
+
+### Alerts Container HTML
+
+When the Renderer receives Alerts to render, it will call a "container" view which will render all the Alerts by using a loop.
+
+```blade
+@if($alerts)
+    <div class="alerts">
+        @each('laralerts::bootstrap.alert', $alerts, 'alert')
+    </div>
+@endif
+```
+
+You may be using another frontend framework different from Bootstrap 5, or you may want to change the HTML to better suit your application design. In any case, you can override the View files in `views/vendor/laralerts`:
+
+* `container.blade.php`: The HTML that contains all the Alerts.
+* `alert.blade.php`: The HTML for a single Alert.
+
+The variables the `alert.blade.php` view receives are set from by Renderer. For the case of the included Bootstrap rendered, these are:
+
+* `$message`: The message to show inside the Alert.
+* `$classes`: The CSS classes to incorporate into the Alert.
+* `$dismissible`: A boolean that sets the alert as dismissible or not.
+
+#### Adding an Alert from JSON
+
+Sometimes your application may receive a JSON Alert from an external service using this package. You can quickly add this JSON as an Alert to your application using the `fromJson()` method.
+
+```json
+{
+  "alert": {
+      "message": "Email delivered",
+      "type": ["success", "important"],
+      "dismiss": false
+  }
+}
+```
+
+```php
+alert()->fromJson($json);
+```
+
+This will work as long the JSON **has the `message` key** with the text to include inside the Alert. Additionally, you can add the `types` and `dismiss` keys to add an Alert, with the possibility of override them afterwards.
+
+If you need to add many alerts from a JSON string, use the `manyFromJson()` method and (optionally) issue the key where they are using dot notation.
+
+When doing this, the alerts will be created using the `message`, `type`, and `dismiss` respectively.
 
 ```php
 <?php
 
 $json = '"{
     "content": {
-        "alerts": 
-            {
-                "message": "I like trains!"
-            },
-            {
-                "message": "Me too!"
-            },
+        "alerts": [
+            {"message": "I like trains!"},
+            {"message": "Me too!"},
+        ]
     }
 }"';
 
-alert()->addManyFromJson($json, 'content.alerts');
+alert()->manyFromJson($json, 'content.alerts');
 ```
 
-### Macros
+## Alerts as JSON
 
-This package is totally compatible with Macros. You can add your own macros to the `AlertManager` class, which has access to the Session Store and the Alert Bag. 
+This library has a convenient way to add Alerts into your JSON Responses. This can be very useful when using this package with [Laravel Jetstream](https://jetstream.laravel.com/), to add your alerts to each response being sent to the browser.
 
-You can add your own macros the usual way, preferably directly through the class itself.
+Just simply [add the `laralerts.json` middleware](https://laravel.com/docs/middleware#registering-middleware) into your `api` routes or, if you're using [Laravel Jetstream](https://jetstream.laravel.com/) or similar, as a [global middleware](https://laravel.com/docs/8.x/middleware#global-middleware).
+
+When you return a `JsonResponse` to the browser, the middleware will append the alert as JSON using the same Session Key defined in the configuration, which is `_alerts` by default. It also accepts the `key` parameter to use as an alternative, compatible with *dot notation*. Here is an example:
 
 ```php
 <?php
 
-use DarkGhostHunter\Laralerts\AlertManager;
+use Illuminate\Support\Facades\Route;
 
-AlertManager::macro('countAlerts', function () {
-    return $this->alertBag->count();
-});
+Route::group('api', function () {
+    
+    Route::post('create')->uses('UserController@create');
+    Route::post('update')->uses('UserController@update');
+    
+})->middleware('laralerts.json:_status.alerts');
+```
+
+When you receive a JSON Response, you will see the alerts appended to whichever key you issued. Using the above example, we should see the `alerts` key under the `_status` key:
+
+```json
+{
+    "resource": "users",
+    "url": "/v1/users",
+    "_status": {
+        "timestamp":  "2019-06-05T03:47:24Z",
+        "action" : "created",
+        "id": 648,
+        "alerts": [
+            {
+                "message": "The user has been created!",
+                "types" : ["success", "important"],
+                "dismiss": true
+            }
+        ]
+    }
+}
 ```
 
 ## Security
