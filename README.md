@@ -158,8 +158,8 @@ alert()->message('There is an unread message.')->types('info', 'fade');
 <div class="alert alert-primary" role="alert">
     Your message was sent!
 </div>
-<div class="alert alert-primary fade" role="alert">
-    Your message was sent!
+<div class="alert alert-info fade" role="alert">
+    There is an unread message.
 </div>
 ```
 
@@ -208,9 +208,11 @@ You can also push an Alert if a condition evaluates to true or false by using `w
 
 use Illuminate\Support\Facades\Auth;
 
-alert('You are authenticated')->when(Auth::check());
+alert()->when(Auth::check())->message('You are authenticated')->types('success');
 
-alert('You have messages in your inbox')->unless(Auth::user()->mailbox()->isEmpty());
+alert()->unless(Auth::user()->mailbox()->isEmpty())
+       ->message('You have messages in your inbox')
+       ->types('warning');
 ```
 
 ### Persistent Alerts
@@ -296,7 +298,7 @@ You can create your own using the `Renderer` contract, and registering it into t
 <?php
 
 use DarkGhostHunter\Laralerts\RendererManager;
-use App\Alerts\Renderers\BulmaRenderer;
+use App\Alerts\Renderers\TailwindRenderer;
 
 /**
  * Bootstrap any application services.
@@ -305,8 +307,8 @@ use App\Alerts\Renderers\BulmaRenderer;
  */
 public function boot(RendererManager $alert)
 {
-    $alert->extend('bulma', function ($app) {
-        return new BulmaRenderer($app);
+    $alert->extend('tailwind', function ($app) {
+        return new TailwindRenderer($app['blade.compiler']);
     });
 }
 ```
@@ -315,8 +317,9 @@ Then, in your config file, set the renderer to the one you have registered.
 
 ```php
 // config/laralerts.php
+
 return [
-    'renderer' => 'bulma'
+    'renderer' => 'tailwind'
     
     // ...
 ];
@@ -331,14 +334,16 @@ alert()->message('Popping colors!')->types('primary');
 ```
 
 ```html
-<div class="notification is-primary">
+<div class="notification type-primary">
     Popping colors!
 </div> 
 ```
 
 ### Alerts Container HTML
 
-When the Renderer receives Alerts to render, it will call a "container" view which will render all the Alerts by using a loop. This is hard-coded into each Renderer, so the default `BootstrapRenderer` calls the `laralerts::bootstrap.container` by default.
+When the Renderer receives Alerts to render, it will call a "container" view which will render all the Alerts by using a loop. This is hard-coded into each Renderer.
+
+For example, the included `BootstrapRenderer` calls the `laralerts::bootstrap.container` by default.
 
 ```html
 @if($alerts)
@@ -358,6 +363,10 @@ The variables the `alert.blade.php` view receives are set from by Renderer. For 
 * `$alert->message`: The message to show inside the Alert.
 * `$alert->classes`: The CSS classes to incorporate into the Alert.
 * `$alert->dismissible`: A boolean that sets the alert as dismissible or not.
+
+As you're suspecting, you can publish the views and override them to suit your needs.
+
+    php artisan vendor:publish --provider="DarkGhostHunter\Laralerts\LaralertsServiceProvider" --tag="views"
 
 ## JSON Alerts
 
