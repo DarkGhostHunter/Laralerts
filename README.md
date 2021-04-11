@@ -11,7 +11,7 @@ Laralerts is compatible with **any** frontend framework to better suit your app,
 ## Requirements
 
 * Laravel 8.x or later
-* PHP 7.4 or later.
+* PHP 7.4, 8.0 or later.
 
 > For older versions support, consider helping by sponsoring or donating.
 
