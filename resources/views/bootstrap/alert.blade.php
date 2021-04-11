@@ -1,4 +1,4 @@
-<div class="alert {{ $alert->classes }}" role="alert">
+<div class="{{ trim('alert ' . $alert->classes) }}" role="alert">
     {!! $alert->message !!}
     @if($alert->dismissible)
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">

@@ -2,9 +2,9 @@
 
 use DarkGhostHunter\Laralerts\Bag;
 
-if (function_exists('alert')) {
+if (!function_exists('alert')) {
     /**
-     * Creates an Alert to render, or calls the Alert Manager without arguments.
+     * Creates an Alert to render, or calls the Alert Bag without arguments.
      *
      * @param  string|null  $message
      * @param  string  ...$types
@@ -20,6 +20,6 @@ if (function_exists('alert')) {
             return $manager;
         }
 
-        return $manager->create()->message($message)->types(...$types);
+        return $manager->new()->message($message)->types(...$types);
     }
 }

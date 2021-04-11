@@ -7,9 +7,11 @@ use DarkGhostHunter\Laralerts\Alert;
 use DarkGhostHunter\Laralerts\Bag;
 use Illuminate\Contracts\Session\Session;
 
-class LaralertsMiddleware
+class StorePersistentAlertsInSession
 {
     /**
+     * Request Session.
+     *
      * @var \Illuminate\Contracts\Session\Session
      */
     protected Session $session;
@@ -56,14 +58,14 @@ class LaralertsMiddleware
         // Locate any alert marked as persistent and populate the bag with these.
         // We will also remove them from the session itself just for cleaning.
         // Obviously there should be no problem because the session started.
-        $this->moveAlertsToBag();
+        $this->sessionAlertsToBag();
 
         $response = $next($request);
 
         // Before handling the response, we will take only those alerts marked
         // as persistent and save them into the session so later these can be
         // retrieved using the bag. Only then the developer can delete them.
-        $this->copyAlertsToSession();
+        $this->bagAlertsToSession();
 
         return $response;
     }
@@ -73,10 +75,10 @@ class LaralertsMiddleware
      *
      * @return void
      */
-    protected function moveAlertsToBag(): void
+    protected function sessionAlertsToBag(): void
     {
-        foreach ($this->session->get($this->key) as $alert) {
-            Alert::fromArray($this->bag, $alert);
+        foreach ($this->session->get($this->key, []) as $alert) {
+            $this->bag->add(Alert::fromArray($alert));
         }
 
         $this->session->forget($this->key);
@@ -91,11 +93,8 @@ class LaralertsMiddleware
      */
     protected static function alertToArray(Alert $alert): array
     {
-        $array = $alert->toArray();
-
-        unset($array['persistent']);
-
-        return $array;
+        // This will return an array with the persistent key.
+        return array_merge($alert->toArray(), ['persistent' => $alert->getPersistKey()]);
     }
 
 
@@ -104,21 +103,13 @@ class LaralertsMiddleware
      *
      * @return void
      */
-    protected function copyAlertsToSession(): void
+    protected function bagAlertsToSession(): void
     {
-        $this->session->put(
-            $this->key,
-            array_map([static::class, 'alertToArray'], $this->bag->getPersistentAlerts())
-        );
-    }
+        // We wil only do it if the bag has alerts to persist.
+        if (!empty($alerts = $this->bag->allPersistent())) {
+            $this->session->put($this->key, array_map([static::class, 'alertToArray'], $alerts));
+        }
 
-    /**
-     * Returns alerts persisted in the session.
-     *
-     * @return array
-     */
-    protected function persistedAlerts(): array
-    {
-        return $this->session->get($this->key, []);
+        $this->bag->flush();
     }
 }

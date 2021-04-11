@@ -9,7 +9,7 @@ use Illuminate\Contracts\Config\Repository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
 
-class LaralertsJsonMiddleware
+class AddAlertsToJson
 {
     /**
      * Alerts Bag.
@@ -26,7 +26,7 @@ class LaralertsJsonMiddleware
     protected Repository $config;
 
     /**
-     * LaralertsJsonMiddleware constructor.
+     * AddAlertsToJson constructor.
      *
      * @param  \DarkGhostHunter\Laralerts\Bag  $bag
      * @param  \Illuminate\Contracts\Config\Repository  $config
@@ -50,13 +50,13 @@ class LaralertsJsonMiddleware
     {
         $response = $next($request);
 
-        if ($response instanceof JsonResponse) {
+        if ($response instanceof JsonResponse && !$response->isClientError() && !$response->isServerError()) {
             $key = $key ?? $this->config->get('laralerts.key');
 
             $data = $response->getData(true);
 
             // If the outgoing data already has the key, don't replace it.
-            if (! Arr::has($data, $key)) {
+            if (!Arr::has($data, $key)) {
                 $response->setData(Arr::add($data, $key, $this->alertsToArray()));
             }
         }
@@ -71,8 +71,11 @@ class LaralertsJsonMiddleware
      */
     protected function alertsToArray(): array
     {
-        return array_map(static function (Alert $alert): array {
-            return $alert->toArray();
-        }, $this->bag->all());
+        return array_map(
+            static function (Alert $alert): array {
+                return $alert->toArray();
+            },
+            $this->bag->all()
+        );
     }
 }

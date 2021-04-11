@@ -1,62 +1,28 @@
 <?php
 
-namespace DarkGhostHunter\Laralerts\Tests;
+namespace Tests;
 
-use BadMethodCallException;
-use Orchestra\Testbench\TestCase;
 use DarkGhostHunter\Laralerts\Alert;
-use DarkGhostHunter\Laralerts\AlertManager;
-use DarkGhostHunter\Laralerts\Testing\WithAlerts;
+use DarkGhostHunter\Laralerts\Bag;
+use Orchestra\Testbench\TestCase;
 
 class HelpersTest extends TestCase
 {
-    use Concerns\RegistersPackage, WithAlerts;
+    use RegistersPackage;
 
-    public function testResolvesAlertFactory()
+    public function test_resolves_alert_factory()
     {
-        $this->assertInstanceOf(AlertManager::class, alert());
+        static::assertInstanceOf(Bag::class, alert());
     }
 
-    public function testCreatesAlert()
+    public function test_creates_alert()
     {
-        $alert = alert('test-message', 'info', true);
-        $this->assertInstanceOf(Alert::class, $alert);
-        $this->assertEquals([
+        $alert = alert('test-message', 'info');
+        static::assertInstanceOf(Alert::class, $alert);
+        static::assertEquals([
             'message' => 'test-message',
-            'type' => 'info',
-            'dismiss' => true,
-            'classes' => null,
+            'types' => ['info'],
+            'dismissible' => false,
         ], $alert->toArray());
-    }
-
-    public function testExceptionOnInvalidType()
-    {
-        $this->expectException(BadMethodCallException::class);
-
-        alert('test-message', 'invalid-type', true);
-    }
-
-    public function testAlertIf()
-    {
-        $false = alert_if(false, 'message')->setType('success')->setClasses('test_class')->setDismiss(true);
-        $this->assertDoesntHaveAlerts();
-
-        $true = alert_if(true, 'message')->setType('success')->setClasses('test_class')->setDismiss(true);
-        $this->assertHasAnyAlert();
-
-        $this->assertInstanceOf(Alert::class, $true);
-        $this->assertInstanceOf(Alert::class, $false);
-    }
-
-    public function testAlertUnless()
-    {
-        $false = alert_unless(true, 'message')->setType('success')->setClasses('test_class')->setDismiss(true);
-        $this->assertDoesntHaveAlerts();
-
-        $true = alert_unless(false, 'message')->setType('success')->setClasses('test_class')->setDismiss(true);
-        $this->assertHasAnyAlert();
-
-        $this->assertInstanceOf(Alert::class, $false);
-        $this->assertInstanceOf(Alert::class, $true);
     }
 }

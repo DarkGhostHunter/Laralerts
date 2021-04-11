@@ -9,7 +9,7 @@ use Illuminate\Contracts\View\Factory;
 
 class BootstrapRenderer implements Renderer
 {
-    use ReplacesLinks;
+    use CompilesClasses;
 
     /**
      * View file for Bootstrap Alerts.
@@ -23,7 +23,7 @@ class BootstrapRenderer implements Renderer
      *
      * @var array|string[]
      */
-    protected const KNOWN_TYPES = [
+    protected const TYPE_CLASSES = [
         'primary' => 'alert-primary',
         'secondary' => 'alert-secondary',
         'success' => 'alert-success',
@@ -79,18 +79,22 @@ class BootstrapRenderer implements Renderer
     public function render(array $alerts): string
     {
         return $this->factory
-            ->make(static::VIEW)->with('alerts', iterator_to_array($this->getAlerts()))->render();
+            ->make(static::VIEW)
+            ->with('alerts', iterator_to_array($this->getAlerts($alerts)))->render();
     }
 
     /**
      * Get the alerts prepared for inserting in the view.
      *
+     * @param  array|\DarkGhostHunter\Laralerts\Alert[]  $alerts
+     *
      * @return \Generator
      */
-    protected function getAlerts(): Generator
+    protected function getAlerts(array $alerts): Generator
     {
-        foreach ($this->alerts as $alert) {
-            if ($alert->isRender()) {
+        foreach ($alerts as $alert) {
+            // Here we will discard those with empty messages.
+            if (filled($alert->getMessage())) {
                 yield static::prepareAlert($alert);
             }
         }
@@ -106,43 +110,9 @@ class BootstrapRenderer implements Renderer
     protected static function prepareAlert(Alert $alert): object
     {
         return (object)[
-            'message' => static::compileMessage($alert),
+            'message' => $alert->getMessage(),
             'classes' => static::compileClasses($alert),
             'dismissible' => $alert->isDismissible(),
         ];
-    }
-
-    /**
-     * Compiles the alert message.
-     *
-     * @param  \DarkGhostHunter\Laralerts\Alert  $alert
-     *
-     * @return string
-     */
-    protected static function compileMessage(Alert $alert): string
-    {
-        return static::replaceLinks($alert->getMessage(), $alert->getLinks());
-    }
-
-    /**
-     * Returns a list of classes as a string.
-     *
-     * @param  \DarkGhostHunter\Laralerts\Alert  $alert
-     *
-     * @return string
-     */
-    protected static function compileClasses(Alert $alert): string
-    {
-        $classes = [];
-
-        foreach ($alert->getTypes() as $type) {
-            $classes[] = static::KNOWN_TYPES[$type] ?? $type;
-        }
-
-        if ($alert->isDismissible()) {
-            $classes = array_merge($classes, static::DISMISS_CLASSES);
-        }
-
-        return implode(' ', $classes);
     }
 }

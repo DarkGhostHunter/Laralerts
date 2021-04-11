@@ -6,15 +6,18 @@ use DarkGhostHunter\Laralerts\Bag;
 use DarkGhostHunter\Laralerts\Contracts\Renderer;
 use Illuminate\View\Component;
 
-class Laralerts extends Component
+class LaralertsComponent extends Component
 {
     /**
-     * The Alert renderer for the alerts.
+     * The renderer for the alerts.
      *
      * @var \DarkGhostHunter\Laralerts\Contracts\Renderer
      */
     protected Renderer $renderer;
+
     /**
+     * Alerts bag.
+     *
      * @var \DarkGhostHunter\Laralerts\Bag
      */
     protected Bag $bag;

@@ -9,93 +9,48 @@ use JsonSerializable;
 class Alert implements Arrayable, Jsonable, JsonSerializable
 {
     /**
+     * The internal key in the Array Bag.
+     *
+     * @var int
+     */
+    protected int $key;
+
+    /**
      * Internal Key of the Alert in the Bag so it can be persisted.
-     *
-     * @var string
-     */
-    protected string $key;
-
-    /**
-     * The message for the Alert.
-     *
-     * @var string
-     */
-    protected string $message;
-
-    /**
-     * Types for this alert.
-     *
-     * @var array|string[]
-     */
-    protected array $types;
-
-    /**
-     * If this Alert should be able to be dismissible in the frontend.
-     *
-     * @var bool
-     */
-    protected bool $dismissible;
-
-    /**
-     * Links that should be replaced in the alert message.
-     *
-     * @var array
-     */
-    protected array $links = [];
-
-    /**
-     * Check if the alert should persist in the session, if possible.
      *
      * @var string|null
      */
     protected ?string $persistentKey = null;
 
     /**
-     * Check if this Alert should be conditionally rendered.
+     * The message for the Alert.
+     *
+     * @var string
+     */
+    protected string $message = '';
+
+    /**
+     * Types for this alert.
+     *
+     * @var array|string[]
+     */
+    protected array $types = [];
+
+    /**
+     * If this Alert should be able to be dismissible in the frontend.
      *
      * @var bool
      */
-    protected bool $render = true;
-
-    /**
-     * Alerts bag.
-     *
-     * @var \DarkGhostHunter\Laralerts\Bag|null
-     */
-    protected ?Bag $bag = null;
-
-    /**
-     * Alert constructor.
-     *
-     * @param  \DarkGhostHunter\Laralerts\Bag  $bag
-     */
-    public function __construct(Bag $bag)
-    {
-        $this->bag = $bag;
-    }
+    protected bool $dismissible = false;
 
     /**
      * Returns the ID of the Alert in the Bag.
      *
-     * @return string
+     * @return string|null
      */
-    public function getPersistKey(): string
+    public function getPersistKey(): ?string
     {
-        return $this->key;
-    }
-
-    /**
-     * Persists the key into the session, forever.
-     *
-     * @param  string  $key
-     *
-     * @return \DarkGhostHunter\Laralerts\Alert
-     */
-    public function persistAs(string $key): Alert
-    {
-        $this->persistentKey = $key;
-
-        return $this;
+        return $this->persistentKey;
     }
 
     /**
@@ -129,16 +84,6 @@ class Alert implements Arrayable, Jsonable, JsonSerializable
     }
 
     /**
-     * Returns the links to be replaced in the message.
-     *
-     * @return array
-     */
-    public function getLinks(): array
-    {
-        return $this->links;
-    }
-
-    /**
      * Check if the Alert should be dismissible.
      *
      * @return bool
@@ -146,16 +91,6 @@ class Alert implements Arrayable, Jsonable, JsonSerializable
     public function isDismissible(): bool
     {
         return $this->dismissible;
-    }
-
-    /**
-     * Check if the Alert should be rendered.
-     *
-     * @return bool
-     */
-    public function isRender(): bool
-    {
-        return $this->render;
     }
 
     /**
@@ -227,42 +162,15 @@ class Alert implements Arrayable, Jsonable, JsonSerializable
     }
 
     /**
-     * Sets links and keys to replaced from the message.
+     * Persists the key into the session, forever.
      *
-     * @param  string|array|string[]  $name
-     * @param  string|null  $value
+     * @param  string  $key
      *
-     * @return $this
+     * @return \DarkGhostHunter\Laralerts\Alert
      */
-    public function links($name, string $value = null): Alert
+    public function persistAs(string $key): Alert
     {
-        $this->links = is_array($name) ? $name : [$name => $value];
-
-        return $this;
-    }
-
-    /**
-     * Sets the Alert to be rendered when the condition is truthy.
-     *
-     * @param  mixed  $condition
-     */
-    public function when($condition): Alert
-    {
-        $this->render = (bool)value($condition);
-
-        return $this;
-    }
-
-    /**
-     * Sets the Alert to be rendered unless the condition is false.
-     *
-     * @param $condition
-     *
-     * @return $this
-     */
-    public function unless($condition): Alert
-    {
-        $this->render = !(bool)value($condition);
+        $this->persistentKey = $key;
 
         return $this;
     }
@@ -278,7 +186,6 @@ class Alert implements Arrayable, Jsonable, JsonSerializable
             'message' => $this->message,
             'types' => $this->types,
             'dismissible' => $this->dismissible,
-            'persistent' => $this->persistentKey
         ];
     }
 
@@ -288,7 +195,6 @@ class Alert implements Arrayable, Jsonable, JsonSerializable
      * @param  int  $options
      *
      * @return string
-     * @throws \JsonException
      */
     public function toJson($options = 0): string
     {
@@ -308,20 +214,17 @@ class Alert implements Arrayable, Jsonable, JsonSerializable
     /**
      * Creates a new Alert from a Bag and an array.
      *
-     * @param  \DarkGhostHunter\Laralerts\Bag  $bag
      * @param  array  $alert
      *
      * @return \DarkGhostHunter\Laralerts\Alert
      */
-    public static function fromArray(Bag $bag, array $alert): Alert
+    public static function fromArray(array $alert): Alert
     {
-        $instance = (new static())->raw($alert['message'])->types($alert['types'] ?? []);
+        $instance = (new static())->raw($alert['message'])->types(...$alert['types'] ?? []);
 
         if (isset($alert['dismissible'])) {
             $instance->dismiss($alert['dismissible']);
         }
-
-        $instance->setBag($bag);
 
         if (isset($alert['persistent'])) {
             $instance->persistAs($alert['persistent']);
