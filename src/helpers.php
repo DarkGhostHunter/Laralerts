@@ -1,69 +1,25 @@
 <?php
 
-use DarkGhostHunter\Laralerts\Alert;
-use DarkGhostHunter\Laralerts\AlertManager;
+use DarkGhostHunter\Laralerts\Bag;
 
-if (! function_exists('alert')) {
-
+if (!function_exists('alert')) {
     /**
-     * Creates an Alert
+     * Creates an Alert to render, or calls the Alert Bag without arguments.
      *
-     * @param string|null $message
-     * @param string|null $type
-     * @param bool|null $dismiss
-     * @return \DarkGhostHunter\Laralerts\AlertManager|\DarkGhostHunter\Laralerts\Alert
+     * @param  string|null  $message
+     * @param  string  ...$types
+     *
+     * @return \DarkGhostHunter\Laralerts\Alert|\DarkGhostHunter\Laralerts\Bag
      */
-    function alert(string $message = null, string $type = null, bool $dismiss = null)
+    function alert(string $message = null, string ...$types)
     {
-        $manager = app(AlertManager::class);
+        /** @var \DarkGhostHunter\Laralerts\Bag $manager */
+        $manager = app(Bag::class);
 
-        if (! $message) {
+        if (! func_num_args()) {
             return $manager;
         }
 
-        $alert = $manager->message($message);
-
-        if ($type) {
-            $alert->setType($type);
-        }
-
-        if ($dismiss !== null) {
-            $alert->setDismiss($dismiss);
-        }
-
-        return $alert;
-    }
-}
-
-if (! function_exists('alert_if')) {
-
-    /**
-     * Creates an Alert based on condition
-     *
-     * @param mixed $condition
-     * @param string|null $message
-     * @param string|null $type
-     * @param bool|null $dismiss
-     * @return \DarkGhostHunter\Laralerts\Alert
-     */
-    function alert_if($condition, string $message = null, string $type = null, bool $dismiss = null)
-    {
-        return $condition ? alert($message, $type, $dismiss) : new Alert;
-    }
-}
-
-if (! function_exists('alert_unless')) {
-    /**
-     * Creates an Alert unless the condition evaluates as false
-     *
-     * @param mixed $condition
-     * @param string|null $message
-     * @param string|null $type
-     * @param bool|null $dismiss
-     * @return \DarkGhostHunter\Laralerts\Alert
-     */
-    function alert_unless($condition, string $message = null, string $type = null, bool $dismiss = null)
-    {
-        return alert_if(!$condition, $message, $type, $dismiss);
+        return $manager->new()->message($message)->types(...$types);
     }
 }

@@ -2,31 +2,18 @@
 
 namespace DarkGhostHunter\Laralerts\Facades;
 
+use DarkGhostHunter\Laralerts\Bag;
 use Illuminate\Support\Facades\Facade;
-use DarkGhostHunter\Laralerts\AlertManager;
 
 /**
- * Class Alert
- * @method static \DarkGhostHunter\Laralerts\AlertManager withOld()
- *
- * @method static \DarkGhostHunter\Laralerts\Alert make(string $message = null, string $type = null, bool $dismiss = null, string $classes = null)
- *
- * @method static \DarkGhostHunter\Laralerts\Alert message(string $text)
- * @method static \DarkGhostHunter\Laralerts\Alert raw(string $text)
- * @method static \DarkGhostHunter\Laralerts\Alert lang(string $key, $replace = [], $locale = null)
- * @method static \DarkGhostHunter\Laralerts\Alert dismiss()
- * @method static \DarkGhostHunter\Laralerts\Alert fixed()
- * @method static \DarkGhostHunter\Laralerts\Alert primary()
- * @method static \DarkGhostHunter\Laralerts\Alert secondary()
- * @method static \DarkGhostHunter\Laralerts\Alert success()
- * @method static \DarkGhostHunter\Laralerts\Alert danger()
- * @method static \DarkGhostHunter\Laralerts\Alert warning()
- * @method static \DarkGhostHunter\Laralerts\Alert info()
- * @method static \DarkGhostHunter\Laralerts\Alert light()
- * @method static \DarkGhostHunter\Laralerts\Alert dark()
- * @method static \DarkGhostHunter\Laralerts\Alert classes(...$classes)
- *
- * @see \DarkGhostHunter\Laralerts\AlertManager
+ * @method static \DarkGhostHunter\Laralerts\Alert persistAs(string $key)
+ * @method static \DarkGhostHunter\Laralerts\Alert message(string $message)
+ * @method static \DarkGhostHunter\Laralerts\Alert raw(string $message)
+ * @method static \DarkGhostHunter\Laralerts\Alert types(string ...$types)
+ * @method static \DarkGhostHunter\Laralerts\Alert dismiss(bool $dismissible = true)
+ * @method static \DarkGhostHunter\Laralerts\Alert links(string|array $name, string $value = null)
+ * @method static \DarkGhostHunter\Laralerts\Alert when($condition)
+ * @method static \DarkGhostHunter\Laralerts\Alert unless($condition)
  */
 class Alert extends Facade
 {
@@ -34,9 +21,11 @@ class Alert extends Facade
      * Get the registered name of the component.
      *
      * @return string
+     *
+     * @throws \RuntimeException
      */
-    protected static function getFacadeAccessor()
+    protected static function getFacadeAccessor(): string
     {
-        return AlertManager::class;
+        return Bag::class;
     }
 }
