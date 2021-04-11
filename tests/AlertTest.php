@@ -1,358 +1,139 @@
 <?php
 
-namespace DarkGhostHunter\Laralerts\Tests;
+namespace Tests;
 
-use BadMethodCallException;
-use Orchestra\Testbench\TestCase;
-use Illuminate\Support\Facades\Lang;
 use DarkGhostHunter\Laralerts\Alert;
+use Illuminate\Support\Facades\Lang;
+use Orchestra\Testbench\TestCase;
 
 class AlertTest extends TestCase
 {
-    use Concerns\RegistersPackage;
+    use RegistersPackage;
 
-    public function testCreatesDefaultInstance()
+    public function test_creates_default_instance()
     {
-        $alert = new Alert;
+        $alert = alert()->new();
 
-        $this->assertNull($alert->getMessage());
-        $this->assertNull($alert->getType());
-        $this->assertNull($alert->getDismiss());
-        $this->assertNull($alert->getClasses());
+        static::assertEmpty($alert->getMessage());
+        static::assertEmpty($alert->getTypes());
+        static::assertFalse($alert->isDismissible());
+        static::assertFalse($alert->isPersistent());
+        static::assertNull($alert->getPersistKey());
     }
 
-    public function testCreatesAlertWithArguments()
+    public function test_alert_set_escaped_message()
     {
-        $alert = new Alert('test-message', 'info', false, 'test-class');
+        $alert = alert()->new();
 
-        $this->assertEquals('test-message', $alert->getMessage());
-        $this->assertEquals('info', $alert->getType());
-        $this->assertFalse($alert->getDismiss());
-        $this->assertEquals('test-class', $alert->getClasses());
+        $alert->message('❤ <script></script>');
+
+        static::assertEquals('❤ &lt;script&gt;&lt;/script&gt;', $alert->getMessage());
     }
 
-    public function testExceptionOnInvalidTypeOnManualInstancing()
+    public function test_alert_set_types()
     {
-        $this->expectException(BadMethodCallException::class);
+        $alert = alert()->new();
 
-        $alert = new Alert('test-message', 'invalid-type');
+        $alert->types('foo', 'bar', 'quz');
 
-        $this->assertInstanceOf(Alert::class, $alert);
+        static::assertEquals(['foo', 'bar', 'quz'], $alert->getTypes());
     }
 
-    public function testExceptionOnInvalidTypeSet()
+    public function test_alert_set_raw_message()
     {
-        $this->expectException(BadMethodCallException::class);
+        $alert = alert()->new();
 
-        $alert = (new Alert())->setType('invalid-type');
+        $alert->raw('❤ <script></script>');
+
+        static::assertEquals('❤ <script></script>', $alert->getMessage());
     }
 
-    public function testSetsMessage()
-    {
-        $alert = new Alert('dont-see-this', 'info', false, 'test-class');
-
-        $alert->message('test-message');
-
-        $this->assertEquals('test-message', $alert->getMessage());
-    }
-
-    public function testEncodedMessage()
-    {
-        $alert = new Alert;
-
-        $alert->message('<script>alert("rofl")</script>');
-
-        $this->assertEquals('&lt;script&gt;alert(&quot;rofl&quot;)&lt;/script&gt;', $alert->getMessage());
-    }
-
-    public function testRawMessage()
-    {
-        $alert = new Alert;
-
-        $alert->raw('<script>alert("rofl")</script>');
-
-        $this->assertEquals('<script>alert("rofl")</script>', $alert->getMessage());
-    }
-
-    public function testLocalizedMessage()
+    public function test_alert_translates_message()
     {
         Lang::shouldReceive('get')
-            ->twice()
+            ->once()
             ->with('test-key', ['foo' => 'bar'], 'test_lang')
             ->andReturn('test-translation');
 
-        $alert = new Alert;
-
-        $alert->lang('test-key', ['foo' => 'bar'], 'test_lang');
-
-        $this->assertEquals('test-translation', $alert->getMessage());
-
-        $alert = new Alert;
+        $alert = alert()->new();
 
         $alert->trans('test-key', ['foo' => 'bar'], 'test_lang');
 
-        $this->assertEquals('test-translation', $alert->getMessage());
+        static::assertEquals('test-translation', $alert->getMessage());
     }
 
-    public function testGetAndSetDismiss()
+    public function test_alert_is_dismissible()
     {
-        $alert = new Alert('test-message', 'info', false);
+        $alert = alert()->new();
 
-        $this->assertFalse($alert->getDismiss());
-        $alert->setDismiss(true);
-        $this->assertTrue($alert->getDismiss());
-
-        $alert->setDismiss(false);
         $alert->dismiss();
-        $this->assertTrue($alert->getDismiss());
 
-        $alert->fixed();
-        $this->assertFalse($alert->getDismiss());
+        static::assertTrue($alert->isDismissible());
     }
 
-    public function testGetAndSetClasses()
+    public function test_alert_is_not_dismissible()
     {
-        $alert = new Alert('test-message', 'info', false, 'test-class');
+        $alert = alert()->new();
 
-        $this->assertEquals('test-class', $alert->getClasses());
+        $alert->dismiss(false);
 
-        $alert->setClasses('class-one class-two');
-        $this->assertEquals('class-one class-two', $alert->getClasses());
+        static::assertFalse($alert->isDismissible());
 
-        $alert->classes('one', 'two');
-        $this->assertEquals('one two', $alert->getClasses());
+        $alert->dismiss(true);
 
-        $alert->classes(['one', 'two']);
-        $this->assertEquals('one two', $alert->getClasses());
+        static::assertTrue($alert->isDismissible());
     }
 
-    public function testSetAndGetTestTypeClass()
+    public function test_alert_to_array()
     {
-        $alert = new Alert('test-message', 'info', false, 'test-class');
+        $alert = alert()->new();
 
-        $this->assertEquals('alert-info', $alert->getTypeClass());
+        $alert->message('foo')
+            ->types('foo', 'bar')
+            ->dismiss()
+            ->persistAs('baz');
 
-        $alert->setTypeClass('test_type-class');
-
-        $this->assertEquals('test_type-class', $alert->getTypeClass());
+        static::assertEquals(
+            [
+                'message' => 'foo',
+                'types' => ['foo', 'bar'],
+                'dismissible' => true,
+            ],
+            $alert->toArray()
+        );
     }
 
-    public function testToArray()
+    public function test_array_to_json()
     {
-        $alert = new Alert('test-message', 'info', false, 'test-class');
+        $alert = alert()->new();
 
-        $array = $alert->toArray();
+        $alert->message('foo')
+            ->types('foo', 'bar')
+            ->dismiss()
+            ->persistAs('baz');
 
-        $this->assertEquals([
-            'message' => 'test-message',
-            'type' => 'info',
-            'dismiss' => false,
-            'classes' => 'test-class',
-        ], $array);
+        static::assertJson(json_encode($alert));
+        static::assertEquals(
+            '{"message":"foo","types":["foo","bar"],"dismissible":true}',
+            $alert->toJson()
+        );
     }
 
-    public function testSerialization()
+    public function test_alert_from_json()
     {
-        $alert = new Alert('test-message', 'info', false, 'test-class');
+        $alert = Alert::fromArray(
+            [
+                'message' => 'foo',
+                'types' => ['foo', 'bar'],
+                'dismissible' => true,
+                'persistent' => 'baz',
+            ]
+        );
 
-        $serialized = serialize($alert);
-
-        $unserialize = unserialize($serialized);
-
-        $this->assertInstanceOf(Alert::class, $unserialize);
-        $this->assertEquals('test-message', $unserialize->getMessage());
-        $this->assertEquals('info', $unserialize->getType());
-        $this->assertFalse($unserialize->getDismiss());
-        $this->assertEquals('test-class', $unserialize->getClasses());
-    }
-
-    public function testGetSetTypes()
-    {
-        $original = Alert::getTypes();
-
-        Alert::setTypes($added = [
-            'foo' => 'alert-foo',
-            'bar' => 'alert-bar',
-        ]);
-
-        $this->assertEquals($added, Alert::getTypes());
-
-        Alert::setTypes($original);
-    }
-
-    public function testAddTypes()
-    {
-        $original = Alert::getTypes();
-
-        Alert::addTypes($added = [
-            'foo' => 'alert-foo',
-            'bar' => 'alert-bar',
-        ]);
-
-        $this->assertEquals(array_merge($original, $added), Alert::getTypes());
-
-        Alert::setTypes($original);
-    }
-
-    public function testDynamicTypeCalls()
-    {
-        $primary = (new Alert)->primary();
-        $secondary = (new Alert)->secondary();
-        $success = (new Alert)->success();
-        $danger = (new Alert)->danger();
-        $warning = (new Alert)->warning();
-        $info = (new Alert)->info();
-        $light = (new Alert)->light();
-        $dark = (new Alert)->dark();
-
-        $this->assertEquals('primary', $primary->getType());
-        $this->assertEquals('secondary', $secondary->getType());
-        $this->assertEquals('success', $success->getType());
-        $this->assertEquals('danger', $danger->getType());
-        $this->assertEquals('warning', $warning->getType());
-        $this->assertEquals('info', $info->getType());
-        $this->assertEquals('light', $light->getType());
-        $this->assertEquals('dark', $dark->getType());
-
-        $this->assertEquals('alert-primary', $primary->getTypeClass());
-        $this->assertEquals('alert-secondary', $secondary->getTypeClass());
-        $this->assertEquals('alert-success', $success->getTypeClass());
-        $this->assertEquals('alert-danger', $danger->getTypeClass());
-        $this->assertEquals('alert-warning', $warning->getTypeClass());
-        $this->assertEquals('alert-info', $info->getTypeClass());
-        $this->assertEquals('alert-light', $light->getTypeClass());
-        $this->assertEquals('alert-dark', $dark->getTypeClass());
-    }
-
-    public function testDynamicCustomTypeCall()
-    {
-        $original = Alert::getTypes();
-
-        Alert::setTypes([
-            'foo' => 'alert-foo',
-            'bar' => 'alert-bar',
-        ]);
-
-        $foo = (new Alert)->foo();
-        $bar = (new Alert)->bar();
-
-        $this->assertEquals('foo', $foo->getType());
-        $this->assertEquals('bar', $bar->getType());
-
-        $this->assertEquals('alert-foo', $foo->getTypeClass());
-        $this->assertEquals('alert-bar', $bar->getTypeClass());
-
-        Alert::setTypes($original);
-    }
-
-    public function testExceptionOnInvalidDynamicCustomTypeCall()
-    {
-        $this->expectException(BadMethodCallException::class);
-
-        $alert = new class extends Alert
-        {
-            protected static $types = ['foo', 'bar'];
-        };
-
-        $alert->baz();
-    }
-
-    public function testJson()
-    {
-        $alert = new Alert('test-message', 'info', false, 'test-class');
-
-        $json = json_encode($alert->toArray());
-
-        $this->assertJson(json_encode($alert));
-        $this->assertEquals($json, json_encode($alert));
-        $this->assertEquals($json, $alert->toJson());
-        $this->assertEquals([
-            'message' => 'test-message',
-            'type' => 'info',
-            'dismiss' => false,
-            'classes' => 'test-class',
-        ], json_decode(json_encode($alert), true));
-    }
-
-    public function testFromArray()
-    {
-        $array = [
-            'type' => 'info',
-            'message' => 'test-message',
-            'classes' => 'test-class',
-            'dismiss' => false,
-        ];
-
-        $alert = Alert::fromArray($array);
-
-        $this->assertInstanceOf(Alert::class, $alert);
-
-        $this->assertEquals([
-            'message' => 'test-message',
-            'type' => 'info',
-            'dismiss' => false,
-            'classes' => 'test-class',
-        ], $alert->toArray());
-    }
-
-    public function testFromPartialArray()
-    {
-        $array = [
-            'message' => 'test-message',
-        ];
-
-        $alert = Alert::fromArray($array);
-
-        $this->assertInstanceOf(Alert::class, $alert);
-
-        $this->assertEquals([
-            'message' => 'test-message',
-            'type' => null,
-            'dismiss' => null,
-            'classes' => null,
-        ], $alert->toArray());
-    }
-
-    public function testFromJson()
-    {
-        $array = [
-            'type' => 'info',
-            'message' => 'test-message',
-            'classes' => 'test-class',
-            'dismiss' => false,
-        ];
-
-        $json = json_encode($array);
-
-        $alert = Alert::fromJson($json);
-
-        $this->assertInstanceOf(Alert::class, $alert);
-
-        $this->assertEquals([
-            'message' => 'test-message',
-            'type' => 'info',
-            'dismiss' => false,
-            'classes' => 'test-class',
-        ], $alert->toArray());
-    }
-
-    public function testFromPartialJson()
-    {
-        $array = [
-            'message' => 'test-message',
-        ];
-
-        $json = json_encode($array);
-
-        $alert = Alert::fromJson($json);
-
-        $this->assertInstanceOf(Alert::class, $alert);
-
-        $this->assertEquals([
-            'message' => 'test-message',
-            'type' => null,
-            'dismiss' => null,
-            'classes' => null,
-        ], $alert->toArray());
+        static::assertEquals('foo', $alert->getMessage());
+        static::assertEquals(['foo', 'bar'], $alert->getTypes());
+        static::assertTrue($alert->isDismissible());
+        static::assertEquals('baz', $alert->getPersistKey());
+        static::assertTrue($alert->isPersistent());
     }
 }

@@ -2,79 +2,117 @@
 
 namespace DarkGhostHunter\Laralerts;
 
-use Serializable;
-use JsonSerializable;
-use BadMethodCallException;
-use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Contracts\Support\Jsonable;
+use JsonSerializable;
 
-class Alert implements Arrayable, Serializable, Jsonable, JsonSerializable, Htmlable
+class Alert implements Arrayable, Jsonable, JsonSerializable
 {
-    use Concerns\Alert\HasTypes,
-        Concerns\Alert\HasGettersAndSetters;
+    /**
+     * The internal key in the Array Bag.
+     *
+     * @var int
+     */
+    protected int $key;
 
     /**
-     * Alert message
+     * Internal Key of the Alert in the Bag so it can be persisted.
+     *
+     * @var string|null
+     */
+    protected ?string $persistentKey = null;
+
+    /**
+     * The message for the Alert.
      *
      * @var string
      */
-    protected $message;
+    protected string $message = '';
 
     /**
-     * If the Alert should be dismissible
+     * Types for this alert.
+     *
+     * @var array|string[]
+     */
+    protected array $types = [];
+
+    /**
+     * If this Alert should be able to be dismissible in the frontend.
      *
      * @var bool
      */
-    protected $dismiss;
+    protected bool $dismissible = false;
 
     /**
-     * Classes to add into the Alert HTML string
+     * Returns the ID of the Alert in the Bag.
      *
-     * @var string
+     * @return string|null
      */
-    protected $classes;
-
-    /**
-     * Create a new Alert instance
-     *
-     * @param  string $message
-     * @param  string $type
-     * @param  bool $dismiss
-     * @param  string $classes
-     */
-    public function __construct(string $message = null,
-                                string $type = null,
-                                bool $dismiss = null,
-                                string $classes = null)
+    public function getPersistKey(): ?string
     {
-        $this->message = $message;
-        $this->dismiss = $dismiss;
-        $this->classes = $classes;
-
-        if ($type) {
-            $this->setType($type);
-        }
+        return $this->persistentKey;
     }
 
     /**
-     * Set the message for this Alert
+     * Checks if the current Alert sh
      *
-     * @param  string $message
-     * @return \DarkGhostHunter\Laralerts\Alert
+     * @return bool
      */
-    public function message(string $message)
+    public function isPersistent(): bool
+    {
+        return null !== $this->persistentKey;
+    }
+
+    /**
+     * Returns the message of the Alert.
+     *
+     * @return string
+     */
+    public function getMessage(): string
+    {
+        return $this->message;
+    }
+
+    /**
+     * Returns the types set for this Alert.
+     *
+     * @return array|string[]
+     */
+    public function getTypes(): array
+    {
+        return $this->types;
+    }
+
+    /**
+     * Check if the Alert should be dismissible.
+     *
+     * @return bool
+     */
+    public function isDismissible(): bool
+    {
+        return $this->dismissible;
+    }
+
+    /**
+     * Sets an safely-escaped message.
+     *
+     * @param  string  $message
+     *
+     * @return $this
+     */
+    public function message(string $message): Alert
     {
         return $this->raw(e($message));
     }
 
     /**
-     * Set a raw string into the Alert
+     * Sets a raw (verbatim) message.
      *
-     * @param  string $message
-     * @return \DarkGhostHunter\Laralerts\Alert
+     * @param  string  $message
+     *
+     * @return $this
      */
-    public function raw(string $message)
+    public function raw(string $message): Alert
     {
         $this->message = $message;
 
@@ -82,68 +120,57 @@ class Alert implements Arrayable, Serializable, Jsonable, JsonSerializable, Html
     }
 
     /**
-     * Set a localized message into the Alert
+     * Set a localized message into the Alert.
      *
-     * @param  string $lang
-     * @param  array $replace
-     * @param  null $locale
-     * @return \DarkGhostHunter\Laralerts\Alert
+     * @param  string  $lang
+     * @param  array  $replace
+     * @param  null  $locale
+     *
+     * @return $this
      */
-    public function lang(string $lang, $replace = [], $locale = null)
+    public function trans(string $lang, $replace = [], $locale = null): Alert
     {
         return $this->raw(trans($lang, $replace, $locale));
     }
 
     /**
-     * Alias for the lang method
+     * Sets one or many types for this alert.
      *
-     * @param  string $lang
-     * @param  array $replace
-     * @param  null $locale
+     * @param  string  ...$types
+     *
+     * @return $this
+     */
+    public function types(string ...$types): Alert
+    {
+        $this->types = $types;
+
+        return $this;
+    }
+
+    /**
+     * Sets the Alert as dismissible.
+     *
+     * @param  bool  $dismissible
+     *
      * @return \DarkGhostHunter\Laralerts\Alert
      */
-    public function trans(string $lang, $replace = [], $locale = null)
+    public function dismiss(bool $dismissible = true): Alert
     {
-        return $this->lang($lang, $replace, $locale);
-    }
-
-    /**
-     * Set the Alert as dismissible
-     *
-     * @return $this
-     */
-    public function dismiss()
-    {
-        $this->dismiss = true;
+        $this->dismissible = $dismissible;
 
         return $this;
     }
 
     /**
-     * Set the Alert as not dismissible (fixed)
+     * Persists the key into the session, forever.
      *
-     * @return $this
-     */
-    public function fixed()
-    {
-        $this->dismiss = false;
-
-        return $this;
-    }
-
-    /**
-     * Set a list of classes to use in the Alert HTML code
+     * @param  string  $key
      *
-     * @param  mixed ...$classes
-     * @return $this
+     * @return \DarkGhostHunter\Laralerts\Alert
      */
-    public function classes(...$classes)
+    public function persistAs(string $key): Alert
     {
-        if (is_array($classes[0]) && func_num_args() === 1) {
-            $classes = $classes[0];
-        }
-
-        $this->classes = implode(' ', (array)$classes);
+        $this->persistentKey = $key;
 
         return $this;
     }
@@ -153,119 +180,56 @@ class Alert implements Arrayable, Serializable, Jsonable, JsonSerializable, Html
      *
      * @return array
      */
-    public function toArray()
+    public function toArray(): array
     {
         return [
-            'message'   => $this->message,
-            'type'      => $this->type,
-            'dismiss'   => $this->dismiss,
-            'classes'   => $this->classes,
+            'message' => $this->message,
+            'types' => $this->types,
+            'dismissible' => $this->dismissible,
         ];
-    }
-
-    /**
-     * String representation of object
-     *
-     * @return string
-     */
-    public function serialize()
-    {
-        return serialize($this->toArray());
-    }
-
-    /**
-     * Constructs the object
-     *
-     * @param  string $serialized
-     * @return void
-     */
-    public function unserialize($serialized)
-    {
-        [
-            'message'   => $this->message,
-            'type'      => $this->type,
-            'dismiss'   => $this->dismiss,
-            'classes'   => $this->classes,
-        ] = unserialize($serialized, [__CLASS__]);
     }
 
     /**
      * Convert the object to its JSON representation.
      *
-     * @param  int $options
+     * @param  int  $options
+     *
      * @return string
      */
-    public function toJson($options = 0)
+    public function toJson($options = 0): string
     {
-        return json_encode($this->jsonSerialize(), $options);
+        return json_encode($this->jsonSerialize(), JSON_THROW_ON_ERROR);
     }
 
     /**
-     * Creates a new Alert instance from an array
-     *
-     * @param  array $attributes
-     * @return \DarkGhostHunter\Laralerts\Alert
-     */
-    public static function fromArray(array $attributes)
-    {
-        return new Alert(
-            $attributes['message'],
-            $attributes['type'] ?? null,
-            $attributes['dismiss'] ?? null,
-            $attributes['classes'] ?? null
-        );
-    }
-
-    /**
-     * Creates a new Alert instance from a JSON string
-     *
-     * @param  string $json
-     * @return \DarkGhostHunter\Laralerts\Alert
-     */
-    public static function fromJson(string $json)
-    {
-        return static::fromArray(json_decode($json, true));
-    }
-
-    /**
-     * Specify data which should be serialized to JSON
+     * Specify data which should be serialized to JSON.
      *
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return $this->toArray();
     }
 
     /**
-     * Get content as a string of HTML.
+     * Creates a new Alert from a Bag and an array.
      *
-     * @return string
-     * @throws \Throwable
-     */
-    public function toHtml()
-    {
-        $array = array_merge($this->toArray(), [
-            'typeClass' => $this->typeClass
-        ]);
-
-        return view($this->dismiss ? 'laralerts::alert-dismiss' : 'laralerts::alert', $array)->render();
-    }
-
-    /**
-     * If the call was made to a type, set that type or bail out.
+     * @param  array  $alert
      *
-     * @param $method
-     * @param $parameters
      * @return \DarkGhostHunter\Laralerts\Alert
-     * @throws \BadMethodCallException
      */
-    public function __call($method, $parameters)
+    public static function fromArray(array $alert): Alert
     {
-        if (isset(self::$types[$method])) {
-            return $this->setType($method);
+        $instance = (new static())->raw($alert['message'])->types(...$alert['types'] ?? []);
+
+        if (isset($alert['dismissible'])) {
+            $instance->dismiss($alert['dismissible']);
         }
 
-        throw new BadMethodCallException("Method $method does not exist.");
+        if (isset($alert['persistent'])) {
+            $instance->persistAs($alert['persistent']);
+        }
+
+        return $instance;
     }
 }

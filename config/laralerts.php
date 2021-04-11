@@ -4,16 +4,16 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Blade Directive name
+    | Renderer
     |--------------------------------------------------------------------------
     |
-    | This library registers a Blade directive called "alerts", but you may be
-    | already using the name in your application. In that case, you may want
-    | to change it so the directive doesn't collide with other directives.
+    | When an Alert is rendered into HTML, it uses a "render" which transforms
+    | the Alert into HTML code for a given frontend framework. By default, it
+    | uses "Bootstrap 5", but you can change it or create your own renderer.
     |
     */
 
-    'directive' => 'alerts',
+    'renderer' => 'bootstrap',
 
     /*
     |--------------------------------------------------------------------------
@@ -27,31 +27,4 @@ return [
     */
 
     'key' => '_alerts',
-
-    /*
-    |--------------------------------------------------------------------------
-    | Type
-    |--------------------------------------------------------------------------
-    |
-    | All Alerts are created "in blank state", without any alert type defined.
-    | Setting a default type will allow you to skip issuing the type in each
-    | alert in your app. Anyway, this can be overridden inside each alert.
-    |
-    */
-
-    'type' => null,
-
-    /*
-    |--------------------------------------------------------------------------
-    | Dismiss
-    |--------------------------------------------------------------------------
-    |
-    | When creating an Alert, these are not dismissible by default. To override
-    | this, set this key to "true", making every Alert dismissible by default.
-    | Of course you can override this default behaviour when making an Alert.
-    |
-    */
-
-    'dismiss' => false,
-
 ];

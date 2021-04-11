@@ -1,6 +1,6 @@
 <?php
 
-namespace DarkGhostHunter\Laralerts\Tests\Concerns;
+namespace Tests;
 
 trait RegistersPackage
 {

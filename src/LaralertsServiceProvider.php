@@ -2,11 +2,14 @@
 
 namespace DarkGhostHunter\Laralerts;
 
-use Illuminate\Routing\Router;
+use DarkGhostHunter\Laralerts\Contracts\Renderer;
+use DarkGhostHunter\Laralerts\Http\Middleware\AddAlertsToJson;
+use DarkGhostHunter\Laralerts\Http\Middleware\StorePersistentAlertsInSession;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Contracts\Session\Session;
+use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
-use DarkGhostHunter\Laralerts\Http\Middleware\ExpireAlerts;
-use DarkGhostHunter\Laralerts\Http\Middleware\AppendAlertsToJsonResponse;
 
 class LaralertsServiceProvider extends ServiceProvider
 {
@@ -17,51 +20,64 @@ class LaralertsServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->mergeConfigFrom(
-            __DIR__ . '/../config/laralerts.php', 'laralerts'
+        $this->mergeConfigFrom(__DIR__ . '/../config/laralerts.php', 'laralerts');
+
+        $this->app->singleton(RendererManager::class);
+        $this->app->singleton(
+            Renderer::class,
+            static function ($app) {
+                return $app->make(RendererManager::class)->driver(
+                    $app->make(Repository::class)->get('laralerts.renderer')
+                );
+            }
         );
 
-        $this->app->singleton(AlertBag::class, function ($app) {
-            return $app['session.store']->get($app['config']['laralerts.key']) ?? new AlertBag();
-        });
+        $this->app->singleton(Bag::class);
 
-        $this->app->singleton(AlertManager::class, function ($app) {
-            $config = $app['config'];
-
-            return new AlertManager(
-                $app->make(AlertBag::class),
-                $app['session.store'],
-                $config->get('laralerts.key'),
-                $config->get('laralerts.type'),
-                $config->get('laralerts.dismiss')
-            );
-        });
+        $this->app->bind(
+            StorePersistentAlertsInSession::class,
+            static function ($app) {
+                return new StorePersistentAlertsInSession(
+                    $app->make(Bag::class),
+                    $app->make(Session::class),
+                    $app->make(Repository::class)->get('laralerts.key')
+                );
+            }
+        );
     }
 
     /**
      * Bootstrap any application services.
      *
+     * @param  \Illuminate\Foundation\Http\Kernel  $http
+     * @param  \Illuminate\Routing\Router  $router
+     *
      * @return void
-     * @throws \Illuminate\Contracts\Container\BindingResolutionException
      */
-    public function boot()
+    public function boot(Kernel $http, Router $router)
     {
-        $this->loadViewsFrom(__DIR__.'/../resources/views', 'laralerts');
+        // Add the Global Middleware to the `web` group only if it exists.
+        if (array_key_exists('web', $http->getMiddlewareGroups())) {
+            $http->appendMiddlewareToGroup('web', StorePersistentAlertsInSession::class);
+        }
 
-        $this->publishes([
-            __DIR__.'/../resources/views' => resource_path('views/vendor/laralerts'),
-        ]);
+        // Add it to the middleware priority as last.
+        $http->appendToMiddlewarePriority(StorePersistentAlertsInSession::class);
 
-        // Register the terminable middleware that ages the alerts automatically
-        $this->app[Kernel::class]->pushMiddleware(ExpireAlerts::class);
+        $router->aliasMiddleware('laralerts.json', AddAlertsToJson::class);
 
-        // Middleware aliasing
-        $this->app[Router::class]->aliasMiddleware('alert.json', AppendAlertsToJsonResponse::class);
+        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'laralerts');
 
-        // @codeCoverageIgnoreStart
-        $this->app['blade.compiler']->directive( $this->app->make('config')->get('laralerts.directive'), function () {
-            return "<?php echo \$__env->make('laralerts::alerts', [], ['alerts' => app(\DarkGhostHunter\Laralerts\AlertBag::class)->getAlerts()])->render(); ?>";
-        });
-        // @codeCoverageIgnoreEnd
+        $this->callAfterResolving(
+            'blade.compiler',
+            function ($blade) {
+                $blade->component(View\Component\LaralertsComponent::class, 'laralerts');
+            }
+        );
+
+        if ($this->app->runningInConsole()) {
+            $this->publishes([__DIR__ . '/../resources/views' => resource_path('views/vendor/laralerts')], 'views');
+            $this->publishes([__DIR__ . '/../config/laralerts.php' => config_path('laralerts.php')], 'config');
+        }
     }
 }
