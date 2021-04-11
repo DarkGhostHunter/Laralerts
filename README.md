@@ -426,6 +426,8 @@ When you receive a JSON Response, you will see the alerts appended to whichever 
 }
 ```
 
+> If your key is already present in the JSON response, Laralerts **won't overwrite the key value**. Ensure the key is never present in the response.
+
 ## Security
 
 If you discover any security related issues, please email darkghosthunter@gmail.com instead of using the issue tracker.
