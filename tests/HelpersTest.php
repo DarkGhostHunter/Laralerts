@@ -10,12 +10,12 @@ class HelpersTest extends TestCase
 {
     use RegistersPackage;
 
-    public function test_resolves_alert_factory()
+    public function test_resolves_alert_factory(): void
     {
         static::assertInstanceOf(Bag::class, alert());
     }
 
-    public function test_creates_alert()
+    public function test_creates_alert(): void
     {
         $alert = alert('test-message', 'info');
         static::assertInstanceOf(Alert::class, $alert);

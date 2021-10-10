@@ -2,42 +2,61 @@
 
 namespace DarkGhostHunter\Laralerts;
 
+use Closure;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Session\Session;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Traits\Macroable;
 
+use function array_key_last;
+use function json_decode;
+use function value;
+
+use const JSON_THROW_ON_ERROR;
+
+/**
+ * @mixin \DarkGhostHunter\Laralerts\Alert
+ */
 class Bag
 {
-    /**
-     * Alerts that will be rendered into the view.
-     *
-     * @var array|\DarkGhostHunter\Laralerts\Alert[]
-     */
-    protected array $alerts = [];
+    use Macroable {
+        __call as macroCall;
+    }
 
     /**
-     * Current Session.
+     * The underlying collection of alerts.
      *
-     * @var \Illuminate\Contracts\Session\Session
+     * @var \Illuminate\Support\Collection
      */
-    protected Session $session;
+    protected Collection $alerts;
 
     /**
-     * Application config.
+     * A key-value pair that indicates which alerts must persist.
      *
-     * @var \Illuminate\Contracts\Config\Repository
+     * @var array
      */
-    protected Repository $config;
+    protected array $persisted = [];
 
     /**
-     * Bag constructor.
+     * Create a new Bag instance.
      *
      * @param  \Illuminate\Contracts\Session\Session  $session
      * @param  \Illuminate\Contracts\Config\Repository  $config
      */
-    public function __construct(Session $session, Repository $config)
+    public function __construct(protected Session $session, protected Repository $config)
     {
-        $this->session = $session;
-        $this->config = $config;
+        $this->alerts = new Collection;
+    }
+
+    /**
+     * Returns all a key-index map of all persisted alerts.
+     *
+     * @return array
+     */
+    public function getPersisted(): array
+    {
+        return $this->persisted;
     }
 
     /**
@@ -47,83 +66,98 @@ class Bag
      */
     public function new(): Alert
     {
-        $this->add($alert = new Alert());
+        $this->add($alert = new Alert($this));
 
         return $alert;
     }
 
     /**
-     * Adds an Alert from an array.
+     * Adds an Alert into the bag.
      *
-     * @param  \DarkGhostHunter\Laralerts\Alert  $alert
+     * @param  \DarkGhostHunter\Laralerts\Alert|\DarkGhostHunter\Laralerts\Alert[]  $alert
+     * @return \DarkGhostHunter\Laralerts\Bag
      */
-    public function add(Alert $alert)
+    public function add(Alert|array $alert): static
     {
-        $this->alerts[] = $alert;
+        foreach (Arr::wrap($alert) as $item) {
+            $this->alerts->push($item);
+
+            $item->index = array_key_last($this->alerts->all());
+
+            // The method is also used to put alerts from the session. Because
+            // of that, we will check if it already has a persistent key and,
+            // if it has one, we will add it to the internal map of alerts.
+            if ($key = $item->getPersistKey()) {
+                $this->persisted[$key] = $item->index;
+            }
+
+            $item->setBag($this);
+        }
+
+        return $this;
     }
 
     /**
-     * Returns all alerts.
+     * Returns the underlying collection of alerts.
      *
-     * @return array|\DarkGhostHunter\Laralerts\Alert[]
+     * @return \Illuminate\Support\Collection|\DarkGhostHunter\Laralerts\Alert[]
      */
-    public function all(): array
+    public function collect(): Collection
     {
         return $this->alerts;
     }
 
     /**
-     * Returns all alerts that are marked as persistent.
+     * Marks an existing Alert as persistent.
      *
-     * @return array|\DarkGhostHunter\Laralerts\Alert[]
+     * @param  string  $key
+     * @param  int  $index
+     * @return $this
      */
-    public function allPersistent(): array
+    public function markPersisted(string $key, int $index): static
     {
-        return array_filter(
-            $this->alerts,
-            static function (Alert $alert) {
-                return $alert->isPersistent();
-            }
-        );
+        $this->persisted[$key] = $index;
+
+        return $this;
     }
 
     /**
-     * Ensures an Alert is only persisted once by its key.
+     * Abandons a persisted Alert.
      *
      * @param  string  $key
-     *
-     * @return \DarkGhostHunter\Laralerts\Alert
-     */
-    public function unique(string $key): Alert
-    {
-        foreach ($this->alerts as $alert) {
-            if ($alert->getPersistKey() === $key) {
-                return $alert;
-            }
-        }
-
-        return $this->new()->persistAs($key);
-    }
-
-    /**
-     * Abandons a persistent Alert. Returns true if successful.
-     *
-     * @param  string  $key
-     *
-     * @return bool
+     * @return bool  Returns true if successful.
      */
     public function abandon(string $key): bool
     {
-        foreach ($this->alerts as $index => $alert) {
-            if ($alert->getPersistKey() === $key) {
-                unset($this->alerts[$index]);
-                return true;
-            }
+        if (null !== $index = $this->whichPersistent($key)) {
+            $this->alerts->forget($index);
+            unset($this->persisted[$key]);
+            return true;
         }
 
-        ksort($this->alerts);
-
         return false;
+    }
+
+    /**
+     * Check if an Alert by the given key is persistent.
+     *
+     * @param  string  $key
+     * @return bool
+     */
+    public function hasPersistent(string $key): bool
+    {
+        return null !== $this->whichPersistent($key);
+    }
+
+    /**
+     * Locates the key of a persistent alert.
+     *
+     * @param  string  $key
+     * @return int|null
+     */
+    protected function whichPersistent(string $key): ?int
+    {
+        return $this->persisted[$key] ?? null;
     }
 
     /**
@@ -133,87 +167,60 @@ class Bag
      */
     public function flush(): void
     {
-        $this->alerts = [];
-    }
-
-    /**
-     * Check if an Alert by the given key is persistent.
-     *
-     * @param  string  $key
-     *
-     * @return bool
-     */
-    public function hasPersistent(string $key): bool
-    {
-        foreach ($this->alerts as $alert) {
-            if ($alert->getPersistKey() === $key) {
-                return true;
-            }
-        }
-
-        return false;
+        $this->alerts = new Collection();
     }
 
     /**
      * Creates an Alert only if the condition evaluates to true.
      *
-     * @param  callable|int|bool  $condition
-     *
+     * @param  \Closure|bool  $condition
      * @return \DarkGhostHunter\Laralerts\Alert
      */
-    public function when($condition): Alert
+    public function when(Closure|bool $condition): Alert
     {
-        if (value($condition)) {
-            return $this->new();
-        }
-
-        return new Alert();
+        return value($condition, $this) ? $this->new() : new BogusAlert($this);
     }
 
     /**
      * Creates an Alert only if the condition evaluates to false.
      *
-     * @param  callable|int|bool  $condition
-     *
+     * @param  \Closure|bool  $condition
      * @return \DarkGhostHunter\Laralerts\Alert
      */
-    public function unless($condition): Alert
+    public function unless(Closure|bool $condition): Alert
     {
-        if (!value($condition)) {
-            return $this->new();
-        }
-
-        return new Alert();
+        return ! value($condition, $this) ? $this->new() : new BogusAlert($this);
     }
 
     /**
      * Adds an Alert into the bag from a JSON string.
      *
      * @param  string  $alert
-     *
+     * @param  int  $options
      * @return \DarkGhostHunter\Laralerts\Alert
      * @throws \JsonException
      */
-    public function fromJson(string $alert): Alert
+    public function fromJson(string $alert, int $options = 0): Alert
     {
-        $alert = Alert::fromArray(json_decode($alert, true, 512, JSON_THROW_ON_ERROR));
+        $this->add($instance = Alert::fromArray($this, json_decode($alert, true, 512, $options | JSON_THROW_ON_ERROR)));
 
-        $this->add($alert);
-
-        return $alert;
+        return $instance;
     }
 
-
     /**
-     * Pass through all calls to the Alert method.
+     * Pass through all calls to a new Alert.
      *
-     * @param  string  $name
-     * @param  array  $arguments
-     *
+     * @codeCoverageIgnore
+     * @param  string  $method
+     * @param  array  $parameters
      * @return \DarkGhostHunter\Laralerts\Alert
      */
-    public function __call(string $name, array $arguments)
+    public function __call(string $method, array $parameters)
     {
-        return $this->new()->{$name}(...$arguments);
+        if (static::hasMacro($method)) {
+            return $this->macroCall($method, $parameters);
+        }
+
+        return $this->new()->{$method}(...$parameters);
     }
 }
