@@ -5,6 +5,7 @@ namespace DarkGhostHunter\Laralerts;
 use Countable;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
+use Illuminate\Support\Traits\Macroable;
 use JsonSerializable;
 use Stringable;
 
@@ -19,6 +20,8 @@ use function url;
 
 class Alert implements Arrayable, Jsonable, JsonSerializable, Stringable
 {
+    use Macroable;
+
     /**
      * The internal key of this Alert in the bag.
      *
@@ -59,6 +62,17 @@ class Alert implements Arrayable, Jsonable, JsonSerializable, Stringable
         $this->bag = $bag;
 
         return $this;
+    }
+
+    /**
+     * Returns the key used to persist the alert, if any.
+     *
+     * @return string|null
+     * @internal
+     */
+    public function getPersistKey(): ?string
+    {
+        return $this->persistKey;
     }
 
     /**
@@ -368,16 +382,5 @@ class Alert implements Arrayable, Jsonable, JsonSerializable, Stringable
         }
 
         return new static($bag, null, $alert['message'], $alert['types'], [], $alert['dismissible'] ?? false);
-    }
-
-    /**
-     * Returns the key used to persist the alert, if any.
-     *
-     * @return string|null
-     * @internal
-     */
-    public function getPersistKey(): ?string
-    {
-        return $this->persistKey;
     }
 }
