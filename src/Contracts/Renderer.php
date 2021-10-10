@@ -2,14 +2,15 @@
 
 namespace DarkGhostHunter\Laralerts\Contracts;
 
+use Illuminate\Support\Collection;
+
 interface Renderer
 {
     /**
      * Returns the rendered alerts as a single HTML string.
      *
-     * @param  array|\DarkGhostHunter\Laralerts\Alert[]  $alerts
-     *
+     * @param  \Illuminate\Support\Collection|\DarkGhostHunter\Laralerts\Alert[]  $alerts
      * @return string
      */
-    public function render(array $alerts): string;
+    public function render(Collection $alerts): string;
 }

@@ -1,5 +1,6 @@
 <?php
 
+use DarkGhostHunter\Laralerts\Alert;
 use DarkGhostHunter\Laralerts\Bag;
 
 if (!function_exists('alert')) {
@@ -11,9 +12,8 @@ if (!function_exists('alert')) {
      *
      * @return \DarkGhostHunter\Laralerts\Alert|\DarkGhostHunter\Laralerts\Bag
      */
-    function alert(string $message = null, string ...$types)
+    function alert(string $message = null, string ...$types): Alert|Bag
     {
-        /** @var \DarkGhostHunter\Laralerts\Bag $manager */
         $manager = app(Bag::class);
 
         if (! func_num_args()) {

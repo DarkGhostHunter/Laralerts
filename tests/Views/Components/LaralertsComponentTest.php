@@ -5,6 +5,7 @@ namespace Tests\Views\Components;
 use DarkGhostHunter\Laralerts\Alert;
 use DarkGhostHunter\Laralerts\Bag;
 use DarkGhostHunter\Laralerts\Contracts\Renderer;
+use Illuminate\Support\Collection;
 use Orchestra\Testbench\TestCase;
 use Tests\RegistersPackage;
 use Tests\TestsView;
@@ -27,9 +28,9 @@ class LaralertsComponentTest extends TestCase
         });
     }
 
-    public function test_doesnt_renders_without_alerts()
+    public function test_doesnt_renders_without_alerts(): void
     {
-        static::assertEmpty($this->bag->all());
+        static::assertEmpty($this->bag->collect());
 
         static::assertEquals(<<<'EOT'
 <div class="container">
@@ -39,15 +40,15 @@ EOT
         , $this->view->render());
     }
 
-    public function test_renders_alerts()
+    public function test_renders_alerts(): void
     {
         $render = $this->mock(Renderer::class);
 
         $render->shouldReceive('render')
             ->once()
-            ->withArgs(function (array $alerts) {
+            ->withArgs(function (Collection $alerts) {
                 static::assertCount(1, $alerts);
-                static::assertInstanceOf(Alert::class, $alerts[0]);
+                static::assertInstanceOf(Alert::class, $alerts->get(0));
 
                 return true;
             })

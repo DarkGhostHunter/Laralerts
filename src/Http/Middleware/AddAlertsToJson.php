@@ -3,40 +3,17 @@
 namespace DarkGhostHunter\Laralerts\Http\Middleware;
 
 use Closure;
-use DarkGhostHunter\Laralerts\Alert;
 use DarkGhostHunter\Laralerts\Bag;
-use Illuminate\Contracts\Config\Repository;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Arr;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+
+use function config;
+use function data_get;
+use function data_set;
 
 class AddAlertsToJson
 {
-    /**
-     * Alerts Bag.
-     *
-     * @var \DarkGhostHunter\Laralerts\Bag
-     */
-    protected Bag $bag;
-
-    /**
-     * Application config.
-     *
-     * @var \Illuminate\Contracts\Config\Repository
-     */
-    protected Repository $config;
-
-    /**
-     * AddAlertsToJson constructor.
-     *
-     * @param  \DarkGhostHunter\Laralerts\Bag  $bag
-     * @param  \Illuminate\Contracts\Config\Repository  $config
-     */
-    public function __construct(Bag $bag, Repository $config)
-    {
-        $this->bag = $bag;
-        $this->config = $config;
-    }
-
     /**
      * Handle an incoming request.
      *
@@ -44,38 +21,22 @@ class AddAlertsToJson
      * @param  \Closure  $next
      * @param  string|null  $key
      *
-     * @return mixed
+     * @return \Illuminate\Http\Response|\Illuminate\Http\JsonResponse
      */
-    public function handle($request, Closure $next, string $key = null)
+    public function handle(Request $request, Closure $next, string $key = null): JsonResponse|Response
     {
         $response = $next($request);
 
-        if ($response instanceof JsonResponse && !$response->isClientError() && !$response->isServerError()) {
-            $key = $key ?? $this->config->get('laralerts.key');
+        if ($response instanceof JsonResponse && $response->isSuccessful()) {
+            $key ??= config('laralerts.key');
 
-            $data = $response->getData(true);
+            $data = $response->getData();
 
-            // If the outgoing data already has the key, don't replace it.
-            if (!Arr::has($data, $key)) {
-                $response->setData(Arr::add($data, $key, $this->alertsToArray()));
+            if (null === data_get($data, $key)) {
+                $response->setData(data_set($data, $key, app(Bag::class)->collect()->toArray()));
             }
         }
 
         return $response;
-    }
-
-    /**
-     * Transforms the Alerts of the Bag to a play array.
-     *
-     * @return array
-     */
-    protected function alertsToArray(): array
-    {
-        return array_map(
-            static function (Alert $alert): array {
-                return $alert->toArray();
-            },
-            $this->bag->all()
-        );
     }
 }

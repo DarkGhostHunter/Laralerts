@@ -2,14 +2,13 @@
 
 namespace DarkGhostHunter\Laralerts\Renderers;
 
-use DarkGhostHunter\Laralerts\Alert;
 use DarkGhostHunter\Laralerts\Contracts\Renderer;
-use Generator;
 use Illuminate\Contracts\View\Factory;
+use Illuminate\Support\Collection;
 
 class BootstrapRenderer implements Renderer
 {
-    use CompilesClasses;
+    use CompilesAlert;
 
     /**
      * View file for Bootstrap Alerts.
@@ -19,19 +18,19 @@ class BootstrapRenderer implements Renderer
     protected const VIEW = 'laralerts::bootstrap.container';
 
     /**
-     * Translation table for known types
+     * Class translation table for known types.
      *
      * @var array|string[]
      */
     protected const TYPE_CLASSES = [
-        'primary' => 'alert-primary',
+        'primary'   => 'alert-primary',
         'secondary' => 'alert-secondary',
-        'success' => 'alert-success',
-        'danger' => 'alert-danger',
-        'warning' => 'alert-warning',
-        'info' => 'alert-info',
-        'light' => 'alert-light',
-        'dark' => 'alert-dark',
+        'success'   => 'alert-success',
+        'danger'    => 'alert-danger',
+        'warning'   => 'alert-warning',
+        'info'      => 'alert-info',
+        'light'     => 'alert-light',
+        'dark'      => 'alert-dark',
     ];
 
     /**
@@ -39,80 +38,30 @@ class BootstrapRenderer implements Renderer
      *
      * @var array|string[]
      */
-    protected const DISMISS_CLASSES = [
-        'fade',
-        'show',
-        'alert-dismissible',
-    ];
+    protected const DISMISS_CLASSES = ['fade', 'show', 'alert-dismissible'];
 
     /**
-     * The alerts that should be rendered
-     *
-     * @var array|\DarkGhostHunter\Laralerts\Alert[]
-     */
-    protected array $alerts = [];
-
-    /**
-     * View Factory to render each alert.
-     *
-     * @var \Illuminate\Contracts\View\Factory
-     */
-    protected Factory $factory;
-
-    /**
-     * BootstrapRenderer constructor.
+     * Bootstrap Renderer constructor.
      *
      * @param  \Illuminate\Contracts\View\Factory  $factory
      */
-    public function __construct(Factory $factory)
+    public function __construct(protected Factory $factory)
     {
-        $this->factory = $factory;
+        //
     }
 
     /**
      * Returns the rendered alerts as a single HTML string.
      *
-     * @param  array|\DarkGhostHunter\Laralerts\Alert[]  $alerts
-     *
+     * @param  \Illuminate\Support\Collection|\DarkGhostHunter\Laralerts\Alert[]  $alerts
      * @return string
      */
-    public function render(array $alerts): string
+    public function render(Collection $alerts): string
     {
         return $this->factory
             ->make(static::VIEW)
-            ->with('alerts', iterator_to_array($this->getAlerts($alerts)))->render();
+            ->with('alerts', $alerts->map([$this, 'compileAlert']))->render();
     }
 
-    /**
-     * Get the alerts prepared for inserting in the view.
-     *
-     * @param  array|\DarkGhostHunter\Laralerts\Alert[]  $alerts
-     *
-     * @return \Generator
-     */
-    protected function getAlerts(array $alerts): Generator
-    {
-        foreach ($alerts as $alert) {
-            // Here we will discard those with empty messages.
-            if (filled($alert->getMessage())) {
-                yield static::prepareAlert($alert);
-            }
-        }
-    }
 
-    /**
-     * Prepares the alert array.
-     *
-     * @param  \DarkGhostHunter\Laralerts\Alert  $alert
-     *
-     * @return object
-     */
-    protected static function prepareAlert(Alert $alert): object
-    {
-        return (object)[
-            'message' => $alert->getMessage(),
-            'classes' => static::compileClasses($alert),
-            'dismissible' => $alert->isDismissible(),
-        ];
-    }
 }

@@ -7,6 +7,8 @@ use Orchestra\Testbench\TestCase;
 use Tests\RegistersPackage;
 use Tests\TestsView;
 
+use function alert;
+
 class BootstrapRendererTest extends TestCase
 {
     use RegistersPackage;
@@ -26,7 +28,7 @@ class BootstrapRendererTest extends TestCase
         );
     }
 
-    public function test_renders_bootstrap_alert()
+    public function test_renders_bootstrap_alert(): void
     {
         alert(
             'A Bootstrap alert',
@@ -59,7 +61,7 @@ EOT
         );
     }
 
-    public function test_renders_dismissible_alert()
+    public function test_renders_dismissible_alert(): void
     {
         alert('A Bootstrap Alert', 'success', 'dark')->dismiss();
 
@@ -82,7 +84,7 @@ EOT
         );
     }
 
-    public function test_eliminates_duplicate_classes()
+    public function test_eliminates_duplicate_classes(): void
     {
         alert('A Bootstrap Alert', 'success', 'success', 'foo', 'foo', 'foo', 'bar', 'alert-dismissible')->dismiss();
 
@@ -92,6 +94,107 @@ EOT
     <div class="alerts">
         <div class="alert alert-success foo bar alert-dismissible fade show" role="alert">
     A Bootstrap Alert
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    </div>
+</div>
+
+EOT
+            ,
+            $this->view->render()
+        );
+    }
+
+    public function test_renders_alert_with_link(): void
+    {
+        alert('A Bootstrap Alert to {link}', 'success', 'success', 'foo', 'foo', 'foo', 'bar', 'alert-dismissible')
+            ->away('link', 'https://www.something.com')
+            ->dismiss();
+
+        static::assertEquals(
+            <<<'EOT'
+<div class="container">
+    <div class="alerts">
+        <div class="alert alert-success foo bar alert-dismissible fade show" role="alert">
+    A Bootstrap Alert to <a href="https://www.something.com" target="_blank">link</a>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    </div>
+</div>
+
+EOT
+            ,
+            $this->view->render()
+        );
+    }
+
+    public function test_renders_alert_with_multiple_links(): void
+    {
+        alert('A Bootstrap {Alert} to {link}', 'success', 'success', 'foo', 'foo', 'foo', 'bar', 'alert-dismissible')
+            ->away('Alert', 'https://www.alert.com', false)
+            ->away('link', 'https://www.something.com')
+            ->dismiss();
+
+        static::assertEquals(
+            <<<'EOT'
+<div class="container">
+    <div class="alerts">
+        <div class="alert alert-success foo bar alert-dismissible fade show" role="alert">
+    A Bootstrap <a href="https://www.alert.com">Alert</a> to <a href="https://www.something.com" target="_blank">link</a>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    </div>
+</div>
+
+EOT
+            ,
+            $this->view->render()
+        );
+    }
+
+    public function test_renders_alert_with_same_link_multiple_times(): void
+    {
+        alert('A Bootstrap {link} to {link}', 'success', 'success', 'foo', 'foo', 'foo', 'bar', 'alert-dismissible')
+            ->away('link', 'https://www.something.com')
+            ->dismiss();
+
+        static::assertEquals(
+            <<<'EOT'
+<div class="container">
+    <div class="alerts">
+        <div class="alert alert-success foo bar alert-dismissible fade show" role="alert">
+    A Bootstrap <a href="https://www.something.com" target="_blank">link</a> to <a href="https://www.something.com" target="_blank">link</a>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    </div>
+</div>
+
+EOT
+            ,
+            $this->view->render()
+        );
+    }
+
+    public function test_link_is_case_sensitive(): void
+    {
+        alert('A Bootstrap {Link} to {link}', 'success', 'success', 'foo', 'foo', 'foo', 'bar', 'alert-dismissible')
+            ->away('link', 'https://www.something.com')
+            ->dismiss();
+
+        static::assertEquals(
+            <<<'EOT'
+<div class="container">
+    <div class="alerts">
+        <div class="alert alert-success foo bar alert-dismissible fade show" role="alert">
+    A Bootstrap {Link} to <a href="https://www.something.com" target="_blank">link</a>
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>
