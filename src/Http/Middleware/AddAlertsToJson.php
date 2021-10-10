@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 use function config;
-use function data_get;
 use function data_set;
 
 class AddAlertsToJson
@@ -32,9 +31,9 @@ class AddAlertsToJson
 
             $data = $response->getData();
 
-            if (null === data_get($data, $key)) {
-                $response->setData(data_set($data, $key, app(Bag::class)->collect()->toArray()));
-            }
+            $response->setData(
+                data_set($data, $key, app(Bag::class)->collect()->toArray(), false)
+            );
         }
 
         return $response;

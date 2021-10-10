@@ -2,8 +2,8 @@
 
 namespace Tests;
 
+use BadMethodCallException;
 use DarkGhostHunter\Laralerts\Bag;
-use Error;
 use Orchestra\Testbench\TestCase;
 
 class BagTest extends TestCase
@@ -110,10 +110,10 @@ class BagTest extends TestCase
         static::assertCount(1, $this->bag->collect());
     }
 
-    public function test_exception_if_method_doesnt_exists(): void
+    public function test_exception_if_method_macro_doesnt_exists(): void
     {
-        $this->expectException(Error::class);
-        $this->expectExceptionMessage('Call to undefined method DarkGhostHunter\Laralerts\Alert::inexistent()');
+        $this->expectException(BadMethodCallException::class);
+        $this->expectExceptionMessage('Method DarkGhostHunter\Laralerts\Alert::inexistent does not exist.');
 
         $this->bag->inexistent('foo');
     }
