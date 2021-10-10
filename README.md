@@ -11,7 +11,7 @@ Laralerts is compatible with **any** frontend framework to better suit your app,
 ## Requirements
 
 * Laravel 8.x or later
-* PHP 7.4, 8.0 or later.
+* PHP 8.0 or later.
 
 > For older versions support, consider helping by sponsoring or donating.
 
@@ -144,7 +144,7 @@ alert()->raw('But this is <strong>important</strong>.')->types('warning');
 
 ### Alert Type
 
-You can set an alert "type" by its name by just simply setting it with the `types()` method.
+You can set an alert "type" by its name by just simply setting it with the `types()` method. It also accepts multiple types.
 
 ```php
 <?php
@@ -165,7 +165,7 @@ alert()->message('There is an unread message.')->types('info', 'fade');
 
 The types are just aliases for custom CSS classes and HTML, which are then translated by the Renderer to the proper code.
 
-> You can issue more than one type. How the type gets rendered into the Alert will be the Rendered responsibility. The default Bootstrap renderer will set each unrecognized type as an additional CSS class.
+> The Renderer receives the list of types and changes them into CSS classes accordingly. The default Bootstrap Renderer will set each unrecognized type as an additional CSS class.
 
 ### Localization
 
@@ -174,7 +174,7 @@ To gracefully localize messages on the fly, use the `trans()` method, which is a
 ```php
 <?php
 
-alert()->lang('email.changed', ['email' => $email], 'es')->types('success');
+alert()->trans('email.changed', ['email' => $email], 'es')->types('success');
 ```
 
 ```html
@@ -183,9 +183,28 @@ alert()->lang('email.changed', ['email' => $email], 'es')->types('success');
 </div>
 ```
 
+You can also use `transChoice()` with the same parameters of [`trans_choice()`](https://laravel.com/docs/localization#pluralization).
+
+```php
+<?php
+
+alert()->transChoice('messages.apples', 1)->types('success');
+alert()->transChoice('messages.apples', 10)->types('success');
+```
+
+```html
+<div class="alert alert-success" role="alert">
+    ¡Ahora tienes 1 manzana! 
+</div>
+
+<div class="alert alert-success" role="alert">
+    ¡Ahora tienes 10 manzanas! 
+</div>
+```
+
 ### Dismiss
 
-Most of frontend frameworks have alerts or notifications that can be dismissible. You can set an Alert to be dismissible using `dismiss()`.
+Most of the frontend frameworks have alerts or notifications that can be dismissible, but require adding more than a single class to allow for interactivity. You can set an Alert to be dismissible using `dismiss()`.
 
 ```php
 alert()->message('You can disregard this')->dismiss();
@@ -197,7 +216,7 @@ If you want to change your mind, you can use `dismiss(false)`:
 alert()->message('You can disregard this')->dismiss(false);
 ```
 
-How the dismissible alert is transformed into code will depend on the renderer itself.
+> How the dismissible alert is transformed into code will depend on the renderer itself.
 
 ### Conditional Alerts
 
@@ -208,38 +227,67 @@ You can also push an Alert if a condition evaluates to true or false by using `w
 
 use Illuminate\Support\Facades\Auth;
 
-alert()->when(Auth::check())->message('You are authenticated')->types('success');
+alert()->when(Auth::check())
+    ->message('You are authenticated')
+    ->types('success');
 
-alert()->unless(Auth::user()->mailbox()->isEmpty())
+alert()->unless(Auth::user()->mailbox()->isNotEmpty())
        ->message('You have messages in your inbox')
        ->types('warning');
 ```
 
 ### Persistent Alerts
 
-> Persistent Alerts require [sessions enabled](https://laravel.com/docs/session). 
-
-Alerts only last for the next response sent to the browser. To make any alert persistent you can use the `persistAs()` method with a key to identify the alert.
+Since alerts are [flashed into the session](https://laravel.com/docs/8.x/session#flash-data), these last only for next response, or after the next redirect. To make any alert persistent you can use the `persistAs()` method with a key to identify the alert. This ensures subsequent calls using the same persistence key don't duplicate (but overwrites) the same Alert.
 
 ```php
 alert()->message('Your disk size is almost full')->types('danger')->persistAs('disk.full');
 ```
 
-Once you're done, you can immediately delete the persistent Alert using `abandon()` directly from the helper, with the name of the persisted Alert. It will return `true` if the persisted Alert is found, or `false` if not.
+> Only the last alert persisted with the same key will be persisted.
+
+Once you're done, you can delete the persistent Alert using `abandon()` directly from the helper with the name of the persisted Alert. It will return `true` if the persisted Alert is found, or `false` if not. For example, we can abandon the previous alert of the disk of the user is no longer full.
 
 ```php
-alert()->abandon('disk.full');
+if ($disk->notFull()) {
+    alert()->abandon('disk.full');
+}
 ```
 
-> Persistent Alerts are **not idempotent**. To ensure one Persistent Alert is not duplicated, use [`unique()`](#persist-only-if-not-persisted). 
+### Links
 
-#### Persist only if not persisted
-
-Since Persistent Alerts are no idempotent, you can use the `unique()` method to create an unique Alert to persist. If the persisted Alert didn't exist before, it will be created.
+Setting up links for an alert doesn't have to be cumbersome. You can easily replace a string between curly braces in your message for a link using `to()`, `route()`, `action()`, and `away()`.
 
 ```php
-alert()->unique('disk.full')->message('Your disk size is almost full')->types('danger');
+<?php
+
+alert()->message('Remember, you can follow your order in your {dashboard}.')
+    ->types('success')
+    ->to('dashboard', '/dashboard/orders')
 ```
+
+Link can also work over translated messages, as long these have a word in curly braces.
+
+```php
+<?php
+
+alert()->trans('user.dashboard.tracking.order', ['order' => $order->tracking_number])
+    ->types('success')
+    ->route('tracking', 'Orders.Tracking', ['order' => 45])
+```
+
+If you have more than one link, you can chain multiple links to a message.
+
+```php
+<?php
+
+alert()->trans('Your {product} is contained in this {order}.')
+    ->types('success')
+    ->action('product', [\App\Http\Controllers\Product::class, 'show'], ['product' => 180])
+    ->to('order', '/dashboard/order/45')
+```
+
+> Links strings are case-sensitive, and replaces all occurrences of the same string. You can [create your own Renderer](#creating-a-custom-renderer) is this is not desired. 
 
 ## Configuration
 
@@ -270,11 +318,13 @@ return [
 ];
 ```
 
-The default renderer to use with Laralerts. This package ships with Bootstrap 5 renderer, but you can [create your own](#renderers) for other frontend frameworks like [Bulma.io](https://bulma.io/), [UI kit](https://getuikit.com/), [TailwindCSS](https://tailwindcss.com/) and [INK](http://ink.sapo.pt/), or even your own custom frontend framework.
+This picks the Renderer to use when transforming Alerts into HTML.
+
+This package ships with Bootstrap 5 renderer, but you can [create your own](#renderers) for other frontend frameworks like [Bulma.io](https://bulma.io/), [UI kit](https://getuikit.com/), [TailwindCSS](https://tailwindcss.com/) and [INK](http://ink.sapo.pt/), or even your own custom frontend framework.
 
 ### Session Key
 
-The Alert Bag is registered into the Session by a given key, which is `_alerts` by default. If you're using this key name for other things in your session, you should change the key name.
+The Alert Bag is registered into the Session by a given key, which is `_alerts` by default. If you're using this key name for other things in your session, you should change it.
 
 ```php
 <?php 
@@ -284,11 +334,11 @@ return [
 ];
 ```
 
-> For ease of mind, the Alerts serialize and unserialize as `array`, so you don't have to worry about storage concerns.
+This key is also used when [sending JSON alerts](#sending-json-alerts).
 
 ## Renderers
 
-Alerts get rendered by a Renderer, which takes the Alert data and transforms them into an HTML string. This makes swapping a frontend framework easier, and have better flexibility when rendering HTML.
+Alerts get rendered by a Renderer, which takes the Alert data and transforms them into an HTML string. This makes swapping a frontend framework easier, and allows greater flexibility when rendering HTML.
 
 ### Creating a custom renderer
 
@@ -325,7 +375,7 @@ return [
 ];
 ```
 
-When you issue an alert, the alert will be rendered using the renderer you have set.
+When you issue an alert, the alert will be rendered using the Renderer you have set.
 
 ```php
 <?php
@@ -343,7 +393,7 @@ alert()->message('Popping colors!')->types('primary');
 
 When the Renderer receives Alerts to render, it will call a "container" view which will render all the Alerts by using a loop. This is hard-coded into each Renderer.
 
-For example, the included `BootstrapRenderer` calls the `laralerts::bootstrap.container` by default.
+For example, the included `BootstrapRenderer` calls the `laralerts::bootstrap.container`.
 
 ```html
 @if($alerts)

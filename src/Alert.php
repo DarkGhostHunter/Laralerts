@@ -2,71 +2,70 @@
 
 namespace DarkGhostHunter\Laralerts;
 
+use Countable;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
 use JsonSerializable;
+use Stringable;
 
-class Alert implements Arrayable, Jsonable, JsonSerializable
+use function action;
+use function is_array;
+use function json_encode;
+use function route;
+use function trans;
+use function trim;
+use function url;
+
+
+class Alert implements Arrayable, Jsonable, JsonSerializable, Stringable
 {
     /**
-     * The internal key in the Array Bag.
+     * The internal key of this Alert in the bag.
      *
      * @var int
+     * @internal
      */
-    protected int $key;
+    public int $index;
 
     /**
-     * Internal Key of the Alert in the Bag so it can be persisted.
+     * Create a new Alert instance.
      *
-     * @var string|null
+     * @param  \DarkGhostHunter\Laralerts\Bag  $bag
+     * @param  string|null  $persistKey
+     * @param  string  $message
+     * @param  array  $types
+     * @param  array  $links
+     * @param  bool  $dismissible
      */
-    protected ?string $persistentKey = null;
-
-    /**
-     * The message for the Alert.
-     *
-     * @var string
-     */
-    protected string $message = '';
-
-    /**
-     * Types for this alert.
-     *
-     * @var array|string[]
-     */
-    protected array $types = [];
-
-    /**
-     * If this Alert should be able to be dismissible in the frontend.
-     *
-     * @var bool
-     */
-    protected bool $dismissible = false;
-
-    /**
-     * Returns the ID of the Alert in the Bag.
-     *
-     * @return string|null
-     */
-    public function getPersistKey(): ?string
-    {
-        return $this->persistentKey;
+    public function __construct(
+        protected Bag $bag,
+        protected ?string $persistKey = null,
+        protected string $message = '',
+        protected array $types = [],
+        protected array $links = [],
+        protected bool $dismissible = false,
+    ) {
+        //
     }
 
     /**
-     * Checks if the current Alert sh
+     * Sets the Bag for the Alert.
      *
-     * @return bool
+     * @param  \DarkGhostHunter\Laralerts\Bag  $bag
+     * @return $this
      */
-    public function isPersistent(): bool
+    public function setBag(Bag $bag): static
     {
-        return null !== $this->persistentKey;
+        $this->bag = $bag;
+
+        return $this;
     }
 
     /**
      * Returns the message of the Alert.
      *
      * @return string
+     * @internal
      */
     public function getMessage(): string
     {
@@ -76,7 +75,8 @@ class Alert implements Arrayable, Jsonable, JsonSerializable
     /**
      * Returns the types set for this Alert.
      *
-     * @return array|string[]
+     * @return string[]
+     * @internal
      */
     public function getTypes(): array
     {
@@ -84,9 +84,21 @@ class Alert implements Arrayable, Jsonable, JsonSerializable
     }
 
     /**
+     * Returns the links to replace in the message.
+     *
+     * @return array
+     * @internal
+     */
+    public function getLinks(): array
+    {
+        return $this->links;
+    }
+
+    /**
      * Check if the Alert should be dismissible.
      *
      * @return bool
+     * @internal
      */
     public function isDismissible(): bool
     {
@@ -94,25 +106,23 @@ class Alert implements Arrayable, Jsonable, JsonSerializable
     }
 
     /**
-     * Sets an safely-escaped message.
+     * Sets a safely-escaped message.
      *
      * @param  string  $message
-     *
      * @return $this
      */
-    public function message(string $message): Alert
+    public function message(string $message): static
     {
         return $this->raw(e($message));
     }
 
     /**
-     * Sets a raw (verbatim) message.
+     * Sets a raw, non-escaped, message.
      *
      * @param  string  $message
-     *
      * @return $this
      */
-    public function raw(string $message): Alert
+    public function raw(string $message): static
     {
         $this->message = $message;
 
@@ -122,25 +132,41 @@ class Alert implements Arrayable, Jsonable, JsonSerializable
     /**
      * Set a localized message into the Alert.
      *
-     * @param  string  $lang
+     * @param  string  $key
      * @param  array  $replace
-     * @param  null  $locale
-     *
+     * @param  string|null  $locale
      * @return $this
      */
-    public function trans(string $lang, $replace = [], $locale = null): Alert
+    public function trans(string $key, array $replace = [], string $locale = null): static
     {
-        return $this->raw(trans($lang, $replace, $locale));
+        return $this->raw(trans($key, $replace, $locale));
+    }
+
+    /**
+     * Sets a localized pluralized message into the Alert.
+     *
+     * @param  string  $key
+     * @param  \Countable|int|array  $number
+     * @param  array  $replace
+     * @param  string|null  $locale
+     * @return $this
+     */
+    public function transChoice(
+        string $key,
+        Countable|int|array $number,
+        array $replace = [],
+        string $locale = null
+    ): static {
+        return $this->raw(trans_choice($key, $number, $replace, $locale));
     }
 
     /**
      * Sets one or many types for this alert.
      *
      * @param  string  ...$types
-     *
      * @return $this
      */
-    public function types(string ...$types): Alert
+    public function types(string ...$types): static
     {
         $this->types = $types;
 
@@ -151,10 +177,9 @@ class Alert implements Arrayable, Jsonable, JsonSerializable
      * Sets the Alert as dismissible.
      *
      * @param  bool  $dismissible
-     *
-     * @return \DarkGhostHunter\Laralerts\Alert
+     * @return $this
      */
-    public function dismiss(bool $dismissible = true): Alert
+    public function dismiss(bool $dismissible = true): static
     {
         $this->dismissible = $dismissible;
 
@@ -165,14 +190,89 @@ class Alert implements Arrayable, Jsonable, JsonSerializable
      * Persists the key into the session, forever.
      *
      * @param  string  $key
-     *
-     * @return \DarkGhostHunter\Laralerts\Alert
+     * @return $this
      */
-    public function persistAs(string $key): Alert
+    public function persistAs(string $key): static
     {
-        $this->persistentKey = $key;
+        $this->persistKey = $key;
+
+        $this->bag->markPersisted($key, $this->index);
 
         return $this;
+    }
+
+    /**
+     * Abandons the Alert from persistence.
+     *
+     * @return $this
+     */
+    public function abandon(): static
+    {
+        $this->bag->abandon($this->persistKey);
+
+        $this->persistKey = null;
+
+        return $this;
+    }
+
+    /**
+     * Adds an external link that should be replaced before rendering the Alert.
+     *
+     * @param  string  $replace
+     * @param  string  $url
+     * @param  bool  $blank
+     * @return $this
+     */
+    public function away(string $replace, string $url, bool $blank = true): static
+    {
+        $this->links[] = (object) [
+            'replace' => trim($replace, "{}"),
+            'url'     => $url,
+            'blank'   => $blank,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Adds a link that should be replaced before rendering the Alert.
+     *
+     * @param  string  $replace
+     * @param  string  $url
+     * @param  bool  $blank
+     * @return $this
+     */
+    public function to(string $replace, string $url, bool $blank = false): static
+    {
+        return $this->away($replace, url($url), $blank);
+    }
+
+    /**
+     * Adds a link to a route that should be replaced before rendering the Alert.
+     *
+     * @param  string  $replace
+     * @param  string  $name
+     * @param  array  $parameters
+     * @param  bool  $blank
+     * @return $this
+     */
+    public function route(string $replace, string $name, array $parameters = [], bool $blank = false): static
+    {
+        return $this->away($replace, route($name, $parameters), $blank);
+    }
+
+    /**
+     * Adds a link to an action that should be replaced before rendering the Alert.
+     *
+     * @param  string  $replace
+     * @param  string|array  $action
+     * @param  array  $parameters
+     * @param  bool  $blank
+     * @return $this
+     */
+    public function action(string $replace, string|array $action, array $parameters = [], bool $blank = false): static
+    {
+        return $this->away($replace, action($action, $parameters), $blank);
     }
 
     /**
@@ -183,8 +283,8 @@ class Alert implements Arrayable, Jsonable, JsonSerializable
     public function toArray(): array
     {
         return [
-            'message' => $this->message,
-            'types' => $this->types,
+            'message'     => $this->message,
+            'types'       => $this->types,
             'dismissible' => $this->dismissible,
         ];
     }
@@ -193,12 +293,12 @@ class Alert implements Arrayable, Jsonable, JsonSerializable
      * Convert the object to its JSON representation.
      *
      * @param  int  $options
-     *
      * @return string
+     * @throws \JsonException
      */
     public function toJson($options = 0): string
     {
-        return json_encode($this->jsonSerialize(), JSON_THROW_ON_ERROR);
+        return json_encode($this->jsonSerialize(), $options | JSON_THROW_ON_ERROR);
     }
 
     /**
@@ -212,24 +312,72 @@ class Alert implements Arrayable, Jsonable, JsonSerializable
     }
 
     /**
+     * Returns the string representation of the Alert.
+     *
+     * @return string
+     * @throws \JsonException
+     */
+    public function __toString()
+    {
+        return $this->toJson();
+    }
+
+    /**
+     * Serializes the Alert.
+     *
+     * @codeCoverageIgnore
+     * @return array
+     */
+    public function __serialize(): array
+    {
+        return [
+            'persistKey'  => $this->persistKey,
+            'message'     => $this->message,
+            'types'       => $this->types,
+            'links'       => $this->links,
+            'dismissible' => $this->dismissible,
+        ];
+    }
+
+    /**
+     * Unserializes the alert.
+     *
+     * @codeCoverageIgnore
+     * @param  array  $data
+     */
+    public function __unserialize(array $data): void
+    {
+        $this->persistKey = $data['persistKey'];
+        $this->message = $data['message'];
+        $this->types = $data['types'];
+        $this->links = $data['links'];
+        $this->dismissible = $data['dismissible'];
+    }
+
+    /**
      * Creates a new Alert from a Bag and an array.
      *
-     * @param  array  $alert
-     *
+     * @param  \DarkGhostHunter\Laralerts\Bag|array  $bag
+     * @param  array|null  $alert
      * @return \DarkGhostHunter\Laralerts\Alert
      */
-    public static function fromArray(array $alert): Alert
+    public static function fromArray(Bag|array $bag, array $alert = null): Alert
     {
-        $instance = (new static())->raw($alert['message'])->types(...$alert['types'] ?? []);
-
-        if (isset($alert['dismissible'])) {
-            $instance->dismiss($alert['dismissible']);
+        if (is_array($bag)) {
+            [$bag, $alert] = [app(Bag::class), $bag];
         }
 
-        if (isset($alert['persistent'])) {
-            $instance->persistAs($alert['persistent']);
-        }
+        return new static($bag, null, $alert['message'], $alert['types'], [], $alert['dismissible'] ?? false);
+    }
 
-        return $instance;
+    /**
+     * Returns the key used to persist the alert, if any.
+     *
+     * @return string|null
+     * @internal
+     */
+    public function getPersistKey(): ?string
+    {
+        return $this->persistKey;
     }
 }

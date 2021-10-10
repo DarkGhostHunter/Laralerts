@@ -11,7 +11,7 @@ class AppendAlertsToJsonResponseTest extends TestCase
     use RegistersPackage;
     use TestsView;
 
-    public function test_adds_json_using_config_key()
+    public function test_adds_json_using_config_key(): void
     {
         $this->app->make('router')->get(
             'test',
@@ -35,7 +35,7 @@ class AppendAlertsToJsonResponseTest extends TestCase
         );
     }
 
-    public function test_doesnt_adds_alerts_if_key_already_present()
+    public function test_doesnt_adds_alerts_if_key_already_present(): void
     {
         $this->app->make('router')->get(
             'test',
@@ -58,7 +58,7 @@ class AppendAlertsToJsonResponseTest extends TestCase
         );
     }
 
-    public function test_doesnt_adds_alerts_if_response_not_json()
+    public function test_doesnt_adds_alerts_if_response_not_json(): void
     {
         $this->app->make('router')->get(
             'test',
@@ -73,7 +73,7 @@ class AppendAlertsToJsonResponseTest extends TestCase
             ->assertExactJson(['bar' => 'baz']);
     }
 
-    public function test_doesnt_adds_alerts_if_response_client_error()
+    public function test_doesnt_adds_alerts_if_response_client_error(): void
     {
         $this->app->make('router')->get(
             'test',
@@ -88,7 +88,7 @@ class AppendAlertsToJsonResponseTest extends TestCase
             ->assertExactJson(['bar' => 'baz']);
     }
 
-    public function test_doesnt_adds_alerts_if_response_server_error()
+    public function test_doesnt_adds_alerts_if_response_server_error(): void
     {
         $this->app->make('router')->get(
             'test',
@@ -103,7 +103,7 @@ class AppendAlertsToJsonResponseTest extends TestCase
             ->assertExactJson(['bar' => 'baz']);
     }
 
-    public function test_adds_alerts_in_custom_key()
+    public function test_adds_alerts_in_custom_key(): void
     {
         $this->app->make('router')->get(
             'test',
@@ -132,7 +132,7 @@ class AppendAlertsToJsonResponseTest extends TestCase
             );
     }
 
-    public function test_doesnt_replaces_custom_alerts_key()
+    public function test_doesnt_replaces_custom_alerts_key(): void
     {
         $this->app->make('router')->get(
             'test',

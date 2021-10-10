@@ -4,7 +4,7 @@ namespace Tests;
 
 use DarkGhostHunter\Laralerts\Bag;
 use DarkGhostHunter\Laralerts\Facades\Alert;
-use DarkGhostHunter\Laralerts\Http\Middleware\StorePersistentAlertsInSession;
+use DarkGhostHunter\Laralerts\Http\Middleware\StoreAlertsInSession;
 use DarkGhostHunter\Laralerts\LaralertsServiceProvider;
 use DarkGhostHunter\Laralerts\View\Component\LaralertsComponent;
 use Illuminate\Contracts\Http\Kernel;
@@ -18,23 +18,23 @@ class ServiceProviderTest extends TestCase
 {
     use RegistersPackage;
 
-    public function test_registers_package()
+    public function test_registers_package(): void
     {
         static::assertArrayHasKey(LaralertsServiceProvider::class, $this->app->getLoadedProviders());
     }
 
-    public function test_facades()
+    public function test_facades(): void
     {
         static::assertInstanceOf(Bag::class, Alert::getFacadeRoot());
         static::assertInstanceOf(\DarkGhostHunter\Laralerts\Alert::class, Alert::new());
     }
 
-    public function test_uses_config()
+    public function test_uses_config(): void
     {
         static::assertEquals(include(__DIR__ . '/../config/laralerts.php'), config('laralerts'));
     }
 
-    public function test_publishes_config()
+    public function test_publishes_config(): void
     {
         $this->artisan(
             'vendor:publish',
@@ -50,7 +50,7 @@ class ServiceProviderTest extends TestCase
         unlink(base_path('config/laralerts.php'));
     }
 
-    public function test_uses_views()
+    public function test_uses_views(): void
     {
         $view = $this->app->make(Factory::class);
 
@@ -58,7 +58,7 @@ class ServiceProviderTest extends TestCase
         static::assertTrue($view->exists('laralerts::bootstrap.container'));
     }
 
-    public function test_publishes_views()
+    public function test_publishes_views(): void
     {
         $this->artisan(
             'vendor:publish',
@@ -82,7 +82,7 @@ class ServiceProviderTest extends TestCase
         unlink(resource_path('views/vendor/laralerts/bootstrap/container.blade.php'));
     }
 
-    public function test_published_component()
+    public function test_published_component(): void
     {
         $aliases = $this->app->make(BladeCompiler::class)->getClassComponentAliases();
 
@@ -90,11 +90,11 @@ class ServiceProviderTest extends TestCase
         static::assertEquals(LaralertsComponent::class, $aliases['laralerts']);
     }
 
-    public function test_registers_middleware()
+    public function test_registers_middleware(): void
     {
         $kernel = $this->app->make(Kernel::class);
 
-        static::assertEquals(StorePersistentAlertsInSession::class, Arr::last($kernel->getMiddlewareGroups()['web']));
+        static::assertEquals(StoreAlertsInSession::class, Arr::last($kernel->getMiddlewareGroups()['web']));
 
         $router = $this->app->make(Router::class);
 

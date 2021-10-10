@@ -20,9 +20,9 @@ return [
     | Session key
     |--------------------------------------------------------------------------
     |
-    | For the Alerts to work, the bag containing the alerts is registered in
-    | the Session store by a identifiable key. You may want to change this
-    | key for another in the case you are already using it in the store.
+    | For the Alerts to work, the bag containing them is registered inside the
+    | Session store by an identifiable key. You may want to change this key
+    | for any other in case it collides with a key you're already using.
     |
     */
 
