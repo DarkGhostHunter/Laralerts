@@ -2,14 +2,14 @@
 
 namespace Tests\Http\Middleware;
 
+use Illuminate\Foundation\Testing\Concerns\InteractsWithViews;
 use Orchestra\Testbench\TestCase;
 use Tests\RegistersPackage;
-use Tests\TestsView;
 
 class AppendAlertsToJsonResponseTest extends TestCase
 {
     use RegistersPackage;
-    use TestsView;
+    use InteractsWithViews;
 
     public function test_adds_json_using_config_key(): void
     {

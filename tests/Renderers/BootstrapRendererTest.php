@@ -3,16 +3,16 @@
 namespace Tests\Renderers;
 
 use DarkGhostHunter\Laralerts\Bag;
+use Illuminate\Foundation\Testing\Concerns\InteractsWithViews;
 use Orchestra\Testbench\TestCase;
 use Tests\RegistersPackage;
-use Tests\TestsView;
 
 use function alert;
 
 class BootstrapRendererTest extends TestCase
 {
     use RegistersPackage;
-    use TestsView;
+    use InteractsWithViews;
 
     protected Bag $bag;
 
@@ -22,9 +22,16 @@ class BootstrapRendererTest extends TestCase
 
         $this->afterApplicationCreated(
             function () {
-                $this->addTestView();
                 $this->bag = $this->app[Bag::class];
             }
+        );
+    }
+
+    public function test_renders_empty_if_no_alerts_done(): void
+    {
+        static::assertSame(
+            '<div class="container"></div>',
+            (string) $this->blade('<div class="container"><x-laralerts /></div>')
         );
     }
 
@@ -45,19 +52,16 @@ class BootstrapRendererTest extends TestCase
             'dismiss'
         );
 
-        static::assertEquals(
+        static::assertSame(
             <<<'EOT'
-<div class="container">
-    <div class="alerts">
+<div class="container"><div class="alerts">
         <div class="alert alert-primary alert-secondary alert-success alert-danger alert-warning alert-info alert-light alert-dark foo bar dismiss" role="alert">
     A Bootstrap alert
     </div>
     </div>
 </div>
-
-EOT
-            ,
-            $this->view->render()
+EOT,
+            (string) $this->blade('<div class="container"><x-laralerts /></div>')
         );
     }
 
@@ -67,8 +71,7 @@ EOT
 
         static::assertEquals(
             <<<'EOT'
-<div class="container">
-    <div class="alerts">
+<div class="container"><div class="alerts">
         <div class="alert alert-success alert-dark fade show alert-dismissible" role="alert">
     A Bootstrap Alert
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -77,10 +80,9 @@ EOT
     </div>
     </div>
 </div>
-
 EOT
             ,
-            $this->view->render()
+            (string) $this->blade('<div class="container"><x-laralerts /></div>')
         );
     }
 
@@ -90,8 +92,7 @@ EOT
 
         static::assertEquals(
             <<<'EOT'
-<div class="container">
-    <div class="alerts">
+<div class="container"><div class="alerts">
         <div class="alert alert-success foo bar alert-dismissible fade show" role="alert">
     A Bootstrap Alert
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -100,10 +101,9 @@ EOT
     </div>
     </div>
 </div>
-
 EOT
             ,
-            $this->view->render()
+            (string) $this->blade('<div class="container"><x-laralerts /></div>')
         );
     }
 
@@ -115,8 +115,7 @@ EOT
 
         static::assertEquals(
             <<<'EOT'
-<div class="container">
-    <div class="alerts">
+<div class="container"><div class="alerts">
         <div class="alert alert-success foo bar alert-dismissible fade show" role="alert">
     A Bootstrap Alert to <a href="https://www.something.com" target="_blank">link</a>
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -125,10 +124,9 @@ EOT
     </div>
     </div>
 </div>
-
 EOT
             ,
-            $this->view->render()
+            (string) $this->blade('<div class="container"><x-laralerts /></div>')
         );
     }
 
@@ -141,8 +139,7 @@ EOT
 
         static::assertEquals(
             <<<'EOT'
-<div class="container">
-    <div class="alerts">
+<div class="container"><div class="alerts">
         <div class="alert alert-success foo bar alert-dismissible fade show" role="alert">
     A Bootstrap <a href="https://www.alert.com">Alert</a> to <a href="https://www.something.com" target="_blank">link</a>
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -151,10 +148,9 @@ EOT
     </div>
     </div>
 </div>
-
 EOT
             ,
-            $this->view->render()
+            (string) $this->blade('<div class="container"><x-laralerts /></div>')
         );
     }
 
@@ -166,8 +162,7 @@ EOT
 
         static::assertEquals(
             <<<'EOT'
-<div class="container">
-    <div class="alerts">
+<div class="container"><div class="alerts">
         <div class="alert alert-success foo bar alert-dismissible fade show" role="alert">
     A Bootstrap <a href="https://www.something.com" target="_blank">link</a> to <a href="https://www.something.com" target="_blank">link</a>
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -176,10 +171,9 @@ EOT
     </div>
     </div>
 </div>
-
 EOT
             ,
-            $this->view->render()
+            (string) $this->blade('<div class="container"><x-laralerts /></div>')
         );
     }
 
@@ -191,8 +185,7 @@ EOT
 
         static::assertEquals(
             <<<'EOT'
-<div class="container">
-    <div class="alerts">
+<div class="container"><div class="alerts">
         <div class="alert alert-success foo bar alert-dismissible fade show" role="alert">
     A Bootstrap {Link} to <a href="https://www.something.com" target="_blank">link</a>
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -201,10 +194,9 @@ EOT
     </div>
     </div>
 </div>
-
 EOT
             ,
-            $this->view->render()
+            (string) $this->blade('<div class="container"><x-laralerts /></div>')
         );
     }
 }

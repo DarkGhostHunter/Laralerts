@@ -3,10 +3,10 @@
 namespace Tests\Http\Middleware;
 
 use DarkGhostHunter\Laralerts\Http\Middleware\StoreAlertsInSession;
+use Illuminate\Foundation\Testing\Concerns\InteractsWithViews;
 use Illuminate\Support\Facades\Route;
 use Orchestra\Testbench\TestCase;
 use Tests\RegistersPackage;
-use Tests\TestsView;
 
 use function alert;
 use function redirect;
@@ -14,7 +14,7 @@ use function redirect;
 class StoreAlertsInSessionTest extends TestCase
 {
     use RegistersPackage;
-    use TestsView;
+    use InteractsWithViews;
 
     protected function registerRoutes(): void
     {
@@ -22,27 +22,27 @@ class StoreAlertsInSessionTest extends TestCase
 
         $router->get('foo')->uses(function () {
             alert('foo');
-            return $this->view;
+            return (string) $this->blade('<div class="container"><x-laralerts /></div>');
         })->middleware('web');
 
         $router->get('bar')->uses(function () {
             alert('bar');
-            return $this->view;
+            return (string) $this->blade('<div class="container"><x-laralerts /></div>');
         })->middleware('web');
 
         $router->get('empty')->uses(function () {
             alert()->message('');
-            return $this->view;
+            return (string) $this->blade('<div class="container"><x-laralerts /></div>');
         })->middleware('web');
 
         $router->get('persist')->uses(function () {
             alert()->message('foo');
             alert()->message('foo')->persistAs('foo.bar');
-            return $this->view;
+            return (string) $this->blade('<div class="container"><x-laralerts /></div>');
         })->middleware('web');
 
         $router->get('no-alert')->uses(function () {
-            return $this->view;
+            return (string) $this->blade('<div class="container"><x-laralerts /></div>');
         })->middleware('web');
 
         $router->get('redirect')->uses(function () {
@@ -59,7 +59,6 @@ class StoreAlertsInSessionTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->afterApplicationCreated([$this, 'addTestView']);
         $this->afterApplicationCreated([$this, 'registerRoutes']);
 
         parent::setUp();
@@ -83,9 +82,7 @@ class StoreAlertsInSessionTest extends TestCase
 
         static::assertEquals(
             <<<'VIEW'
-<div class="container">
-    </div>
-
+<div class="container"></div>
 VIEW
             ,
             $response->getContent()
@@ -98,14 +95,12 @@ VIEW
 
         static::assertEquals(
             <<<'VIEW'
-<div class="container">
-    <div class="alerts">
+<div class="container"><div class="alerts">
         <div class="alert" role="alert">
     foo
     </div>
     </div>
 </div>
-
 VIEW
             ,
             $response->getContent()
@@ -115,9 +110,7 @@ VIEW
 
         static::assertEquals(
             <<<'VIEW'
-<div class="container">
-    </div>
-
+<div class="container"></div>
 VIEW
             ,
             $response->getContent()
@@ -135,14 +128,12 @@ VIEW
 
         static::assertEquals(
             <<<'VIEW'
-<div class="container">
-    <div class="alerts">
+<div class="container"><div class="alerts">
         <div class="alert" role="alert">
     redirected
     </div>
     </div>
 </div>
-
 VIEW
             ,
             $response->getContent()
@@ -152,9 +143,7 @@ VIEW
 
         static::assertEquals(
             <<<'VIEW'
-<div class="container">
-    </div>
-
+<div class="container"></div>
 VIEW,
             $response->getContent()
         );
@@ -166,8 +155,7 @@ VIEW,
 
         static::assertEquals(
             <<<'VIEW'
-<div class="container">
-    <div class="alerts">
+<div class="container"><div class="alerts">
         <div class="alert" role="alert">
     redirect persisted
     </div>
@@ -176,7 +164,6 @@ VIEW,
     </div>
     </div>
 </div>
-
 VIEW
             ,
             $response->getContent()
@@ -186,14 +173,12 @@ VIEW
 
         static::assertEquals(
             <<<'VIEW'
-<div class="container">
-    <div class="alerts">
+<div class="container"><div class="alerts">
         <div class="alert" role="alert">
     redirect persisted
     </div>
     </div>
 </div>
-
 VIEW
             ,
             $response->getContent()
@@ -206,8 +191,7 @@ VIEW
 
         static::assertEquals(
             <<<'VIEW'
-<div class="container">
-    <div class="alerts">
+<div class="container"><div class="alerts">
         <div class="alert" role="alert">
     foo
     </div>
@@ -216,7 +200,6 @@ VIEW
     </div>
     </div>
 </div>
-
 VIEW
             ,
             $response->getContent()
@@ -226,14 +209,12 @@ VIEW
 
         static::assertEquals(
             <<<'VIEW'
-<div class="container">
-    <div class="alerts">
+<div class="container"><div class="alerts">
         <div class="alert" role="alert">
     foo
     </div>
     </div>
 </div>
-
 VIEW
             ,
             $response->getContent()
@@ -245,13 +226,12 @@ VIEW
         Route::get('persist')->uses(function () {
             alert()->message('foo')->persistAs('foo.bar');
             alert()->message('bar')->persistAs('foo.bar');
-            return $this->view;
+            return (string) $this->blade('<div class="container"><x-laralerts /></div>');
         })->middleware('web');
 
         static::assertEquals(
             <<<'VIEW'
-<div class="container">
-    <div class="alerts">
+<div class="container"><div class="alerts">
         <div class="alert" role="alert">
     foo
     </div>
@@ -260,21 +240,22 @@ VIEW
     </div>
     </div>
 </div>
-
 VIEW
-            , $this->get('persist')->getContent());
+            ,
+            $this->get('persist')->getContent()
+        );
 
         static::assertEquals(
             <<<'VIEW'
-<div class="container">
-    <div class="alerts">
+<div class="container"><div class="alerts">
         <div class="alert" role="alert">
     bar
     </div>
     </div>
 </div>
-
 VIEW
-            , $this->get('empty')->getContent());
+            ,
+            $this->get('empty')->getContent()
+        );
     }
 }
