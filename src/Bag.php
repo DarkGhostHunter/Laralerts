@@ -9,7 +9,6 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Traits\Macroable;
 
-use function array_key_exists;
 use function array_key_last;
 use function json_decode;
 use function value;
@@ -118,9 +117,7 @@ class Bag
     public function markPersisted(string $key, int $index): static
     {
         // Find if there is a key already for the persisted alert and replace it.
-        if (array_key_exists($key, $this->persisted)) {
-            $this->alerts->forget($this->persisted[$key]);
-        }
+        $this->abandon($key);
 
         $this->persisted[$key] = $index;
 

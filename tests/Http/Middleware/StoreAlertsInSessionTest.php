@@ -242,4 +242,56 @@ VIEW
             $this->get('persist')->getContent()
         );
     }
+
+    public function test_next_request_replaces_persistent_alert(): void
+    {
+        Route::get('first')->uses(function () {
+            alert()->message('foo')->types('success')->persistAs('foo.bar');
+            return (string) $this->blade('<div class="container"><x-laralerts /></div>');
+        })->middleware('web');
+
+        Route::get('second')->uses(function () {
+            alert()->message('bar')->persistAs('foo.bar');
+            return (string) $this->blade('<div class="container"><x-laralerts /></div>');
+        })->middleware('web');
+
+        $this->get('first');
+
+        static::assertSame(
+            <<<'VIEW'
+<div class="container"><div class="alerts">
+        <div class="alert" role="alert">
+    bar
+    </div>
+    </div>
+</div>
+VIEW,
+            $this->get('second')->getContent()
+        );
+    }
+
+    public function test_next_redirect_request_replaces_persistent_alert(): void
+    {
+        Route::get('first')->uses(function () {
+            alert()->message('foo')->types('success')->persistAs('foo.bar');
+            return redirect('/second');
+        })->middleware('web');
+
+        Route::get('second')->uses(function () {
+            alert()->message('bar')->persistAs('foo.bar');
+            return (string) $this->blade('<div class="container"><x-laralerts /></div>');
+        })->middleware('web');
+
+        static::assertSame(
+            <<<'VIEW'
+<div class="container"><div class="alerts">
+        <div class="alert" role="alert">
+    bar
+    </div>
+    </div>
+</div>
+VIEW,
+            $this->followingRedirects()->get('first')->getContent()
+        );
+    }
 }
