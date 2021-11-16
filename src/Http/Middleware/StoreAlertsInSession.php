@@ -86,7 +86,7 @@ class StoreAlertsInSession
         // Those not persistent will be flashed. These will live during the
         // current request or the next if the actual one is a redirection.
         // Once done these will magically disappear from the alerts bag.
-        if ($persistent->isNotEmpty()) {
+        if ($nonPersistent->isNotEmpty()) {
             $this->session->flash("$this->key.alerts", $nonPersistent->all());
         }
 
