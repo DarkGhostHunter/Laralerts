@@ -62,6 +62,4 @@ class BootstrapRenderer implements Renderer
             ->make(static::VIEW)
             ->with('alerts', $alerts->map([$this, 'compileAlert']))->render();
     }
-
-
 }
