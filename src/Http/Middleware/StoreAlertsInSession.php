@@ -71,14 +71,13 @@ class StoreAlertsInSession
     /**
      * Move the alerts back to the session.
      *
+     * @param  bool  $flashIfRedirect
      * @return void
      */
     protected function bagAlertsToSession(bool $flashIfRedirect): void
     {
         [$persistent, $nonPersistent] = $this->bag->collect()
-            ->filter(static function (Alert $alert): bool {
-                return '' !== $alert->getMessage();
-            })->partition(function (Alert $alert): bool {
+            ->partition(function (Alert $alert): bool {
                 return in_array($alert->index, $this->bag->getPersisted(), true);
             });
 
