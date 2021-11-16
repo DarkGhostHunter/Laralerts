@@ -221,10 +221,10 @@ VIEW
         );
     }
 
-    public function test_same_persisted_key_displaces_previous_alert_to_non_persisted(): void
+    public function test_same_persisted_key_replaces_previous_alert(): void
     {
         Route::get('persist')->uses(function () {
-            alert()->message('foo')->persistAs('foo.bar');
+            alert()->message('foo')->types('success')->persistAs('foo.bar');
             alert()->message('bar')->persistAs('foo.bar');
             return (string) $this->blade('<div class="container"><x-laralerts /></div>');
         })->middleware('web');
@@ -233,9 +233,6 @@ VIEW
             <<<'VIEW'
 <div class="container"><div class="alerts">
         <div class="alert" role="alert">
-    foo
-    </div>
-<div class="alert" role="alert">
     bar
     </div>
     </div>
@@ -243,19 +240,6 @@ VIEW
 VIEW
             ,
             $this->get('persist')->getContent()
-        );
-
-        static::assertEquals(
-            <<<'VIEW'
-<div class="container"><div class="alerts">
-        <div class="alert" role="alert">
-    bar
-    </div>
-    </div>
-</div>
-VIEW
-            ,
-            $this->get('empty')->getContent()
         );
     }
 }
