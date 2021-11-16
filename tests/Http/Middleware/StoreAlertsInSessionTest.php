@@ -80,16 +80,12 @@ class StoreAlertsInSessionTest extends TestCase
     {
         $response = $this->get('empty')->assertSessionMissing('_alerts');
 
-        static::assertEquals(
-            <<<'VIEW'
-<div class="container"><div class="alerts">
+        static::assertEquals('<div class="container"><div class="alerts">
         <div class="alert" role="alert">
-
+' . '    ' . '
     </div>
     </div>
-</div>
-VIEW
-            ,
+</div>'     ,
             $response->getContent()
         );
     }
