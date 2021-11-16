@@ -2,7 +2,6 @@
 
 namespace DarkGhostHunter\Laralerts\View\Component;
 
-use DarkGhostHunter\Laralerts\Alert;
 use DarkGhostHunter\Laralerts\Bag;
 use DarkGhostHunter\Laralerts\Contracts\Renderer;
 use Illuminate\View\Component;
@@ -27,8 +26,6 @@ class LaralertsComponent extends Component
      */
     public function render(): string
     {
-        return $this->renderer->render($this->bag->collect()->filter(static function (Alert $alert): bool {
-            return (bool) $alert->getMessage();
-        }));
+        return $this->renderer->render($this->bag->collect());
     }
 }

@@ -76,15 +76,16 @@ class StoreAlertsInSessionTest extends TestCase
         $this->get('no-session')->assertSessionMissing('_alerts');
     }
 
-    public function test_doesnt_renders_empty_alerts(): void
+    public function test_renders_empty_alerts(): void
     {
         $response = $this->get('empty')->assertSessionMissing('_alerts');
 
-        static::assertEquals(
-            <<<'VIEW'
-<div class="container"></div>
-VIEW
-            ,
+        static::assertEquals('<div class="container"><div class="alerts">
+        <div class="alert" role="alert">
+' . '    ' . '
+    </div>
+    </div>
+</div>'     ,
             $response->getContent()
         );
     }
@@ -205,7 +206,7 @@ VIEW
             $response->getContent()
         );
 
-        $response = $this->get('empty')->assertSessionHas('_alerts');
+        $response = $this->get('no-alert')->assertSessionHas('_alerts');
 
         static::assertEquals(
             <<<'VIEW'
