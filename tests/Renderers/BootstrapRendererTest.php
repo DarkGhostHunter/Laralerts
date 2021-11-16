@@ -74,9 +74,7 @@ EOT,
 <div class="container"><div class="alerts">
         <div class="alert alert-success alert-dark fade show alert-dismissible" role="alert">
     A Bootstrap Alert
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
     </div>
 </div>
@@ -95,9 +93,7 @@ EOT
 <div class="container"><div class="alerts">
         <div class="alert alert-success foo bar alert-dismissible fade show" role="alert">
     A Bootstrap Alert
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
     </div>
 </div>
@@ -118,9 +114,7 @@ EOT
 <div class="container"><div class="alerts">
         <div class="alert alert-success foo bar alert-dismissible fade show" role="alert">
     A Bootstrap Alert to <a href="https://www.something.com" target="_blank">link</a>
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
     </div>
 </div>
@@ -142,9 +136,7 @@ EOT
 <div class="container"><div class="alerts">
         <div class="alert alert-success foo bar alert-dismissible fade show" role="alert">
     A Bootstrap <a href="https://www.alert.com">Alert</a> to <a href="https://www.something.com" target="_blank">link</a>
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
     </div>
 </div>
@@ -165,9 +157,7 @@ EOT
 <div class="container"><div class="alerts">
         <div class="alert alert-success foo bar alert-dismissible fade show" role="alert">
     A Bootstrap <a href="https://www.something.com" target="_blank">link</a> to <a href="https://www.something.com" target="_blank">link</a>
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
     </div>
 </div>
@@ -188,9 +178,7 @@ EOT
 <div class="container"><div class="alerts">
         <div class="alert alert-success foo bar alert-dismissible fade show" role="alert">
     A Bootstrap {Link} to <a href="https://www.something.com" target="_blank">link</a>
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
     </div>
 </div>
