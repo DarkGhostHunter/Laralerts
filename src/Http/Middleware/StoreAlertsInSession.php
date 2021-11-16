@@ -6,6 +6,7 @@ use Closure;
 use DarkGhostHunter\Laralerts\Alert;
 use DarkGhostHunter\Laralerts\Bag;
 use Illuminate\Contracts\Session\Session;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 use function app;
@@ -45,7 +46,7 @@ class StoreAlertsInSession
 
         $response = $next($request);
 
-        $this->bagAlertsToSession();
+        $this->bagAlertsToSession($response instanceof RedirectResponse);
 
         return $response;
     }
@@ -72,7 +73,7 @@ class StoreAlertsInSession
      *
      * @return void
      */
-    protected function bagAlertsToSession(): void
+    protected function bagAlertsToSession(bool $flashIfRedirect): void
     {
         [$persistent, $nonPersistent] = $this->bag->collect()
             ->filter(static function (Alert $alert): bool {
@@ -86,10 +87,10 @@ class StoreAlertsInSession
             $this->session->put("$this->key.persistent", $persistent->all());
         }
 
-        // Those not persistent will be flashed. These will live during the
-        // current request or the next if the actual one is a redirection.
-        // Once done these will magically disappear from the alerts bag.
-        if ($nonPersistent->isNotEmpty()) {
+        // Non-persistent will be flashed if the response is as redirection.
+        // This way we allow the next response from the app to have these
+        // alerts without having to manually flash them from the app.
+        if ($flashIfRedirect && $nonPersistent->isNotEmpty()) {
             $this->session->flash("$this->key.alerts", $nonPersistent->all());
         }
 

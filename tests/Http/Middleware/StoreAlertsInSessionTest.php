@@ -10,7 +10,6 @@ use Tests\TestsView;
 
 use function alert;
 use function redirect;
-use function tap;
 
 class StoreAlertsInSessionTest extends TestCase
 {
@@ -47,6 +46,11 @@ class StoreAlertsInSessionTest extends TestCase
         })->middleware('web');
 
         $router->get('redirect')->uses(function () {
+            alert()->message('redirected');
+            return redirect()->to('no-alert');
+        })->middleware('web');
+
+        $router->get('redirect-with-both')->uses(function () {
             alert()->message('redirected');
             alert()->message('redirect persisted')->persistAs('foo.bar');
             return redirect()->to('no-alert');
@@ -88,7 +92,7 @@ VIEW
         );
     }
 
-    public function test_renders_alert_one_time(): void
+    public function test_renders_alert_one_time_if_not_redirect(): void
     {
         $response = $this->get('foo')->assertSessionMissing('_alerts');
 
@@ -107,10 +111,7 @@ VIEW
             $response->getContent()
         );
 
-        $this->refreshApplication();
-        $this->setUp();
-
-        $response = $this->get('empty')->assertSessionMissing('_alerts');
+        $response = $this->get('no-alert')->assertSessionMissing('_alerts');
 
         static::assertEquals(
             <<<'VIEW'
@@ -123,9 +124,45 @@ VIEW
         );
     }
 
-    public function test_alerts_persist_through_redirect(): void
+    public function test_alert_flashed_in_session_when_redirects(): void
     {
-        $response = $this->followingRedirects()->get('redirect')->assertSessionHas('_alerts');
+        $this->get('redirect')->assertSessionHas('_alerts');
+    }
+
+    public function test_alert_renders_through_redirect(): void
+    {
+        $response = $this->followingRedirects()->get('redirect')->assertSessionMissing('_alerts');
+
+        static::assertEquals(
+            <<<'VIEW'
+<div class="container">
+    <div class="alerts">
+        <div class="alert" role="alert">
+    redirected
+    </div>
+    </div>
+</div>
+
+VIEW
+            ,
+            $response->getContent()
+        );
+
+        $response = $this->get('no-alert')->assertSessionMissing('_alerts');
+
+        static::assertEquals(
+            <<<'VIEW'
+<div class="container">
+    </div>
+
+VIEW,
+            $response->getContent()
+        );
+    }
+
+    public function test_alert_persistent_and_non_persistent_renders_through_redirect(): void
+    {
+        $response = $this->followingRedirects()->get('redirect-with-both')->assertSessionHas('_alerts');
 
         static::assertEquals(
             <<<'VIEW'
@@ -136,6 +173,23 @@ VIEW
     </div>
 <div class="alert" role="alert">
     redirected
+    </div>
+    </div>
+</div>
+
+VIEW
+            ,
+            $response->getContent()
+        );
+
+        $response = $this->get('no-alert')->assertSessionHas('_alerts');
+
+        static::assertEquals(
+            <<<'VIEW'
+<div class="container">
+    <div class="alerts">
+        <div class="alert" role="alert">
+    redirect persisted
     </div>
     </div>
 </div>
@@ -168,15 +222,6 @@ VIEW
             $response->getContent()
         );
 
-        $session = tap($this->app['session'], function ($session): void {
-            $session->ageFlashData();
-        })->all();
-
-        $this->refreshApplication();
-        $this->setUp();
-
-        $this->session($session);
-
         $response = $this->get('empty')->assertSessionHas('_alerts');
 
         static::assertEquals(
@@ -203,16 +248,21 @@ VIEW
             return $this->view;
         })->middleware('web');
 
-        $this->get('persist');
+        static::assertEquals(
+            <<<'VIEW'
+<div class="container">
+    <div class="alerts">
+        <div class="alert" role="alert">
+    foo
+    </div>
+<div class="alert" role="alert">
+    bar
+    </div>
+    </div>
+</div>
 
-        $session = tap($this->app['session'], function ($session): void {
-            $session->ageFlashData();
-        })->all();
-
-        $this->refreshApplication();
-        $this->setUp();
-
-        $this->session($session);
+VIEW
+            , $this->get('persist')->getContent());
 
         static::assertEquals(
             <<<'VIEW'
