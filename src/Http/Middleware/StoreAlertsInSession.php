@@ -74,9 +74,12 @@ class StoreAlertsInSession
      */
     protected function bagAlertsToSession(): void
     {
-        [$persistent, $nonPersistent] = $this->bag->collect()->partition(function (Alert $alert): bool {
-            return in_array($alert->index, $this->bag->getPersisted(), true);
-        });
+        [$persistent, $nonPersistent] = $this->bag->collect()
+            ->filter(static function (Alert $alert): bool {
+                return '' !== $alert->getMessage();
+            })->partition(function (Alert $alert): bool {
+                return in_array($alert->index, $this->bag->getPersisted(), true);
+            });
 
         // Persistent keys will be put persistently into the session.
         if ($persistent->isNotEmpty()) {
