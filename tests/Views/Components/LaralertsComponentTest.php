@@ -5,15 +5,15 @@ namespace Tests\Views\Components;
 use DarkGhostHunter\Laralerts\Alert;
 use DarkGhostHunter\Laralerts\Bag;
 use DarkGhostHunter\Laralerts\Contracts\Renderer;
+use Illuminate\Foundation\Testing\Concerns\InteractsWithViews;
 use Illuminate\Support\Collection;
 use Orchestra\Testbench\TestCase;
 use Tests\RegistersPackage;
-use Tests\TestsView;
 
 class LaralertsComponentTest extends TestCase
 {
     use RegistersPackage;
-    use TestsView;
+    use InteractsWithViews;
 
     protected Bag $bag;
 
@@ -22,8 +22,6 @@ class LaralertsComponentTest extends TestCase
         parent::setUp();
 
         $this->afterApplicationCreated(function () {
-            $this->addTestView();
-
             $this->bag = $this->app[Bag::class];
         });
     }
@@ -33,11 +31,10 @@ class LaralertsComponentTest extends TestCase
         static::assertEmpty($this->bag->collect());
 
         static::assertEquals(<<<'EOT'
-<div class="container">
-    </div>
-
+<div class="container"></div>
 EOT
-        , $this->view->render());
+        , (string) $this->blade('<div class="container"><x-laralerts /></div>')
+        );
     }
 
     public function test_renders_alerts(): void
@@ -57,10 +54,10 @@ EOT
         alert('foo', 'bar');
 
         static::assertEquals(<<<'EOT'
-<div class="container">
-    <foo>bar</foo></div>
-
+<div class="container"><foo>bar</foo></div>
 EOT
-            , $this->view->render());
+            ,
+            (string) $this->blade('<div class="container"><x-laralerts /></div>')
+        );
     }
 }

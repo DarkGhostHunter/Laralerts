@@ -6,6 +6,7 @@ use Closure;
 use DarkGhostHunter\Laralerts\Alert;
 use DarkGhostHunter\Laralerts\Bag;
 use Illuminate\Contracts\Session\Session;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 use function app;
@@ -45,7 +46,7 @@ class StoreAlertsInSession
 
         $response = $next($request);
 
-        $this->bagAlertsToSession();
+        $this->bagAlertsToSession($response instanceof RedirectResponse);
 
         return $response;
     }
@@ -70,23 +71,25 @@ class StoreAlertsInSession
     /**
      * Move the alerts back to the session.
      *
+     * @param  bool  $flashIfRedirect
      * @return void
      */
-    protected function bagAlertsToSession(): void
+    protected function bagAlertsToSession(bool $flashIfRedirect): void
     {
-        [$persistent, $nonPersistent] = $this->bag->collect()->partition(function (Alert $alert): bool {
-            return in_array($alert->index, $this->bag->getPersisted(), true);
-        });
+        [$persistent, $nonPersistent] = $this->bag->collect()
+            ->partition(function (Alert $alert): bool {
+                return in_array($alert->index, $this->bag->getPersisted(), true);
+            });
 
         // Persistent keys will be put persistently into the session.
         if ($persistent->isNotEmpty()) {
             $this->session->put("$this->key.persistent", $persistent->all());
         }
 
-        // Those not persistent will be flashed. These will live during the
-        // current request or the next if the actual one is a redirection.
-        // Once done these will magically disappear from the alerts bag.
-        if ($persistent->isNotEmpty()) {
+        // Non-persistent will be flashed if the response is as redirection.
+        // This way we allow the next response from the app to have these
+        // alerts without having to manually flash them from the app.
+        if ($flashIfRedirect && $nonPersistent->isNotEmpty()) {
             $this->session->flash("$this->key.alerts", $nonPersistent->all());
         }
 

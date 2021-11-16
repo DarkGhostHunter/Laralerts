@@ -24,6 +24,15 @@ class AlertTest extends TestCase
         static::assertFalse($alert->isDismissible());
     }
 
+    public function test_alert_can_receive_empty_message(): void
+    {
+        static::assertSame('', alert()->new()->getMessage());
+        static::assertSame('', alert()->message('')->getMessage());
+        static::assertSame('', alert()->raw('')->getMessage());
+        static::assertSame('', alert()->trans('')->getMessage());
+        static::assertSame('', alert()->transChoice('', 10)->getMessage());
+    }
+
     public function test_alert_set_escaped_message(): void
     {
         $alert = alert()->new();

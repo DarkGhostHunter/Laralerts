@@ -116,6 +116,9 @@ class Bag
      */
     public function markPersisted(string $key, int $index): static
     {
+        // Find if there is a key already for the persisted alert and replace it.
+        $this->abandon($key);
+
         $this->persisted[$key] = $index;
 
         return $this;

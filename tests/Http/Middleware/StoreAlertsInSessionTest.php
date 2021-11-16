@@ -3,19 +3,18 @@
 namespace Tests\Http\Middleware;
 
 use DarkGhostHunter\Laralerts\Http\Middleware\StoreAlertsInSession;
+use Illuminate\Foundation\Testing\Concerns\InteractsWithViews;
 use Illuminate\Support\Facades\Route;
 use Orchestra\Testbench\TestCase;
 use Tests\RegistersPackage;
-use Tests\TestsView;
 
 use function alert;
 use function redirect;
-use function tap;
 
 class StoreAlertsInSessionTest extends TestCase
 {
     use RegistersPackage;
-    use TestsView;
+    use InteractsWithViews;
 
     protected function registerRoutes(): void
     {
@@ -23,30 +22,35 @@ class StoreAlertsInSessionTest extends TestCase
 
         $router->get('foo')->uses(function () {
             alert('foo');
-            return $this->view;
+            return (string) $this->blade('<div class="container"><x-laralerts /></div>');
         })->middleware('web');
 
         $router->get('bar')->uses(function () {
             alert('bar');
-            return $this->view;
+            return (string) $this->blade('<div class="container"><x-laralerts /></div>');
         })->middleware('web');
 
         $router->get('empty')->uses(function () {
             alert()->message('');
-            return $this->view;
+            return (string) $this->blade('<div class="container"><x-laralerts /></div>');
         })->middleware('web');
 
         $router->get('persist')->uses(function () {
             alert()->message('foo');
             alert()->message('foo')->persistAs('foo.bar');
-            return $this->view;
+            return (string) $this->blade('<div class="container"><x-laralerts /></div>');
         })->middleware('web');
 
         $router->get('no-alert')->uses(function () {
-            return $this->view;
+            return (string) $this->blade('<div class="container"><x-laralerts /></div>');
         })->middleware('web');
 
         $router->get('redirect')->uses(function () {
+            alert()->message('redirected');
+            return redirect()->to('no-alert');
+        })->middleware('web');
+
+        $router->get('redirect-with-both')->uses(function () {
             alert()->message('redirected');
             alert()->message('redirect persisted')->persistAs('foo.bar');
             return redirect()->to('no-alert');
@@ -55,7 +59,6 @@ class StoreAlertsInSessionTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->afterApplicationCreated([$this, 'addTestView']);
         $this->afterApplicationCreated([$this, 'registerRoutes']);
 
         parent::setUp();
@@ -79,58 +82,80 @@ class StoreAlertsInSessionTest extends TestCase
 
         static::assertEquals(
             <<<'VIEW'
-<div class="container">
-    </div>
-
+<div class="container"></div>
 VIEW
             ,
             $response->getContent()
         );
     }
 
-    public function test_renders_alert_one_time(): void
+    public function test_renders_alert_one_time_if_not_redirect(): void
     {
         $response = $this->get('foo')->assertSessionMissing('_alerts');
 
         static::assertEquals(
             <<<'VIEW'
-<div class="container">
-    <div class="alerts">
+<div class="container"><div class="alerts">
         <div class="alert" role="alert">
     foo
     </div>
     </div>
 </div>
-
 VIEW
             ,
             $response->getContent()
         );
 
-        $this->refreshApplication();
-        $this->setUp();
-
-        $response = $this->get('empty')->assertSessionMissing('_alerts');
+        $response = $this->get('no-alert')->assertSessionMissing('_alerts');
 
         static::assertEquals(
             <<<'VIEW'
-<div class="container">
-    </div>
-
+<div class="container"></div>
 VIEW
             ,
             $response->getContent()
         );
     }
 
-    public function test_alerts_persist_through_redirect(): void
+    public function test_alert_flashed_in_session_when_redirects(): void
     {
-        $response = $this->followingRedirects()->get('redirect')->assertSessionHas('_alerts');
+        $this->get('redirect')->assertSessionHas('_alerts');
+    }
+
+    public function test_alert_renders_through_redirect(): void
+    {
+        $response = $this->followingRedirects()->get('redirect')->assertSessionMissing('_alerts');
 
         static::assertEquals(
             <<<'VIEW'
-<div class="container">
-    <div class="alerts">
+<div class="container"><div class="alerts">
+        <div class="alert" role="alert">
+    redirected
+    </div>
+    </div>
+</div>
+VIEW
+            ,
+            $response->getContent()
+        );
+
+        $response = $this->get('no-alert')->assertSessionMissing('_alerts');
+
+        static::assertEquals(
+            <<<'VIEW'
+<div class="container"></div>
+VIEW,
+            $response->getContent()
+        );
+    }
+
+    public function test_alert_persistent_and_non_persistent_renders_through_redirect(): void
+    {
+        $response = $this->followingRedirects()->get('redirect-with-both')->assertSessionHas('_alerts');
+
+        static::assertEquals(
+            <<<'VIEW'
+<div class="container"><div class="alerts">
         <div class="alert" role="alert">
     redirect persisted
     </div>
@@ -139,7 +164,21 @@ VIEW
     </div>
     </div>
 </div>
+VIEW
+            ,
+            $response->getContent()
+        );
 
+        $response = $this->get('no-alert')->assertSessionHas('_alerts');
+
+        static::assertEquals(
+            <<<'VIEW'
+<div class="container"><div class="alerts">
+        <div class="alert" role="alert">
+    redirect persisted
+    </div>
+    </div>
+</div>
 VIEW
             ,
             $response->getContent()
@@ -152,8 +191,7 @@ VIEW
 
         static::assertEquals(
             <<<'VIEW'
-<div class="container">
-    <div class="alerts">
+<div class="container"><div class="alerts">
         <div class="alert" role="alert">
     foo
     </div>
@@ -162,69 +200,98 @@ VIEW
     </div>
     </div>
 </div>
-
 VIEW
             ,
             $response->getContent()
         );
 
-        $session = tap($this->app['session'], function ($session): void {
-            $session->ageFlashData();
-        })->all();
-
-        $this->refreshApplication();
-        $this->setUp();
-
-        $this->session($session);
-
         $response = $this->get('empty')->assertSessionHas('_alerts');
 
         static::assertEquals(
             <<<'VIEW'
-<div class="container">
-    <div class="alerts">
+<div class="container"><div class="alerts">
         <div class="alert" role="alert">
     foo
     </div>
     </div>
 </div>
-
 VIEW
             ,
             $response->getContent()
         );
     }
 
-    public function test_same_persisted_key_displaces_previous_alert_to_non_persisted(): void
+    public function test_same_persisted_key_replaces_previous_alert(): void
     {
         Route::get('persist')->uses(function () {
-            alert()->message('foo')->persistAs('foo.bar');
+            alert()->message('foo')->types('success')->persistAs('foo.bar');
             alert()->message('bar')->persistAs('foo.bar');
-            return $this->view;
+            return (string) $this->blade('<div class="container"><x-laralerts /></div>');
         })->middleware('web');
-
-        $this->get('persist');
-
-        $session = tap($this->app['session'], function ($session): void {
-            $session->ageFlashData();
-        })->all();
-
-        $this->refreshApplication();
-        $this->setUp();
-
-        $this->session($session);
 
         static::assertEquals(
             <<<'VIEW'
-<div class="container">
-    <div class="alerts">
+<div class="container"><div class="alerts">
         <div class="alert" role="alert">
     bar
     </div>
     </div>
 </div>
-
 VIEW
-            , $this->get('empty')->getContent());
+            ,
+            $this->get('persist')->getContent()
+        );
+    }
+
+    public function test_next_request_replaces_persistent_alert(): void
+    {
+        Route::get('first')->uses(function () {
+            alert()->message('foo')->types('success')->persistAs('foo.bar');
+            return (string) $this->blade('<div class="container"><x-laralerts /></div>');
+        })->middleware('web');
+
+        Route::get('second')->uses(function () {
+            alert()->message('bar')->persistAs('foo.bar');
+            return (string) $this->blade('<div class="container"><x-laralerts /></div>');
+        })->middleware('web');
+
+        $this->get('first');
+
+        static::assertSame(
+            <<<'VIEW'
+<div class="container"><div class="alerts">
+        <div class="alert" role="alert">
+    bar
+    </div>
+    </div>
+</div>
+VIEW,
+            $this->get('second')->getContent()
+        );
+    }
+
+    public function test_next_redirect_request_replaces_persistent_alert(): void
+    {
+        Route::get('first')->uses(function () {
+            alert()->message('foo')->types('success')->persistAs('foo.bar');
+            return redirect('/second');
+        })->middleware('web');
+
+        Route::get('second')->uses(function () {
+            alert()->message('bar')->persistAs('foo.bar');
+            return (string) $this->blade('<div class="container"><x-laralerts /></div>');
+        })->middleware('web');
+
+        static::assertSame(
+            <<<'VIEW'
+<div class="container"><div class="alerts">
+        <div class="alert" role="alert">
+    bar
+    </div>
+    </div>
+</div>
+VIEW,
+            $this->followingRedirects()->get('first')->getContent()
+        );
     }
 }
