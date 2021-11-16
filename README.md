@@ -23,17 +23,19 @@ You can install the package via composer:
 composer require darkghosthunter/laralerts
 ```
 
-If you don't have anything to start with in your frontend, you can use [Laravel Jetstream](https://jetstream.laravel.com/), or go the classic way and use [Bootstrap](https://getbootstrap.com), [Bulma.io](https://bulma.io/), [UI kit](https://getuikit.com/), [TailwindCSS](https://tailwindcss.com/) and [INK](http://ink.sapo.pt/). 
+If you don't have anything to start with in your frontend, you can use [Laravel Jetstream](https://jetstream.laravel.com/), or go the classic way and use [Bootstrap](https://getbootstrap.com), [Bulma.io](https://bulma.io/), [UI kit](https://getuikit.com/), [TailwindCSS](https://tailwindcss.com/) and [INK](http://ink.sapo.pt/), among many others. 
 
 ## Usage
 
-Laralerts allows you to set a list of Alerts in your application and render them in the frontend.
+Laralerts allows you to set a list of Alerts in your application and render them in the frontend in just a few minutes.
 
 The default Alert renderer uses Bootstrap code to transform each alert into [Bootstrap Alerts](https://getbootstrap.com/docs/5.0/components/alerts/). If you're not using Bootstrap, you can [create your own](#creating-a-custom-renderer) for your particular framework.
 
 ### Quickstart
 
-To set an Alert in your frontend, you can use the `alert()` helper, or the `Alert` Facade. A good place to use them is before sending a View or Redirect response to the browser, like in your HTTP Controllers.
+To set an Alert in your frontend, you can use the `alert()` helper, or the `Alert` Facade. A good place to use them is before sending a response to the browser, like in your HTTP Controllers.
+
+If you're sending a redirect, Laralerts will automatically flash the alert so the next request can show it. 
 
 ```php
 <?php
@@ -220,7 +222,7 @@ alert()->message('You can disregard this')->dismiss(false);
 
 ### Conditional Alerts
 
-You can also push an Alert if a condition evaluates to true or false by using `when()` and `unless()`, respectively.
+You can also push an Alert if a condition evaluates to true or false by using `when()` and `unless()`, respectively. Further method calls will be sent to the void.
 
 ```php
 <?php
@@ -238,15 +240,17 @@ alert()->unless(Auth::user()->mailbox()->isNotEmpty())
 
 ### Persistent Alerts
 
-Since alerts are [flashed into the session](https://laravel.com/docs/8.x/session#flash-data), these last only for next response, or after the next redirect. To make any alert persistent you can use the `persistAs()` method with a key to identify the alert. This ensures subsequent calls using the same persistence key don't duplicate (but overwrites) the same Alert.
+Alerts only last for the actual request. On Redirects, these are [flashed into the session](https://laravel.com/docs/8.x/session#flash-data) so these are available on the next request.
+
+To make any alert persistent you can use the `persistAs()` method with a key to identify the alert.
 
 ```php
 alert()->message('Your disk size is almost full')->types('danger')->persistAs('disk.full');
 ```
 
-> Only the last alert persisted with the same key will be persisted.
+> When setting a persitant alert with the same key, it will be replaced for the latter. 
 
-Once you're done, you can delete the persistent Alert using `abandon()` directly from the helper with the name of the persisted Alert. It will return `true` if the persisted Alert is found, or `false` if not. For example, we can abandon the previous alert of the disk of the user is no longer full.
+Once you're done, you can delete the persistent Alert using `abandon()` directly from the helper with the name of the persisted Alert. It will return `true` if the persisted Alert is found, or `false` if not. For example, we can abandon the previous alert if the disk is no longer full.
 
 ```php
 if ($disk->notFull()) {
@@ -266,14 +270,15 @@ alert()->message('Remember, you can follow your order in your {dashboard}.')
     ->to('dashboard', '/dashboard/orders')
 ```
 
-Link can also work over translated messages, as long these have a word in curly braces.
+Links can also work over translated messages, as long these have a word in curly braces.
 
 ```php
 <?php
+// You can see your package status in the {tracking}.
 
 alert()->trans('user.dashboard.tracking.order', ['order' => $order->tracking_number])
     ->types('success')
-    ->route('tracking', 'Orders.Tracking', ['order' => 45])
+    ->route('tracking', 'orders.tracking', ['order' => 45])
 ```
 
 If you have more than one link, you can chain multiple links to a message.
@@ -338,7 +343,7 @@ This key is also used when [sending JSON alerts](#sending-json-alerts).
 
 ## Renderers
 
-Alerts get rendered by a Renderer, which takes the Alert data and transforms them into an HTML string. This makes swapping a frontend framework easier, and allows greater flexibility when rendering HTML.
+Alerts get rendered by a Renderer, which takes the Alert data and transforms it into an HTML string. This makes swapping a frontend framework easier, and allows greater flexibility when rendering HTML.
 
 ### Creating a custom renderer
 
