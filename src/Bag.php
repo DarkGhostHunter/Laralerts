@@ -32,29 +32,14 @@ class Bag
     protected Collection $alerts;
 
     /**
-     * A key-value pair that indicates which alerts must persist.
-     *
-     * @var int[]
-     */
-    protected array $persisted = [];
-
-    /**
-     * Default array of tags to inject in each Alert.
-     *
-     * @var string[]
-     */
-    protected array $tags;
-
-    /**
      * Create a new Bag instance.
      *
      * @param  \Illuminate\Contracts\Session\Session  $session
      * @param  \Illuminate\Contracts\Config\Repository  $config
      */
-    public function __construct(protected Session $session, Repository $config)
+    public function __construct(protected array $tags, protected array $persisted = [])
     {
         $this->alerts = new Collection;
-        $this->tags = (array) $config->get('laralerts.tags', ['default']);
     }
 
     /**
