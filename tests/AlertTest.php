@@ -218,6 +218,17 @@ class AlertTest extends TestCase
         static::assertEmpty(app(Bag::class)->getPersisted());
     }
 
+    public function test_tags(): void
+    {
+        $alert = alert()->new();
+
+        static::assertSame(['default'], $alert->getTags());
+
+        $alert->tag('foo', 'bar');
+
+        static::assertSame(['foo', 'bar'], $alert->getTags());
+    }
+
     public function test_to_string(): void
     {
         $alert = (new Alert(app(Bag::class)))->message('foo')->types('bar');

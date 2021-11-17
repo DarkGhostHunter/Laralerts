@@ -3,6 +3,7 @@
 namespace DarkGhostHunter\Laralerts;
 
 use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\View\Compilers\BladeCompiler;
@@ -14,20 +15,22 @@ class LaralertsServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register()
+    public function register(): void
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/laralerts.php', 'laralerts');
 
         $this->app->singleton(RendererManager::class);
-        $this->app->singleton(Contracts\Renderer::class, static function ($app): Contracts\Renderer {
+        $this->app->singleton(Contracts\Renderer::class, static function (Container $app): Contracts\Renderer {
             return $app->make(RendererManager::class)->driver($app->make('config')->get('laralerts.renderer'));
         });
 
-        $this->app->singleton(Bag::class);
+        $this->app->singleton(Bag::class, static function (Container $app): Bag {
+            return new Bag((array) $app->make('config')->get('laralerts.tags', ['default']));
+        });
 
         $this->app->bind(
             Http\Middleware\StoreAlertsInSession::class,
-            static function ($app): Http\Middleware\StoreAlertsInSession {
+            static function (Container $app): Http\Middleware\StoreAlertsInSession {
                 return new Http\Middleware\StoreAlertsInSession(
                     $app->make(Bag::class),
                     $app->make('session.store'),
@@ -51,9 +54,6 @@ class LaralertsServiceProvider extends ServiceProvider
         if (array_key_exists('web', $http->getMiddlewareGroups())) {
             $http->appendMiddlewareToGroup('web', Http\Middleware\StoreAlertsInSession::class);
         }
-
-        // Add it to the middleware priority as last.
-//        $http->appendToMiddlewarePriority(Http\Middleware\StoreAlertsInSession::class);
 
         $router->aliasMiddleware('laralerts.json', Http\Middleware\AddAlertsToJson::class);
 

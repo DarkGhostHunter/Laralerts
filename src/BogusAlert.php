@@ -150,4 +150,16 @@ class BogusAlert extends Alert
     {
         return $this;
     }
+
+    /**
+     * Tags the alert.
+     *
+     * @param  string  ...$tags
+     * @return $this
+     */
+    public function tag(string ...$tags): static
+    {
+        return $this;
+    }
+
 }

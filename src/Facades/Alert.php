@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \DarkGhostHunter\Laralerts\Alert to(string $replace, string $url, bool $blank = false)
  * @method static \DarkGhostHunter\Laralerts\Alert route(string $replace, string $name, array $parameters = [], bool $blank = false)
  * @method static \DarkGhostHunter\Laralerts\Alert action(string $replace, string|array $action, array $parameters = [], bool $blank = false)
+ * @method static \DarkGhostHunter\Laralerts\Alert tags(string ...$tags)
  * @method static \DarkGhostHunter\Laralerts\Alert fromJson(string $alert, int $options = 0)
  */
 class Alert extends Facade
@@ -29,7 +30,6 @@ class Alert extends Facade
      * Get the registered name of the component.
      *
      * @return string
-     * @throws \RuntimeException
      */
     protected static function getFacadeAccessor(): string
     {
