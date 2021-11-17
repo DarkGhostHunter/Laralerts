@@ -69,7 +69,7 @@ class Bag
      */
     public function new(): Alert
     {
-        $this->add($alert = new Alert(bag: $this, alerts: $this->tags));
+        $this->add($alert = new Alert(bag: $this, tags: $this->tags));
 
         return $alert;
     }
