@@ -213,11 +213,6 @@ class Bag
         return ! value($condition, $this) ? $this->new() : new BogusAlert($this);
     }
 
-    public function defaultTags(): array
-    {
-        return $this->config->get
-    }
-
     /**
      * Adds an Alert into the bag from a JSON string.
      *
