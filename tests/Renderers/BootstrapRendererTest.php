@@ -244,4 +244,22 @@ EOT
             (string) $this->blade('<div class="container"><x-laralerts :tags="\'bar\'" /></div>')
         );
     }
+
+    public function tests_accepts_attributes(): void
+    {
+        alert('quz');
+
+        static::assertEquals(
+            <<<'EOT'
+<div class="container"><div foo="bar">
+        <div class="alert" role="alert">
+    quz
+    </div>
+    </div>
+</div>
+EOT
+            ,
+            (string) $this->blade('<div class="container"><x-laralerts foo="bar" :tags="\'bar\'" /></div>')
+        );
+    }
 }
