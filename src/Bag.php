@@ -34,14 +34,14 @@ class Bag
     /**
      * A key-value pair that indicates which alerts must persist.
      *
-     * @var array
+     * @var int[]
      */
     protected array $persisted = [];
 
     /**
      * Default array of tags to inject in each Alert.
      *
-     * @var array
+     * @var string[]
      */
     protected array $tags;
 
@@ -54,7 +54,7 @@ class Bag
     public function __construct(protected Session $session, Repository $config)
     {
         $this->alerts = new Collection;
-        $this->tags = (array) $config->get('laralerts.tags', ['default'])
+        $this->tags = (array) $config->get('laralerts.tags', ['default']);
     }
 
     /**
@@ -68,7 +68,7 @@ class Bag
     }
 
     /**
-     * Returns the default tags injected in each Alert.
+     * Returns the default list of tags injected in each Alert.
      *
      * @return array
      */
