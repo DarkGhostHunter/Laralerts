@@ -25,7 +25,7 @@ class LaralertsServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(Bag::class, static function (Container $app): Bag {
-            return new Bag($app->make('config')->get('laralerts.tags', ['default']));
+            return new Bag((array) $app->make('config')->get('laralerts.tags', ['default']));
         });
 
         $this->app->bind(
