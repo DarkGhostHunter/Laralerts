@@ -259,7 +259,7 @@ EOT
 </div>
 EOT
             ,
-            (string) $this->blade('<div class="container"><x-laralerts foo="bar" :tags="\'bar\'" /></div>')
+            (string) $this->blade('<div class="container"><x-laralerts foo="bar" /></div>')
         );
     }
 }
