@@ -23,13 +23,6 @@ class Alert implements Arrayable, Jsonable, JsonSerializable, Stringable
     use Macroable;
 
     /**
-     * The default list of tags.
-     * 
-     * @var array
-     */
-    public const DEFAULT_TAGS = ['default'];
-
-    /**
      * The internal key of this Alert in the bag.
      *
      * @var int
@@ -54,7 +47,7 @@ class Alert implements Arrayable, Jsonable, JsonSerializable, Stringable
         protected array $types = [],
         protected array $links = [],
         protected bool $dismissible = false,
-        protected array $tags = self::DEFAULT_TAGS
+        protected array $tags = [],
     ) {
         //
     }

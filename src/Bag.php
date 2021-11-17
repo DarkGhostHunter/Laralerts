@@ -39,14 +39,22 @@ class Bag
     protected array $persisted = [];
 
     /**
+     * Default array of tags to inject in each Alert.
+     *
+     * @var array
+     */
+    protected array $tags;
+
+    /**
      * Create a new Bag instance.
      *
      * @param  \Illuminate\Contracts\Session\Session  $session
      * @param  \Illuminate\Contracts\Config\Repository  $config
      */
-    public function __construct(protected Session $session, protected Repository $config)
+    public function __construct(protected Session $session, Repository $config)
     {
         $this->alerts = new Collection;
+        $this->tags = (array) $config->get('laralerts.tags', ['default'])
     }
 
     /**
@@ -60,13 +68,23 @@ class Bag
     }
 
     /**
+     * Returns the default tags injected in each Alert.
+     *
+     * @return array
+     */
+    public function getDefaultTags(): array
+    {
+        return $this->tags;
+    }
+
+    /**
      * Creates a new Alert into this Bag instance.
      *
      * @return \DarkGhostHunter\Laralerts\Alert
      */
     public function new(): Alert
     {
-        $this->add($alert = new Alert($this));
+        $this->add($alert = new Alert(bag: $this, alerts: $this->tags));
 
         return $alert;
     }
@@ -193,6 +211,11 @@ class Bag
     public function unless(Closure|bool $condition): Alert
     {
         return ! value($condition, $this) ? $this->new() : new BogusAlert($this);
+    }
+
+    public function defaultTags(): array
+    {
+        return $this->config->get
     }
 
     /**

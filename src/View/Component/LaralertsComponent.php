@@ -14,11 +14,12 @@ class LaralertsComponent extends Component
      *
      * @param  \DarkGhostHunter\Laralerts\Bag  $bag
      * @param  \DarkGhostHunter\Laralerts\Contracts\Renderer  $renderer
-     * @param  array|string  $tags
+     * @param  array|string|null  $tags
      */
-    public function __construct(protected Bag $bag, protected Renderer $renderer, protected array|string $tags = Alert::DEFAULT_TAGS)
+    public function __construct(protected Bag $bag, protected Renderer $renderer, protected array|string|null $tags = null)
     {
-        $this->tags = (array) $tags;
+        // If the developer doesn't set tags, we will use the default list.
+        $this->tags = (array) $tags ?: $bag->getDefaultTags();
     }
 
     /**
