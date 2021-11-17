@@ -226,7 +226,7 @@ class AlertTest extends TestCase
 
         $alert->tag('foo', 'bar');
 
-        static:assertSame(['foo', 'bar'], $alert->getTags());
+        static::assertSame(['foo', 'bar'], $alert->getTags());
     }
 
     public function test_to_string(): void
