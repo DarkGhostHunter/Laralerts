@@ -325,7 +325,7 @@ Using the [Laralerts directive](#quickstart), you can filter the Alerts to rende
 <x-laralerts :tags="'default'" />
 
 <!-- Here we will render alerts for users and admins. -->
-<x-laralerts :tags="'user', 'admin'" />
+<x-laralerts :tags="['user', 'admin']" />
 ```
 
 ## Configuration

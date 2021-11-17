@@ -16,7 +16,10 @@ class LaralertsComponent extends Component
      * @param  \DarkGhostHunter\Laralerts\Contracts\Renderer  $renderer
      * @param  array|string|null  $tags
      */
-    public function __construct(protected Bag $bag, protected Renderer $renderer, protected array|string|null $tags = null)
+    public function __construct(
+        protected Bag $bag, 
+        protected Renderer $renderer, 
+        protected array|string|null $tags = null)
     {
         // If the developer doesn't set tags, we will use the default list.
         $this->tags = (array) $tags ?: $bag->getDefaultTags();
@@ -25,7 +28,7 @@ class LaralertsComponent extends Component
     /**
      * Get the view / view contents that represent the component.
      *
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Contracts\Support\Htmlable|\Closure|string
+     * @return string
      */
     public function render(): string
     {

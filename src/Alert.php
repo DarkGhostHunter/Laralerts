@@ -124,6 +124,7 @@ class Alert implements Arrayable, Jsonable, JsonSerializable, Stringable
      * Returns the tags of this Alert.
      *
      * @return array
+     * @internal
      */
     public function getTags(): array
     {
@@ -135,6 +136,7 @@ class Alert implements Arrayable, Jsonable, JsonSerializable, Stringable
      * 
      * @param  string ...$tags
      * @return bool
+     * @internal
      */
     public function hasAnyTag(string ...$tags): bool
     {

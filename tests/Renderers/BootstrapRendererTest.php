@@ -187,4 +187,42 @@ EOT
             (string) $this->blade('<div class="container"><x-laralerts /></div>')
         );
     }
+
+    public function test_shows_default_tags_by_default(): void
+    {
+        alert('foo')->tag('bar');
+        alert('quz');
+
+        static::assertEquals(
+            <<<'EOT'
+<div class="container"><div class="alerts">
+        <div class="alert" role="alert">
+    quz
+    </div>
+    </div>
+</div>
+EOT
+            ,
+            (string) $this->blade('<div class="container"><x-laralerts /></div>')
+        );
+    }
+
+    public function test_filters_tags(): void
+    {
+        alert('foo')->tag('bar');
+        alert('quz');
+
+        static::assertEquals(
+            <<<'EOT'
+<div class="container"><div class="alerts">
+        <div class="alert" role="alert">
+    foo
+    </div>
+    </div>
+</div>
+EOT
+            ,
+            (string) $this->blade('<div class="container"><x-laralerts :tags="[\'quz\', \'bar\']" /></div>')
+        );
+    }
 }
