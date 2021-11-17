@@ -294,6 +294,28 @@ alert()->trans('Your {product} is contained in this {order}.')
 
 > Links strings are case-sensitive, and replaces all occurrences of the same string. You can [create your own Renderer](#creating-a-custom-renderer) is this is not desired. 
 
+### Tags
+
+Sometimes you may have more than one place in your site to place Alerts, like having global alerts with different style than normal ones. Tags can work to separate Alerts from others when rendering.
+
+Alerts use the `default` tag, but you can change it to another, or many others, using `tag()`.
+
+```php
+alert()->message('Maintenance is scheduled for tomorrow')
+    ->type('warning')
+    ->tag('global')
+```
+
+Using the [Laralerts directive](#quickstart), you can filter the Alerts to render by the tag names using the `:tags` slot.
+
+```blade
+<!-- Render the Alerts in the `global` tag -->
+<x-laralerts :tags="'global'" />
+
+<!-- Here we will render the rest of Alerts and the user alerts. -->
+<x-laralerts :tags="'default', 'user'" />
+```
+
 ## Configuration
 
 Laralerts works out-of-the-box with some common defaults, but if you need a better approach for your particular application, you can configure some parameters. First, publish the configuration file.
