@@ -47,6 +47,7 @@ class Alert implements Arrayable, Jsonable, JsonSerializable, Stringable
         protected array $types = [],
         protected array $links = [],
         protected bool $dismissible = false,
+        protected array $tags = [],
     ) {
         //
     }
@@ -117,6 +118,35 @@ class Alert implements Arrayable, Jsonable, JsonSerializable, Stringable
     public function isDismissible(): bool
     {
         return $this->dismissible;
+    }
+
+    /**
+     * Returns the tags of this Alert.
+     *
+     * @return array
+     * @internal
+     */
+    public function getTags(): array
+    {
+        return $this->tags;
+    }
+
+    /**
+     * Check if the alert contains any of the given tags.
+     * 
+     * @param  string ...$tags
+     * @return bool
+     * @internal
+     */
+    public function hasAnyTag(string ...$tags): bool
+    {
+        foreach ($tags as $tag) {
+            if (in_array($tag, $this->tags, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -290,6 +320,19 @@ class Alert implements Arrayable, Jsonable, JsonSerializable, Stringable
     }
 
     /**
+     * Tags the alert.
+     *
+     * @param  string  ...$tags
+     * @return $this
+     */
+    public function tag(string ...$tags): static
+    {
+        $this->tags = $tags;
+
+        return $this;
+    }
+
+    /**
      * Get the instance as an array.
      *
      * @return array
@@ -350,6 +393,7 @@ class Alert implements Arrayable, Jsonable, JsonSerializable, Stringable
             'types'       => $this->types,
             'links'       => $this->links,
             'dismissible' => $this->dismissible,
+            'tags'        => $this->tags,
         ];
     }
 
@@ -366,6 +410,7 @@ class Alert implements Arrayable, Jsonable, JsonSerializable, Stringable
         $this->types = $data['types'];
         $this->links = $data['links'];
         $this->dismissible = $data['dismissible'];
+        $this->tags = $data['tags'];
     }
 
     /**
