@@ -81,7 +81,7 @@ To render them in the frontend, use the `<x-laralerts />` Blade component which 
 </div>
 ```
 
-If there is at least one Alert to be rendered, the above will be transformed into this:
+If there is at least one Alert to be rendered, the above will be transformed into proper HTML:
 
 ```html
 <div class="header">
@@ -91,18 +91,6 @@ If there is at least one Alert to be rendered, the above will be transformed int
             Your article has been updated!
         </div>
     </div>
-</div>
-```
-
-The component supports [attributes](https://laravel.com/docs/blade#component-attributes), so you can use custom classes, otherwise the default `class="alerts"` attribute will be used.
-
-```blade
-<x-laralerts id="global-alerts" class="alerts-container" />
-```
-
-```html
-<div id="global-alerts" class="alerts-container">
-    <!-- ... -->
 </div>
 ```
 
@@ -134,7 +122,7 @@ alert()->message('We will email you 📨 a copy!')->types('info');
 
 ### Raw message
 
-Since the `message()` method escapes the text for safety, you can use the `raw()` method to output the any raw string you set. This allows you to use HTML for personalized messages, like adding some _style_, links, or any other HTML.
+Since the `message()` method escapes the text for safety, you can use the `raw()` method to output a string verbatim. This allows you to use HTML for personalized messages, like adding some _style_, links, or even scripts.
 
 ```php
 <?php
@@ -221,16 +209,23 @@ alert()->transChoice('messages.apples', 10)->types('success');
 Most of the frontend frameworks have alerts or notifications that can be dismissible, but require adding more than a single class to allow for interactivity. You can set an Alert to be dismissible using `dismiss()`.
 
 ```php
-alert()->message('You can disregard this')->dismiss();
+alert()->message('You can disregard this')->type('success')->dismiss();
 ```
 
 If you want to change your mind, you can use `dismiss(false)`:
 
 ```php
-alert()->message('You can disregard this')->dismiss(false);
+alert()->message('You can disregard this')->type('success')->dismiss(false);
 ```
 
-> How the dismissible alert is transformed into code will depend on the renderer itself.
+How the dismissible alert is transformed into code will depend on the renderer itself. The default Bootstrap renderer adds the proper CSS classes and a dismiss button automatically.
+
+```html
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+  You can disregard this
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+```
 
 ### Conditional Alerts
 
@@ -364,8 +359,6 @@ This package ships with Bootstrap 5 renderer, but you can [create your own](#ren
 
 ### Session Key
 
-The Alert Bag is registered into the Session by a given key, which is `_alerts` by default. If you're using this key name for other things in your session, you should change it.
-
 ```php
 <?php 
 
@@ -374,11 +367,11 @@ return [
 ];
 ```
 
+When alerts are flashed or persisted, these are stored in the Session by a given key, which is `_alerts` by default. If you're using this key name for other things, you may want to change it.
+
 This key is also used when [sending JSON alerts](#sending-json-alerts).
 
 ### Default tag list
-
-This holds the default tag list to inject to all Alerts when created. You can leave this alone if you're not using [tags](#tags).
 
 ```php
 <?php 
@@ -388,10 +381,11 @@ return [
 ];
 ```
 
+This holds the default tag list to inject to all Alerts when created. You can leave this alone if you're not using [tags](#tags).
 
 ## Renderers
 
-Alerts get rendered by a Renderer, which takes the Alert data and transforms it into an HTML string. This makes swapping a frontend framework easier, and allows greater flexibility when rendering HTML.
+A Renderer takes a [collection](https://laravel.com/docs/collections) of Alerts and transforms each into an HTML string. This makes swapping a frontend framework easier, and allows greater flexibility when rendering HTML.
 
 ### Creating a custom renderer
 
@@ -428,7 +422,7 @@ return [
 ];
 ```
 
-When you issue an alert, the alert will be rendered using the Renderer you have set.
+When you issue an alert, the alert will be rendered using your own custom renderer.
 
 ```php
 <?php
@@ -444,12 +438,12 @@ alert()->message('Popping colors!')->types('primary');
 
 ### Alerts Container HTML
 
-When the Renderer receives Alerts to render, it will call a "container" view which will render all the Alerts by using a loop. This is hard-coded into each Renderer.
+When the Renderer receives Alerts to render, it will call a "container" view which will render all the Alerts by using a loop.
 
 For example, the included `BootstrapRenderer` calls the `laralerts::bootstrap.container`.
 
 ```html
-@if($alerts)
+@if($alerts->isNotEmpty())
     <div class="alerts">
         @each('laralerts::bootstrap.alert', $alerts, 'alert')
     </div>
