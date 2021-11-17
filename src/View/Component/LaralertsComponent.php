@@ -30,7 +30,7 @@ class LaralertsComponent extends Component
     public function render(): string
     {
         return $this->renderer->render(
-            $this->bag->collect()->filter->hasAnyTag($this->tags)
+            $this->bag->collect()->filter->hasAnyTag(...$this->tags)
         );
     }
 }
