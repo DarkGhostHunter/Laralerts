@@ -86,7 +86,7 @@ If there is at least one Alert to be rendered, the above will be transformed int
 ```html
 <div class="header">
     <h1>Welcome to my site</h1>
-    <div class="top-alerts">
+    <div class="alerts">
         <div class="alert alert-success" role="alert">
             Your article has been updated!
         </div>
@@ -94,9 +94,21 @@ If there is at least one Alert to be rendered, the above will be transformed int
 </div>
 ```
 
+The component supports [attributes](https://laravel.com/docs/blade#component-attributes), so you can use custom classes, otherwise the default `class="alerts"` attribute will be used.
+
+```blade
+<x-laralerts id="global-alerts" class="alerts-container" />
+```
+
+```html
+<div id="global-alerts" class="alerts-container">
+    <!-- ... -->
+</div>
+```
+
 ### Message
 
-Add the text inside the Alert using the `message()` method. Yeah, that's it.
+Add the text inside the Alert using the `message()` method. That's it.
 
 ```php
 <?php
@@ -105,7 +117,7 @@ use DarkGhostHunter\Laralerts\Facades\Alert;
 
 alert()->message('You are gonna love this! 😍')->types('success');
 
-alert()->message('We will email you a copy!')->types('info');
+alert()->message('We will email you 📨 a copy!')->types('info');
 ```
 
 ```html
@@ -114,7 +126,7 @@ alert()->message('We will email you a copy!')->types('info');
 </div>
 
 <div class="alert alert-info" role="alert">
-    We will email you a copy!
+    We will email you 📨 a copy!
 </div>
 ```
 
@@ -142,11 +154,11 @@ alert()->raw('But this is <strong>important</strong>.')->types('warning');
 </div>
 ```
 
-**Warning: Don't use `raw()` to show user-generated content. You have been warned**.
+**Warning: Don't use `raw()` to show user-generated content. YOU HAVE BEEN WARNED**.
 
 ### Alert Type
 
-You can set an alert "type" by its name by just simply setting it with the `types()` method. It also accepts multiple types.
+You can set an alert "type" by its name by just setting it with the `types()` method. It also accepts multiple types.
 
 ```php
 <?php
@@ -171,7 +183,7 @@ The types are just aliases for custom CSS classes and HTML, which are then trans
 
 ### Localization
 
-To gracefully localize messages on the fly, use the `trans()` method, which is a mirror to [the `__()` helper](https://laravel.com/docs/localization#retrieving-translation-strings).
+To gracefully localize messages on the fly, use the `trans()` method, which is a mirror of [the `__()` helper](https://laravel.com/docs/localization#retrieving-translation-strings).
 
 ```php
 <?php
@@ -240,7 +252,7 @@ alert()->unless(Auth::user()->mailbox()->isNotEmpty())
 
 ### Persistent Alerts
 
-Alerts only last for the actual request. On Redirects, these are [flashed into the session](https://laravel.com/docs/8.x/session#flash-data) so these are available on the next request.
+Alerts only last for the actual request being sent. On redirects, these are [flashed into the session](https://laravel.com/docs/8.x/session#flash-data) so these are available on the next request (the redirection target).
 
 To make any alert persistent you can use the `persistAs()` method with a key to identify the alert.
 
@@ -248,9 +260,9 @@ To make any alert persistent you can use the `persistAs()` method with a key to 
 alert()->message('Your disk size is almost full')->types('danger')->persistAs('disk.full');
 ```
 
-> When setting a persitant alert with the same key, it will be replaced for the latter. 
+> Setting a persistent alert replaces any previous set with the same key. 
 
-Once you're done, you can delete the persistent Alert using `abandon()` directly from the helper with the name of the persisted Alert. It will return `true` if the persisted Alert is found, or `false` if not. For example, we can abandon the previous alert if the disk is no longer full.
+Once you're done, you can delete the persistent Alert using `abandon()` directly from the helper using the key of the persisted Alert. It will return `true` if the persisted Alert is found, or `false` if not. For example, we can abandon the previous alert if the disk is no longer full.
 
 ```php
 if ($disk->notFull()) {
@@ -292,28 +304,28 @@ alert()->trans('Your {product} is contained in this {order}.')
     ->to('order', '/dashboard/order/45')
 ```
 
-> Links strings are case-sensitive, and replaces all occurrences of the same string. You can [create your own Renderer](#creating-a-custom-renderer) is this is not desired. 
+> Links strings are case-sensitive, and replaces all occurrences of the same string. You can [create your own Renderer](#creating-a-custom-renderer) if this is not desired. 
 
 ### Tags
 
-Sometimes you may have more than one place in your site to place Alerts, like having global alerts with different style than normal ones. Tags can work to separate Alerts from others when rendering.
+Sometimes you may have more than one place in your site to place Alerts, like one for global alerts and other for small user alerts. Tags can work to filter which Alerts you want to render.
 
-Alerts use the `default` tag, but you can change it to another, or many others, using `tag()`.
+You can set the tags of the Alert using `tag()`. 
 
 ```php
 alert()->message('Maintenance is scheduled for tomorrow')
     ->type('warning')
-    ->tag('global')
+    ->tag('user', 'admin')
 ```
 
 Using the [Laralerts directive](#quickstart), you can filter the Alerts to render by the tag names using the `:tags` slot.
 
 ```blade
-<!-- Render the Alerts in the `global` tag -->
-<x-laralerts :tags="'global'" />
+<!-- Render the Alerts in the default list -->
+<x-laralerts :tags="'default'" />
 
-<!-- Here we will render the rest of Alerts and the user alerts. -->
-<x-laralerts :tags="'default', 'user'" />
+<!-- Here we will render alerts for users and admins. -->
+<x-laralerts :tags="'user', 'admin'" />
 ```
 
 ## Configuration
@@ -332,6 +344,7 @@ Let's examine the configuration array, which is quite simple:
 return [
     'renderer' => 'bootstrap',
     'key' => '_alerts',
+    'tags' => 'default',
 ];
 ```
 
@@ -362,6 +375,19 @@ return [
 ```
 
 This key is also used when [sending JSON alerts](#sending-json-alerts).
+
+### Default tag list
+
+This holds the default tag list to inject to all Alerts when created. You can leave this alone if you're not using [tags](#tags).
+
+```php
+<?php 
+
+return [
+    'tags' => ['user', 'admin'],
+];
+```
+
 
 ## Renderers
 
