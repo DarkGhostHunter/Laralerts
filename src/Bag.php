@@ -3,16 +3,12 @@
 namespace DarkGhostHunter\Laralerts;
 
 use Closure;
-use Illuminate\Contracts\Config\Repository;
-use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Traits\Macroable;
-
 use function array_key_last;
 use function json_decode;
 use function value;
-
 use const JSON_THROW_ON_ERROR;
 
 /**
@@ -34,8 +30,8 @@ class Bag
     /**
      * Create a new Bag instance.
      *
-     * @param  \Illuminate\Contracts\Session\Session  $session
-     * @param  \Illuminate\Contracts\Config\Repository  $config
+     * @param  array  $tags
+     * @param  array  $persisted
      */
     public function __construct(protected array $tags, protected array $persisted = [])
     {

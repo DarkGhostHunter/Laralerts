@@ -8,11 +8,12 @@ use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Support\Traits\Macroable;
 use JsonSerializable;
 use Stringable;
-
 use function action;
 use function is_array;
 use function json_encode;
 use function route;
+use function sort;
+use function strcmp;
 use function trans;
 use function trim;
 use function url;
@@ -133,7 +134,7 @@ class Alert implements Arrayable, Jsonable, JsonSerializable, Stringable
 
     /**
      * Check if the alert contains any of the given tags.
-     * 
+     *
      * @param  string ...$tags
      * @return bool
      * @internal
@@ -214,6 +215,8 @@ class Alert implements Arrayable, Jsonable, JsonSerializable, Stringable
     {
         $this->types = $types;
 
+        sort($this->types);
+
         return $this;
     }
 
@@ -275,6 +278,10 @@ class Alert implements Arrayable, Jsonable, JsonSerializable, Stringable
             'blank'   => $blank,
         ];
 
+        usort($this->links, static function (object $first, object $second): int {
+            return strcmp($first->replace . $first->url, $second->replace . $second->url);
+        });
+
         return $this;
     }
 
@@ -328,6 +335,8 @@ class Alert implements Arrayable, Jsonable, JsonSerializable, Stringable
     public function tag(string ...$tags): static
     {
         $this->tags = $tags;
+
+        sort($this->tags);
 
         return $this;
     }

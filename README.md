@@ -534,6 +534,76 @@ When you receive a JSON Response, you will see the alerts appended to whichever 
 
 > If your key is already present in the JSON response, Laralerts **won't overwrite the key value**. Ensure the key is never present in the response.
 
+## Testing
+
+To test any alerts after a response, you can use `Alert::fake()`, which returns an Alert Bag that you can use to assert alerts.
+
+The fake bag will hold a copy of all the alerts generated, which allows for some convenient assertion methods.
+
+```php
+use \DarkGhostHunter\Laralerts\Facades\Alert;
+
+public function test_alert_sent()
+{
+    $alerts = Alert::fake();
+    
+    $this->get('something')->assertOk();
+    
+    $alerts->assertHas(2);
+}
+```
+
+The following assertions are available:
+
+| Method                    | Description                                                            |
+|---------------------------|------------------------------------------------------------------------|
+| `assertEmpty()`           | Check if the alert bag doesn't contains alerts.                        |
+| `assertNotEmpty()`        | Check if the alert bag contains any alert.                             |
+| `assertHasOne()`          | Check if the alert bag contains only one alert.                        |
+| `assertHas($count)`       | Check if the alert bag contains the exact amount of alerts.            |
+| `assertHasPersistent()`   | Check if the alert bag contains at least one persistent alert.         |
+| `assertHasNoPersistent()` | Check if the alert bag doesn't contains a persistent alert.            |
+| `assertPersistentCount()` | Check if the alert bag contains the exact amount of persistent alerts. |
+
+### Asserting alerts
+
+You can use `assertAlert()` to build expectations for the existence (or nonexistence) of specific alerts. 
+
+```php
+$bag->assertAlert()->withMessage('Hello world!')->exists();
+
+$bag->assertAlert()->dismissible()->missing();
+```
+
+Alternatively, you can use `count()` if you expect a specific number of alerts to match the given conditions, or `unique()` for matching only one alert.
+
+```php
+$bag->assertAlert()->persistent()->count(3);
+
+$bag->assertAlert()->withTag('toast')->unique();
+```
+
+The following expectations are available:
+
+| Method              | Description                                       |
+|---------------------|---------------------------------------------------|
+| `withRaw()`         | Find alerts with the given raw message.           |
+| `withMessage()`     | Find alerts with the given message.               |
+| `withTrans()`       | Find alerts with the translated message.          |
+| `withTransChoice()` | Find alerts with the translated (choice) message. |
+| `withAway()`        | Find alerts with a link away.                     |
+| `withTo()`          | Find alerts with a link to a path.                |
+| `withRoute()`       | Find alerts with a link to a route.               |
+| `withAction()`      | Find alerts with a link to a controller action.   |
+| `withTypes()`       | Find alerts with exactly the given types.         |
+| `persisted()`       | Find alerts persisted.                            |
+| `notPersisted()`    | Find alerts not persisted.                        |
+| `persistedAs()`     | Find alerts persisted with the issued keys.       |
+| `dismissible()`     | Find alerts dismissible.                          |
+| `notDismissible()`  | Find alerts not dismissible.                      |
+| `withTag()`         | Find alerts with all the given tags.              |
+| `withAnyTag()`      | Find alerts with any of the given tags.           |
+
 ## Security
 
 If you discover any security related issues, please email darkghosthunter@gmail.com instead of using the issue tracker.

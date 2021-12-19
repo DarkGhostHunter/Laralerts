@@ -6,7 +6,6 @@ use DarkGhostHunter\Laralerts\Bag;
 use Illuminate\Foundation\Testing\Concerns\InteractsWithViews;
 use Orchestra\Testbench\TestCase;
 use Tests\RegistersPackage;
-
 use function alert;
 
 class BootstrapRendererTest extends TestCase
@@ -55,7 +54,7 @@ class BootstrapRendererTest extends TestCase
         static::assertSame(
             <<<'EOT'
 <div class="container"><div class="alerts">
-        <div class="alert alert-primary alert-secondary alert-success alert-danger alert-warning alert-info alert-light alert-dark foo bar dismiss" role="alert">
+        <div class="alert bar alert-danger alert-dark dismiss foo alert-info alert-light alert-primary alert-secondary alert-success alert-warning" role="alert">
     A Bootstrap alert
     </div>
     </div>
@@ -72,7 +71,7 @@ EOT,
         static::assertEquals(
             <<<'EOT'
 <div class="container"><div class="alerts">
-        <div class="alert alert-success alert-dark fade show alert-dismissible" role="alert">
+        <div class="alert alert-dark alert-success fade show alert-dismissible" role="alert">
     A Bootstrap Alert
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
@@ -91,7 +90,7 @@ EOT
         static::assertEquals(
             <<<'EOT'
 <div class="container"><div class="alerts">
-        <div class="alert alert-success foo bar alert-dismissible fade show" role="alert">
+        <div class="alert alert-dismissible bar foo alert-success fade show" role="alert">
     A Bootstrap Alert
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
@@ -112,7 +111,7 @@ EOT
         static::assertEquals(
             <<<'EOT'
 <div class="container"><div class="alerts">
-        <div class="alert alert-success foo bar alert-dismissible fade show" role="alert">
+        <div class="alert alert-dismissible bar foo alert-success fade show" role="alert">
     A Bootstrap Alert to <a href="https://www.something.com" target="_blank">link</a>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
@@ -134,7 +133,7 @@ EOT
         static::assertEquals(
             <<<'EOT'
 <div class="container"><div class="alerts">
-        <div class="alert alert-success foo bar alert-dismissible fade show" role="alert">
+        <div class="alert alert-dismissible bar foo alert-success fade show" role="alert">
     A Bootstrap <a href="https://www.alert.com">Alert</a> to <a href="https://www.something.com" target="_blank">link</a>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
@@ -155,7 +154,7 @@ EOT
         static::assertEquals(
             <<<'EOT'
 <div class="container"><div class="alerts">
-        <div class="alert alert-success foo bar alert-dismissible fade show" role="alert">
+        <div class="alert alert-dismissible bar foo alert-success fade show" role="alert">
     A Bootstrap <a href="https://www.something.com" target="_blank">link</a> to <a href="https://www.something.com" target="_blank">link</a>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
@@ -176,7 +175,7 @@ EOT
         static::assertEquals(
             <<<'EOT'
 <div class="container"><div class="alerts">
-        <div class="alert alert-success foo bar alert-dismissible fade show" role="alert">
+        <div class="alert alert-dismissible bar foo alert-success fade show" role="alert">
     A Bootstrap {Link} to <a href="https://www.something.com" target="_blank">link</a>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
