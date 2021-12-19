@@ -64,7 +64,7 @@ class BuilderTest extends TestCase
     public function test_unique_fails(): void
     {
         $this->expectException(AssertionFailedError::class);
-        $this->expectExceptionMessage("Failed to assert that [2] alerts match the expected [1] count.\nFailed asserting that actual size 2 matches expected size 1.");
+        $this->expectExceptionMessage("Failed to assert that there is only one alert.\nFailed asserting that actual size 2 matches expected size 1.");
 
         Alert::raw('foo');
         Alert::raw('bar');
@@ -102,7 +102,7 @@ class BuilderTest extends TestCase
     public function test_filters_by_raw_fails(): void
     {
         $this->expectException(AssertionFailedError::class);
-        $this->expectExceptionMessage("Failed to assert that [0] alerts match the expected [1] count.\nFailed asserting that actual size 0 matches expected size 1.");
+        $this->expectExceptionMessage("Failed to assert that there is only one alert.\nFailed asserting that actual size 0 matches expected size 1.");
 
         Alert::raw('foo');
         Alert::raw('bar');
@@ -121,7 +121,7 @@ class BuilderTest extends TestCase
     public function test_filters_by_message_fails(): void
     {
         $this->expectException(AssertionFailedError::class);
-        $this->expectExceptionMessage("Failed to assert that [0] alerts match the expected [1] count.\nFailed asserting that actual size 0 matches expected size 1.");
+        $this->expectExceptionMessage("Failed to assert that there is only one alert.\nFailed asserting that actual size 0 matches expected size 1.");
 
         Alert::raw(e('<bar>'));
         Alert::raw('<foo>');
@@ -142,7 +142,7 @@ class BuilderTest extends TestCase
     public function test_filters_by_trans_fails(): void
     {
         $this->expectException(AssertionFailedError::class);
-        $this->expectExceptionMessage("Failed to assert that [0] alerts match the expected [1] count.\nFailed asserting that actual size 0 matches expected size 1.");
+        $this->expectExceptionMessage("Failed to assert that there is only one alert.\nFailed asserting that actual size 0 matches expected size 1.");
 
         Lang::shouldReceive('get')->with('foo.bar', [], null)->once()->andReturn('baz');
 
@@ -164,7 +164,7 @@ class BuilderTest extends TestCase
     public function test_filters_by_trans_choice_fails(): void
     {
         $this->expectException(AssertionFailedError::class);
-        $this->expectExceptionMessage("Failed to assert that [0] alerts match the expected [1] count.\nFailed asserting that actual size 0 matches expected size 1.");
+        $this->expectExceptionMessage("Failed to assert that there is only one alert.\nFailed asserting that actual size 0 matches expected size 1.");
 
         Lang::shouldReceive('choice')->with('foo.bar', 2, [], null)->once()->andReturn('baz');
 
@@ -183,7 +183,7 @@ class BuilderTest extends TestCase
     public function test_filters_by_link_away_fails(): void
     {
         $this->expectException(AssertionFailedError::class);
-        $this->expectExceptionMessage("Failed to assert that [0] alerts match the expected [1] count.\nFailed asserting that actual size 0 matches expected size 1.");
+        $this->expectExceptionMessage("Failed to assert that there is only one alert.\nFailed asserting that actual size 0 matches expected size 1.");
 
         Alert::raw('foo.bar')->away('bar', 'foo');
 
@@ -200,7 +200,7 @@ class BuilderTest extends TestCase
     public function test_filters_by_multiple_link_away_fails(): void
     {
         $this->expectException(AssertionFailedError::class);
-        $this->expectExceptionMessage("Failed to assert that [0] alerts match the expected [1] count.\nFailed asserting that actual size 0 matches expected size 1.");
+        $this->expectExceptionMessage("Failed to assert that there is only one alert.\nFailed asserting that actual size 0 matches expected size 1.");
 
         Alert::raw('foo.bar')->away('foo', 'bar')->away('baz', 'quz');
 
@@ -219,7 +219,7 @@ class BuilderTest extends TestCase
     public function test_filters_by_link_to_fails(): void
     {
         $this->expectException(AssertionFailedError::class);
-        $this->expectExceptionMessage("Failed to assert that [0] alerts match the expected [1] count.\nFailed asserting that actual size 0 matches expected size 1.");
+        $this->expectExceptionMessage("Failed to assert that there is only one alert.\nFailed asserting that actual size 0 matches expected size 1.");
 
         URL::shouldReceive('to')->with('foo', [], null)->once()->andReturn('bar');
         URL::shouldReceive('to')->with('bar', [], null)->once()->andReturn('bar');
@@ -241,7 +241,7 @@ class BuilderTest extends TestCase
     public function test_filters_by_link_route_fails(): void
     {
         $this->expectException(AssertionFailedError::class);
-        $this->expectExceptionMessage("Failed to assert that [0] alerts match the expected [1] count.\nFailed asserting that actual size 0 matches expected size 1.");
+        $this->expectExceptionMessage("Failed to assert that there is only one alert.\nFailed asserting that actual size 0 matches expected size 1.");
 
         URL::shouldReceive('route')->with('foo', [], true)->once()->andReturn('bar');
         URL::shouldReceive('route')->with('bar', [], true)->once()->andReturn('bar');
@@ -263,7 +263,7 @@ class BuilderTest extends TestCase
     public function test_filters_by_link_action_fails(): void
     {
         $this->expectException(AssertionFailedError::class);
-        $this->expectExceptionMessage("Failed to assert that [0] alerts match the expected [1] count.\nFailed asserting that actual size 0 matches expected size 1.");
+        $this->expectExceptionMessage("Failed to assert that there is only one alert.\nFailed asserting that actual size 0 matches expected size 1.");
 
         URL::shouldReceive('action')->with('foo', [], true)->once()->andReturn('bar');
         URL::shouldReceive('action')->with('bar', [], true)->once()->andReturn('bar');
@@ -283,7 +283,7 @@ class BuilderTest extends TestCase
     public function test_filters_by_types_fails(): void
     {
         $this->expectException(AssertionFailedError::class);
-        $this->expectExceptionMessage("Failed to assert that [0] alerts match the expected [1] count.\nFailed asserting that actual size 0 matches expected size 1.");
+        $this->expectExceptionMessage("Failed to assert that there is only one alert.\nFailed asserting that actual size 0 matches expected size 1.");
 
         Alert::raw('foo.bar')->types('foo', 'bar');
 
@@ -300,7 +300,7 @@ class BuilderTest extends TestCase
     public function test_filters_by_dismissible_fails(): void
     {
         $this->expectException(AssertionFailedError::class);
-        $this->expectExceptionMessage("Failed to assert that [0] alerts match the expected [1] count.\nFailed asserting that actual size 0 matches expected size 1.");
+        $this->expectExceptionMessage("Failed to assert that there is only one alert.\nFailed asserting that actual size 0 matches expected size 1.");
 
         Alert::raw('foo.bar')->dismiss(false);
 
@@ -317,7 +317,7 @@ class BuilderTest extends TestCase
     public function test_filters_by_not_dismissible_fails(): void
     {
         $this->expectException(AssertionFailedError::class);
-        $this->expectExceptionMessage("Failed to assert that [0] alerts match the expected [1] count.\nFailed asserting that actual size 0 matches expected size 1.");
+        $this->expectExceptionMessage("Failed to assert that there is only one alert.\nFailed asserting that actual size 0 matches expected size 1.");
 
         Alert::raw('foo.bar')->dismiss(true);
 
@@ -334,7 +334,7 @@ class BuilderTest extends TestCase
     public function test_filters_by_persisted_fails(): void
     {
         $this->expectException(AssertionFailedError::class);
-        $this->expectExceptionMessage("Failed to assert that [0] alerts match the expected [1] count.\nFailed asserting that actual size 0 matches expected size 1.");
+        $this->expectExceptionMessage("Failed to assert that there is only one alert.\nFailed asserting that actual size 0 matches expected size 1.");
 
         Alert::raw('foo');
 
@@ -351,7 +351,7 @@ class BuilderTest extends TestCase
     public function test_filters_by_not_persisted_fails(): void
     {
         $this->expectException(AssertionFailedError::class);
-        $this->expectExceptionMessage("Failed to assert that [0] alerts match the expected [1] count.\nFailed asserting that actual size 0 matches expected size 1.");
+        $this->expectExceptionMessage("Failed to assert that there is only one alert.\nFailed asserting that actual size 0 matches expected size 1.");
 
         Alert::raw('foo')->persistAs('foo');
 
@@ -362,17 +362,17 @@ class BuilderTest extends TestCase
     {
         Alert::raw('foo')->persistAs('bar');
 
-        $this->bag->assertAlert()->persistedAs('bar')->unique();
+        $this->bag->assertAlert()->persistedAs('bar');
     }
 
     public function test_filters_by_persisted_as_fails(): void
     {
         $this->expectException(AssertionFailedError::class);
-        $this->expectExceptionMessage("Failed to assert that [0] alerts match the expected [1] count.\nFailed asserting that actual size 0 matches expected size 1.");
+        $this->expectExceptionMessage("Failed to assert that [1] persistent alerts exist.\nFailed asserting that actual size 0 matches expected size 1.");
 
         Alert::raw('foo')->persistAs('bar');
 
-        $this->bag->assertAlert()->persistedAs('foo')->unique();
+        $this->bag->assertAlert()->persistedAs('foo');
     }
 
     public function test_filters_by_persisted_as_array(): void
@@ -381,19 +381,19 @@ class BuilderTest extends TestCase
         Alert::raw('foo')->persistAs('bar');
         Alert::raw('foo')->persistAs('quz');
 
-        $this->bag->assertAlert()->persistedAs(['bar', 'quz'])->count(2);
+        $this->bag->assertAlert()->persistedAs('bar', 'quz');
     }
 
     public function test_filters_by_persisted_as_array_fails(): void
     {
         $this->expectException(AssertionFailedError::class);
-        $this->expectExceptionMessage("Failed to assert that [0] alerts match the expected [1] count.\nFailed asserting that actual size 0 matches expected size 1.");
+        $this->expectExceptionMessage("Failed to assert that [2] persistent alerts exist.\nFailed asserting that actual size 0 matches expected size 2.");
 
         Alert::raw('foo')->persistAs('foo');
         Alert::raw('foo')->persistAs('bar');
         Alert::raw('foo')->persistAs('quz');
 
-        $this->bag->assertAlert()->persistedAs(['qux', 'quuz'])->unique();
+        $this->bag->assertAlert()->persistedAs('qux', 'quuz');
     }
 
     public function test_filters_by_tag(): void
@@ -410,7 +410,7 @@ class BuilderTest extends TestCase
     public function test_filters_by_tag_fails(): void
     {
         $this->expectException(AssertionFailedError::class);
-        $this->expectExceptionMessage("Failed to assert that [0] alerts match the expected [1] count.\nFailed asserting that actual size 0 matches expected size 1.");
+        $this->expectExceptionMessage("Failed to assert that there is only one alert.\nFailed asserting that actual size 0 matches expected size 1.");
 
         Alert::raw('foo')->tag('bar');
 

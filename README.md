@@ -536,9 +536,7 @@ When you receive a JSON Response, you will see the alerts appended to whichever 
 
 ## Testing
 
-To test any alerts after a response, you can use `Alert::fake()`, which returns an Alert Bag that you can use to assert alerts.
-
-The fake bag will hold a copy of all the alerts generated, which allows for some convenient assertion methods.
+To test if alerts were generated, you can use `Alert::fake()`, which works like any other faked services. It returns a fake Alert Bag that holds a copy of all alerts generated, which exposes some convenient assertion methods.
 
 ```php
 use \DarkGhostHunter\Laralerts\Facades\Alert;
@@ -547,9 +545,9 @@ public function test_alert_sent()
 {
     $alerts = Alert::fake();
     
-    $this->get('something')->assertOk();
+    $this->post('/comment', ['body' => 'cool'])->assertOk();
     
-    $alerts->assertHas(2);
+    $alerts->assertHasOne();
 }
 ```
 
@@ -565,25 +563,27 @@ The following assertions are available:
 | `assertHasNoPersistent()` | Check if the alert bag doesn't contains a persistent alert.            |
 | `assertPersistentCount()` | Check if the alert bag contains the exact amount of persistent alerts. |
 
-### Asserting alerts
+### Asserting specific alerts
 
-You can use `assertAlert()` to build expectations for the existence (or nonexistence) of specific alerts. 
+The fake Alert bag allows building conditions for the existence (or nonexistence) of alerts with specific properties, by using `assertAlert()`. 
+
+Once you build your conditions, you can use `exists()` to check if any alert matches, or `missing()` to check if no alert should match.
 
 ```php
 $bag->assertAlert()->withMessage('Hello world!')->exists();
 
-$bag->assertAlert()->dismissible()->missing();
+$bag->assertAlert()->withTypes('danger')->dismissible()->missing();
 ```
 
 Alternatively, you can use `count()` if you expect a specific number of alerts to match the given conditions, or `unique()` for matching only one alert.
 
 ```php
-$bag->assertAlert()->persistent()->count(3);
+$bag->assertAlert()->persisted()->count(2);
 
-$bag->assertAlert()->withTag('toast')->unique();
+$bag->assertAlert()->notDismissible()->withTag('toast')->unique();
 ```
 
-The following expectations are available:
+The following conditions are available:
 
 | Method              | Description                                       |
 |---------------------|---------------------------------------------------|

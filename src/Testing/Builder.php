@@ -26,11 +26,11 @@ class Builder
      *
      * @param  \DarkGhostHunter\Laralerts\Testing\Fakes\BagFake  $bag
      * @param  string|null  $message
-     * @param  array|null  $types
+     * @param  string[]|null  $types
      * @param  bool|null  $dismiss
-     * @param  string|bool|null  $persisted
-     * @param  array|null  $tags
-     * @param  array|null  $links
+     * @param  string[]|bool|null  $persisted
+     * @param  string[]|null  $tags
+     * @param  string[]|null  $links
      * @param  bool  $anyTag
      */
     public function __construct(
@@ -38,7 +38,7 @@ class Builder
         protected ?string $message = null,
         protected ?array $types = null,
         protected ?bool $dismiss = null,
-        protected array|string|bool|null $persisted = null,
+        protected array|bool|null $persisted = null,
         protected ?array $tags = null,
         protected ?array $links = null,
         protected bool $anyTag = false,
@@ -207,19 +207,6 @@ class Builder
     }
 
     /**
-     * Expect an alert persisted with the issued key.
-     *
-     * @param  string|array  $key
-     * @return $this
-     */
-    public function persistedAs(string|array $key): static
-    {
-        $this->persisted = $key;
-
-        return $this;
-    }
-
-    /**
      * Expect an alert dismissible.
      *
      * @return $this
@@ -255,6 +242,7 @@ class Builder
 
         return $this;
     }
+
     /**
      * Expect an alert with any of the given tags.
      *
@@ -267,7 +255,6 @@ class Builder
 
         return $this->withTag(...$tags);
     }
-
     /**
      * Returns a collection of all matching alerts.
      *
@@ -328,34 +315,49 @@ class Builder
     }
 
     /**
-     * Assert that at least one Alert exists with the given expectations.
+     * Expect an alert persisted with the issued key.
      *
-     * @param  string|null  $message
+     * @param  string|array  $key
      * @return void
      */
-    public function exists(string $message = null): void
+    public function persistedAs(string ...$key): void
     {
-        PHPUnit::assertNotEmpty($this->matches(), $message ?? "Failed to assert that at least one alert matches the expectations.");
+        $this->persisted = $key;
+
+        $count = count($key);
+
+        $this->count($count, "Failed to assert that [$count] persistent alerts exist.");
+    }
+
+    /**
+     * Assert that at least one Alert exists with the given expectations.
+     *
+     * @param  string  $message
+     * @return void
+     */
+    public function exists(string $message = 'Failed to assert that at least one alert matches the expectations.'): void
+    {
+        PHPUnit::assertNotEmpty($this->matches(), $message);
     }
 
     /**
      * Assert that no Alert exists with the given expectations.
      *
-     * @param  string|null  $message
+     * @param  string  $message
      * @return void
      */
-    public function missing(string $message = null): void
+    public function missing(string $message = 'Failed to assert that no alert matches the expectations.'): void
     {
-        PHPUnit::assertEmpty($this->matches(), $message ?? "Failed to assert that no alert matches the expectations.");
+        PHPUnit::assertEmpty($this->matches(), $message);
     }
 
     /**
      * Assert that only one Alert exists with the given expectations.
      *
-     * @param  string|null  $message
+     * @param  string  $message
      * @return void
      */
-    public function unique(string $message = null): void
+    public function unique(string $message = 'Failed to assert that there is only one alert.'): void
     {
         $this->count(1, $message);
     }

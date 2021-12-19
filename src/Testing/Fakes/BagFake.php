@@ -62,7 +62,7 @@ class BagFake extends Bag
      */
     public function assertHasOne(): void
     {
-        $this->assertAlert()->count(1, "Failed to assert that there is only one alert");
+        $this->assertAlert()->unique();
     }
 
     /**
@@ -84,9 +84,7 @@ class BagFake extends Bag
      */
     public function assertPersisted(string $key): void
     {
-        $this->assertAlert()->persistedAs($key)->unique(
-            "Failed to assert that there is persisted alerts."
-        );
+        $this->assertAlert()->persistedAs($key);
     }
 
     /**
@@ -96,7 +94,7 @@ class BagFake extends Bag
      */
     public function assertHasPersistent(): void
     {
-        $this->assertAlert()->persisted()->exists("Failed to assert that there is any persistent alert");
+        $this->assertAlert()->persisted()->exists("Failed to assert that there is any persistent alert.");
     }
 
     /**
@@ -106,6 +104,6 @@ class BagFake extends Bag
      */
     public function assertHasNoPersistent(): void
     {
-        $this->assertAlert()->persisted()->missing("Failed to assert that there is no persistent alert.");
+        $this->assertAlert()->persisted()->missing("Failed to assert that there is no persistent alerts.");
     }
 }

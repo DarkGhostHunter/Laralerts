@@ -75,7 +75,7 @@ class FakeTest extends TestCase
     public function test_asserts_has_one_exception(): void
     {
         $this->expectException(AssertionFailedError::class);
-        $this->expectExceptionMessage("Failed to assert that there is only one alert\nFailed asserting that actual size 2 matches expected size 1.");
+        $this->expectExceptionMessage("Failed to assert that there is only one alert.\nFailed asserting that actual size 2 matches expected size 1.");
 
         $bag = Alert::fake();
 
@@ -122,7 +122,7 @@ class FakeTest extends TestCase
     public function test_assert_persisted_exception(): void
     {
         $this->expectException(AssertionFailedError::class);
-        $this->expectExceptionMessage("Failed to assert that there is persisted alerts.\nFailed asserting that actual size 0 matches expected size 1.");
+        $this->expectExceptionMessage("Failed to assert that [1] persistent alerts exist.\nFailed asserting that actual size 0 matches expected size 1.");
 
         $bag = Alert::fake();
 
@@ -144,7 +144,7 @@ class FakeTest extends TestCase
     public function test_assert_has_persistent_exception(): void
     {
         $this->expectException(AssertionFailedError::class);
-        $this->expectExceptionMessage("Failed to assert that there is any persistent alert\nFailed asserting that an object is not empty.");
+        $this->expectExceptionMessage("Failed to assert that there is any persistent alert.\nFailed asserting that an object is not empty.");
 
         $bag = Alert::fake();
 
@@ -165,7 +165,7 @@ class FakeTest extends TestCase
     public function test_assert_has_no_persistent_exception(): void
     {
         $this->expectException(AssertionFailedError::class);
-        $this->expectExceptionMessage("Failed to assert that there is no persistent alert.\nFailed asserting that an object is empty.");
+        $this->expectExceptionMessage("Failed to assert that there is no persistent alerts.\nFailed asserting that an object is empty.");
 
         $bag = Alert::fake();
 
