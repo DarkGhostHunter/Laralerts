@@ -7,7 +7,6 @@ use DarkGhostHunter\Laralerts\Bag;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\URL;
 use Orchestra\Testbench\TestCase;
-
 use function alert;
 use function app;
 
@@ -48,7 +47,7 @@ class AlertTest extends TestCase
 
         $alert->types('foo', 'bar', 'quz');
 
-        static::assertEquals(['foo', 'bar', 'quz'], $alert->getTypes());
+        static::assertEquals(['bar', 'foo', 'quz'], $alert->getTypes());
     }
 
     public function test_alert_set_raw_message(): void
@@ -163,7 +162,7 @@ class AlertTest extends TestCase
         static::assertEquals(
             [
                 'message'     => 'foo',
-                'types'       => ['foo', 'bar'],
+                'types'       => ['bar', 'foo'],
                 'dismissible' => true,
             ],
             $alert->toArray()
@@ -181,7 +180,7 @@ class AlertTest extends TestCase
 
         static::assertJson(json_encode($alert));
         static::assertEquals(
-            '{"message":"foo","types":["foo","bar"],"dismissible":true}',
+            '{"message":"foo","types":["bar","foo"],"dismissible":true}',
             $alert->toJson()
         );
     }
@@ -226,7 +225,7 @@ class AlertTest extends TestCase
 
         $alert->tag('foo', 'bar');
 
-        static::assertSame(['foo', 'bar'], $alert->getTags());
+        static::assertSame(['bar', 'foo'], $alert->getTags());
     }
 
     public function test_to_string(): void

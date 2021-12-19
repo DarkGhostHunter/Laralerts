@@ -2,8 +2,8 @@
 
 namespace DarkGhostHunter\Laralerts;
 
-use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\View\Compilers\BladeCompiler;
